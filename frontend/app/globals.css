@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+/* ── Base tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --background: #0A0F1E;
+  --foreground: #F1F5F9;
+}
+
+html[data-theme="light"] {
+  --background: #F0F4FF;
+  --foreground: #0F172A;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* ── Light mode: remap the entire Tailwind slate palette ─────────────────────
+   Tailwind v4 utility classes use var(--color-slate-*) internally,
+   so overriding these variables here changes bg-slate-*, text-slate-*,
+   border-slate-* and every opacity variant (bg-slate-900/80 etc.) app-wide.
+   The mapping inverts dark ↔ light shades so every dark surface becomes
+   a light surface and every light text becomes dark text.
+   ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="light"] {
+  /* original slate-50  ↔ replaces slate-950 */
+  --color-slate-950: oklch(0.984 0.003 247.858);
+  /* original slate-100 ↔ replaces slate-900 */
+  --color-slate-900: oklch(0.968 0.007 247.896);
+  /* original slate-200 ↔ replaces slate-800 */
+  --color-slate-800: oklch(0.929 0.013 255.508);
+  /* original slate-300 ↔ replaces slate-700 */
+  --color-slate-700: oklch(0.869 0.022 264.532);
+  /* original slate-400 ↔ replaces slate-600 */
+  --color-slate-600: oklch(0.704 0.04 256.788);
+  /* slate-500 stays as-is (middle gray) */
+  /* original slate-600 ↔ replaces slate-400 */
+  --color-slate-400: oklch(0.446 0.043 257.281);
+  /* original slate-700 ↔ replaces slate-300 */
+  --color-slate-300: oklch(0.372 0.044 257.287);
+  /* original slate-800 ↔ replaces slate-200 */
+  --color-slate-200: oklch(0.279 0.041 260.031);
+  /* original slate-900 ↔ replaces slate-100 */
+  --color-slate-100: oklch(0.208 0.042 264.695);
+  /* original slate-950 ↔ replaces slate-50  */
+  --color-slate-50:  oklch(0.129 0.042 264.695);
+}
+
+/* Message entrance animation */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.msg-enter {
+  animation: slideUp 0.25s ease-out;
+}
+
+/* Cursor blink for streaming */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0; }
+}
+
+.cursor-blink {
+  animation: blink 0.8s ease-in-out infinite;
+}
+
+/* Markdown body — remove top margin on first element */
+.markdown-body > *:first-child { margin-top: 0; }
+.markdown-body > *:last-child  { margin-bottom: 0; }
+
+/* ── Light mode: sidebar active chat item ────────────────────────────────── */
+html[data-theme="light"] .conv-sidebar .text-indigo-300 {
+  color: oklch(0.457 0.24 264);  /* indigo-700 — visible on light purple bg */
+}
+html[data-theme="light"] .conv-sidebar .text-slate-600 {
+  color: oklch(0.446 0.043 257); /* darker so subtitle is readable */
+}
+html[data-theme="light"] .conv-sidebar .text-slate-700 {
+  color: oklch(0.5 0.04 257);    /* keep timestamp readable */
+}
+
+/* ── Light mode: flight card — indigo/emerald colors ─────────────────────── */
+html[data-theme="light"] .flight-card .text-indigo-300 {
+  color: oklch(0.457 0.24 264);  /* indigo-700 */
+}
+html[data-theme="light"] .flight-card .text-indigo-400 {
+  color: oklch(0.511 0.262 276); /* indigo-600 */
+}
+html[data-theme="light"] .flight-card .text-emerald-400 {
+  color: oklch(0.261 0.12 145);  /* emerald-800 — dark green, readable on light bg */
+}
+/* Selected flight row bg: dark indigo stays, add slight opacity adjustment */
+html[data-theme="light"] .flight-card .bg-indigo-950\/50 {
+  background-color: oklch(0.9 0.01 264 / 0.6);  /* near-white indigo tint */
+}
+html[data-theme="light"] .flight-card .bg-indigo-950\/30 {
+  background-color: oklch(0.92 0.01 264 / 0.5);
+}
+html[data-theme="light"] .flight-card .bg-emerald-900\/40 {
+  background-color: oklch(0.85 0.06 145 / 0.5); /* light green tint */
+}
+
+/* ── Light mode: fix indigo/white colors in MarkdownBody that don't ─────────
+   participate in the slate palette inversion. Scoped to .md-body so we
+   don't accidentally affect other components.
+   ─────────────────────────────────────────────────────────────────────────── */
+html[data-theme="light"] .md-body .md-inline-code {
+  background: #DDE3F5;          /* light blue-gray tint */
+  color: #3730A3;               /* indigo-800 — visible on light bg */
+}
+
+html[data-theme="light"] .md-body .md-link {
+  color: #4F46E5;               /* indigo-600 — readable on light bg */
+}
+
+html[data-theme="light"] .md-body .md-link:hover {
+  color: #3730A3;               /* indigo-800 on hover */
+}
+
+/* Code blocks: bg-slate-800 inverts to light gray; text inherits dark from body */
+html[data-theme="light"] .md-body .md-code-block {
+  border-color: #CBD5E1;        /* slate-300 equivalent */
+}
+
+/* Blockquote border — keep indigo visible in both modes */
+html[data-theme="light"] .md-body blockquote {
+  border-color: #6366F1;        /* indigo-500 — same in both modes */
+  color: #475569;               /* slate-600 — mid-tone for light bg */
+}
+
+/* Custom scrollbar */
+.chat-scroll::-webkit-scrollbar       { width: 4px; }
+.chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.chat-scroll::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 4px; }
+
+/* Bounce with delays for typing dots */
+.dot-1 { animation: bounce 1.2s ease-in-out infinite; }
+.dot-2 { animation: bounce 1.2s ease-in-out 0.2s infinite; }
+.dot-3 { animation: bounce 1.2s ease-in-out 0.4s infinite; }
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: translateY(0);    opacity: 0.4; }
+  40%           { transform: translateY(-6px); opacity: 1;   }
+}

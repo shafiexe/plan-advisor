@@ -1,0 +1,113 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import MessageBubble, { Message } from "./MessageBubble";
+import TypingDots from "./TypingDots";
+
+const TOOL_ICONS: Record<string, string> = {
+  search_flights:   "✈️",
+  compare_flights:  "✈️",
+  get_price_calendar: "📅",
+  search_trains:    "🚆",
+  search_buses:     "🚌",
+  search_hotels:    "🏨",
+  find_restaurants: "🍽️",
+};
+
+type Props = {
+  messages: Message[];
+  typing: boolean;
+  toolLabel: string | null;
+  toolName?: string | null;
+  onSpeak: (text: string) => void;
+  onStopSpeak: () => void;
+  speaking: boolean;
+  onAction?: (text: string) => void;
+};
+
+const SUGGESTIONS = [
+  "✈️  Suggest the best vacation spots for this season",
+  "🚆  Compare flights, trains & buses from Bangalore to Goa",
+  "🏨  Find hotels and restaurants near my destination",
+  "🗺️  Plan a complete trip — transport, stay & food",
+];
+
+type EmptyProps = { onSuggestion: (text: string) => void };
+
+function EmptyState({ onSuggestion }: EmptyProps) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full gap-6 px-4 text-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl shadow-xl shadow-indigo-900/30">
+          ✦
+        </div>
+        <div>
+          <p className="text-xl font-semibold text-slate-200">Plan Advisor</p>
+          <p className="text-sm text-slate-500 mt-1">Your travel & lifestyle advisor</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-2 w-full max-w-sm">
+        {SUGGESTIONS.map((s) => (
+          <button
+            key={s}
+            onClick={() => onSuggestion(s)}
+            className="text-left px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60
+              text-slate-300 text-sm hover:bg-slate-700/60 hover:border-indigo-500/40
+              hover:text-white transition-all"
+          >
+            {s}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+type ChatWindowProps = Props & { onSuggestion: (text: string) => void; toolName?: string | null };
+
+export default function ChatWindow({
+  messages, typing, toolLabel, toolName, onSuggestion,
+  onSpeak, onStopSpeak, speaking, onAction,
+}: ChatWindowProps) {
+  const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, typing]);
+
+  return (
+    <div className="flex-1 overflow-y-auto chat-scroll flex flex-col">
+      <div className="px-4 py-6 flex-1">
+        {messages.length === 0 ? (
+          <EmptyState onSuggestion={onSuggestion} />
+        ) : (
+          <div className="flex flex-col gap-4 max-w-3xl mx-auto">
+            {messages.map((msg) => (
+              <MessageBubble
+                key={msg.id}
+                message={msg}
+                onSpeak={onSpeak}
+                onStopSpeak={onStopSpeak}
+                speaking={speaking}
+                onAction={onAction}
+              />
+            ))}
+            {typing && <TypingDots />}
+            {toolLabel && !typing && (
+              <div className="flex items-center gap-2.5 px-1 animate-pulse">
+                <div className="w-8 h-8 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-sm shrink-0">
+                  {(toolName && TOOL_ICONS[toolName]) ?? "🔍"}
+                </div>
+                <span className="text-sm text-indigo-300/80">{toolLabel}</span>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export type { Message };
