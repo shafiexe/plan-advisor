@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # SQLite DB lives at /app/data/plan_advisor.db (volume-mounted at runtime)
+RUN mkdir -p /app/data
 ENV DATABASE_URL=sqlite+aiosqlite:////app/data/plan_advisor.db
 
 EXPOSE 8000
