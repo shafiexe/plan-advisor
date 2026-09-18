@@ -1,4 +1,6 @@
 import json
+import logging
+import traceback
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -8,6 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import Conversation, Passenger, PassengerProfile
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/user")
 
@@ -63,49 +67,53 @@ async def upsert_conversation(
     email: str = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    row = (await db.execute(
-        select(Conversation).where(
-            Conversation.id == conv_id,
-            Conversation.user_email == email,
-        )
-    )).scalar_one_or_none()
+    try:
+        row = (await db.execute(
+            select(Conversation).where(
+                Conversation.id == conv_id,
+                Conversation.user_email == email,
+            )
+        )).scalar_one_or_none()
 
-    now = datetime.now(timezone.utc).replace(tzinfo=None)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-    _CARD_FIELDS = ("flightData", "calendarData", "hotelData", "restaurantData", "busData", "trainData")
+        _CARD_FIELDS = ("flightData", "calendarData", "hotelData", "restaurantData", "busData", "trainData")
 
-    cleaned = []
-    for m in body.messages:
-        if not isinstance(m, dict):
-            continue
-        entry = {
-            "id":        m.get("id", ""),
-            "role":      m.get("role", "user"),
-            "content":   m.get("content", ""),
-            "timestamp": m.get("timestamp", 0),
-        }
-        for field in _CARD_FIELDS:
-            if m.get(field):
-                entry[field] = m[field]
-        cleaned.append(entry)
+        cleaned = []
+        for m in body.messages:
+            if not isinstance(m, dict):
+                continue
+            entry = {
+                "id":        m.get("id", ""),
+                "role":      m.get("role", "user"),
+                "content":   m.get("content", ""),
+                "timestamp": m.get("timestamp", 0),
+            }
+            for field in _CARD_FIELDS:
+                if m.get(field):
+                    entry[field] = m[field]
+            cleaned.append(entry)
 
-    msgs_json = json.dumps(cleaned)
+        msgs_json = json.dumps(cleaned)
 
-    if row:
-        row.title         = body.title
-        row.messages_json = msgs_json
-        row.pinned        = body.pinned
-        row.updated_at    = now
-    else:
-        db.add(Conversation(
-            id=conv_id, user_email=email,
-            title=body.title, messages_json=msgs_json,
-            pinned=body.pinned,
-            created_at=now, updated_at=now,
-        ))
+        if row:
+            row.title         = body.title
+            row.messages_json = msgs_json
+            row.pinned        = body.pinned
+            row.updated_at    = now
+        else:
+            db.add(Conversation(
+                id=conv_id, user_email=email,
+                title=body.title, messages_json=msgs_json,
+                pinned=body.pinned,
+                created_at=now, updated_at=now,
+            ))
 
-    await db.commit()
-    return {"ok": True}
+        await db.commit()
+        return {"ok": True}
+    except Exception:
+        log.error("upsert_conversation failed for conv_id=%s email=%s\n%s", conv_id, email, traceback.format_exc())
+        raise
 
 
 @router.delete("/conversations/{conv_id}")

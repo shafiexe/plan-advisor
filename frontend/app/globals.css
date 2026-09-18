@@ -132,6 +132,28 @@ html[data-theme="light"] .md-body blockquote {
   color: #475569;               /* slate-600 — mid-tone for light bg */
 }
 
+/* ── Light mode: login page auth buttons ─────────────────────────────────── */
+/* The slate palette inversion makes text-slate-900 near-white in light mode,
+   which breaks white-background buttons. These overrides pin the buttons to
+   their intended appearance regardless of the slate remap. */
+html[data-theme="light"] .login-btn-google {
+  background: #ffffff;
+  color: #0F172A;
+  border: 1px solid #CBD5E1;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08);
+}
+html[data-theme="light"] .login-btn-google:hover {
+  background: #F8FAFC;
+}
+html[data-theme="light"] .login-btn-github {
+  background: #24292e;
+  color: #ffffff;
+  border-color: #1b1f23;
+}
+html[data-theme="light"] .login-btn-github:hover {
+  background: #2f363d;
+}
+
 /* Custom scrollbar */
 .chat-scroll::-webkit-scrollbar       { width: 4px; }
 .chat-scroll::-webkit-scrollbar-track { background: transparent; }

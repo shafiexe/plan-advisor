@@ -35,8 +35,9 @@ function LoginCard() {
           <div className="flex flex-col gap-3">
             <button
               onClick={() => signIn("google", { callbackUrl })}
+              style={{ color: '#0F172A', background: '#ffffff', border: '1px solid #E2E8F0' }}
               className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl
-                bg-white hover:bg-slate-100 text-slate-900 font-medium text-sm
+                hover:bg-slate-50 font-medium text-sm
                 transition-all duration-150 shadow-sm hover:shadow-md"
             >
               <svg width="18" height="18" viewBox="0 0 24 24">
@@ -50,9 +51,9 @@ function LoginCard() {
 
             <button
               onClick={() => signIn("github", { callbackUrl })}
+              style={{ color: '#ffffff', background: '#24292e', borderColor: '#1b1f23' }}
               className="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-xl
-                bg-slate-800 hover:bg-slate-700 text-slate-100 font-medium text-sm
-                border border-slate-700 hover:border-slate-600
+                font-medium text-sm border hover:opacity-90
                 transition-all duration-150 shadow-sm"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">

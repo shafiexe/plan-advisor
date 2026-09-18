@@ -80,52 +80,41 @@ export default function Home() {
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
 
-  /* ── Load conversations: server-first, localStorage as fallback ─── */
+  /* ── Load conversations ─── */
   useEffect(() => {
     serverLoadedRef.current = false;
-    // Always load from localStorage immediately so the UI isn't blank
-    const local = loadConversations(STORAGE_KEY);
-    setConversations(local);
-    try {
-      const saved = localStorage.getItem(ACTIVE_KEY);
-      if (saved && local.find((c) => c.id === saved)) setActiveId(saved);
-    } catch {}
+    const savedActiveId = (() => { try { return localStorage.getItem(ACTIVE_KEY); } catch { return null; } })();
 
-    // Load saved passengers from server
-    if (sync.enabled) {
-      sync.loadPassengers().then(setSavedPassengers).catch(() => {});
+    if (!sync.enabled) {
+      // Guest (not logged in): localStorage only
+      const local = loadConversations(STORAGE_KEY);
+      setConversations(local);
+      if (savedActiveId && local.find(c => c.id === savedActiveId)) setActiveId(savedActiveId);
+      return;
     }
 
-    // Then fetch from server (authoritative, cross-device)
-    if (sync.enabled) {
-      sync.loadConversations().then((serverConvs) => {
-        if (serverConvs.length > 0) {
-          setConversations(serverConvs);
-          serverLoadedRef.current = true;
-          // Keep the active conv if it exists in the server list
-          setActiveId(prev => {
-            const stillExists = serverConvs.find(c => c.id === prev);
-            if (stillExists) return prev;
-            try {
-              const saved = localStorage.getItem(ACTIVE_KEY);
-              return serverConvs.find(c => c.id === saved) ? saved : null;
-            } catch { return null; }
-          });
-        } else {
-          serverLoadedRef.current = true;
-        }
+    // Logged in: DB is the single source of truth — never read localStorage for convs
+    sync.loadPassengers().then(setSavedPassengers).catch(() => {});
+
+    sync.loadConversations().then((serverConvs) => {
+      serverLoadedRef.current = true;
+      setConversations(serverConvs);
+      setActiveId(prev => {
+        if (serverConvs.find(c => c.id === prev)) return prev;
+        return serverConvs.find(c => c.id === savedActiveId) ? savedActiveId : null;
       });
-    }
+    }).catch(() => { serverLoadedRef.current = true; });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [STORAGE_KEY, sync.enabled]);
 
-  /* ── Persist to localStorage + server whenever conversations change ─── */
+  /* ── Persist: DB for logged-in users, localStorage for guests ─── */
   useEffect(() => {
-    if (conversations.length > 0) {
+    if (!sync.enabled && conversations.length > 0) {
       saveConversations(STORAGE_KEY, conversations);
-      try { if (activeId) localStorage.setItem(ACTIVE_KEY, activeId); } catch {}
     }
-  }, [conversations, activeId, STORAGE_KEY, ACTIVE_KEY]);
+    // Always remember which chat was active (UX only — not conversation data)
+    try { if (activeId) localStorage.setItem(ACTIVE_KEY, activeId); } catch {}
+  }, [conversations, activeId, STORAGE_KEY, sync.enabled]);
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
   const messages = activeConversation?.messages ?? [];
@@ -291,6 +280,7 @@ export default function Home() {
 
     // Ensure there's an active conversation
     let convId = activeIdRef.current;
+    const isNewConv = !convId;
     if (!convId) {
       const conv: Conversation = {
         id: makeId(),
@@ -321,6 +311,20 @@ export default function Home() {
       })
     );
 
+    // Persist to DB the moment the user sends — don't wait for AI response.
+    // This guarantees every conversation exists in the DB even if the AI fails.
+    const existingMsgs = activeConversation?.messages ?? [];
+    sync.saveConversation({
+      id: convId,
+      title: (isNewConv || existingMsgs.length === 0)
+        ? (txt.length > 45 ? txt.slice(0, 42) + "…" : txt)
+        : (activeConversation?.title ?? ""),
+      messages: [...existingMsgs, userMsg],
+      createdAt: activeConversation?.createdAt ?? Date.now(),
+      updatedAt: Date.now(),
+      pinned: activeConversation?.pinned,
+    });
+
     setInput("");
 
     // Send text + history (without the message just added)
@@ -338,7 +342,7 @@ export default function Home() {
       : null;
 
     send(txt, history, passengerContext ? { passenger_context: passengerContext } : undefined);
-  }, [input, connected, streaming, typing, activeConversation, send]);
+  }, [input, connected, streaming, typing, activeConversation, send, sync]);
 
   /* ── Voice input ─── */
   const { recording, toggleRecording } = useVoiceInput({

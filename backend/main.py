@@ -2,14 +2,18 @@ from dotenv import load_dotenv
 load_dotenv()  # must run before any service module is imported
 
 import logging
+import traceback
 logging.basicConfig(level=logging.INFO)
+
+log = logging.getLogger(__name__)
 # Set OTA scraper to DEBUG so we can see HTML snippets during development
 logging.getLogger("services.ota_scraper").setLevel(logging.DEBUG)
 
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from routers import chat, transcribe, tts, passport, user_data
 from database import init_db
 
@@ -44,6 +48,12 @@ app.include_router(transcribe.router, tags=["voice"])
 app.include_router(tts.router,        tags=["tts"])
 app.include_router(passport.router,   tags=["passport"])
 app.include_router(user_data.router,  tags=["user"])
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    log.error("Unhandled exception %s %s\n%s", request.method, request.url, traceback.format_exc())
+    return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 
 @app.get("/health")

@@ -47,15 +47,28 @@ export function useServerSync(userEmail: string | null | undefined) {
       const resp = await fetch(`${API}/api/user/conversations`, {
         headers: { "X-User-Email": userEmail! },
       });
-      if (!resp.ok) return [];
+      if (!resp.ok) {
+        console.error("[sync] loadConversations failed:", resp.status, await resp.text());
+        return [];
+      }
       return await resp.json() as Conversation[];
-    } catch { return []; }
+    } catch (e) {
+      console.error("[sync] loadConversations error:", e);
+      return [];
+    }
   }, [enabled, userEmail]);
 
   const saveConversation = useCallback(async (conv: Conversation) => {
-    if (!enabled || !conv.messages?.length) return;
+    if (!enabled) {
+      console.warn("[sync] saveConversation skipped — userEmail is null (not logged in)");
+      return;
+    }
+    if (!conv.messages?.length) {
+      console.warn("[sync] saveConversation skipped — no messages in conversation");
+      return;
+    }
     try {
-      await fetch(`${API}/api/user/conversations/${conv.id}`, {
+      const resp = await fetch(`${API}/api/user/conversations/${conv.id}`, {
         method:  "PUT",
         headers: authHeaders(userEmail!),
         body:    JSON.stringify({
@@ -64,7 +77,12 @@ export function useServerSync(userEmail: string | null | undefined) {
           pinned:   conv.pinned ?? false,
         }),
       });
-    } catch {}
+      if (!resp.ok) {
+        console.error("[sync] saveConversation failed:", resp.status, await resp.text());
+      }
+    } catch (e) {
+      console.error("[sync] saveConversation network error:", e);
+    }
   }, [enabled, userEmail]);
 
   const deleteConversation = useCallback(async (id: string) => {

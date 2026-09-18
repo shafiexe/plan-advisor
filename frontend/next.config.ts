@@ -5,7 +5,8 @@ import type { NextConfig } from "next";
 const isStaticExport = process.env.EXPORT_STATIC === "true";
 
 const nextConfig: NextConfig = {
-  ...(isStaticExport && { output: "export", trailingSlash: true }),
+  output: isStaticExport ? "export" : "standalone",
+  ...(isStaticExport && { trailingSlash: true }),
   // react-markdown, remark-gfm and the whole unified/mdast/hast ecosystem are
   // ESM-only packages. Without transpilePackages, Next.js bundles them as CJS
   // which causes silent import failures (Markdown component is undefined).
