@@ -108,7 +108,7 @@ stages:
     displayName: "Deploy"
     dependsOn: Build
     # Only deploy on pushes to main (not PRs)
-    condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
+    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'Manual'))
     jobs:
       - deployment: DeployBackend
         displayName: "Deploy backend"
