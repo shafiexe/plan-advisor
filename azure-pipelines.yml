@@ -42,7 +42,7 @@ variables:
   - name: FRONTEND_APP_NAME
     value: "plan-advisor-frontend"
   - name: FRONTEND_FQDN
-    value: "plan-advisor-frontend.ashyocean-2012629c.eastus.azurecontainerapps.io"
+    value: "www.planadvisors.in"
 
   # ── Public URLs baked into the frontend image at build time ───────────────
   # After first deploy, run:
