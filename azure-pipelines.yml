@@ -1,0 +1,198 @@
+# ── Plan Advisor — Azure DevOps CI/CD Pipeline ────────────────────────────────
+#
+# Prerequisites (complete once before first run):
+#   1. Run .azure/provision.sh to create ACR, Container Apps, Redis, etc.
+#   2. Create an ARM service connection named 'plan-advisor-azure' in
+#      Azure DevOps → Project Settings → Service Connections.
+#   3. Create a Docker Registry service connection named 'plan-advisor-acr'
+#      pointing at your Container Registry (same project settings page).
+#   4. Create a Library variable group named 'plan-advisor-secrets' with the
+#      secrets listed in .azure/provision.sh.  Mark every value as Secret.
+#   5. Fill in the four TODO variables below.
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    exclude:
+      - "*.md"
+      - ".azure/**"
+
+pr:
+  branches:
+    include:
+      - main
+
+variables:
+  # ── Secret variables (Azure DevOps Library → Variable Groups) ─────────────
+  - group: plan-advisor-secrets          # created in step 4 above
+
+  # ── Infrastructure names — edit to match what provision.sh created ─────────
+  - name: AZURE_SERVICE_CONNECTION       # TODO: ARM service connection name
+    value: "plan-advisor-azure"
+  - name: ACR_SERVICE_CONNECTION         # TODO: Docker registry service connection name
+    value: "plan-advisor-acr"
+  - name: ACR_NAME                       # TODO: your ACR name (lowercase, no hyphens)
+    value: "planadvisoracr"
+  - name: RESOURCE_GROUP
+    value: "plan-advisor-rg"
+  - name: BACKEND_APP_NAME
+    value: "plan-advisor-backend"
+  - name: FRONTEND_APP_NAME
+    value: "plan-advisor-frontend"
+
+  # ── Public URLs baked into the frontend image at build time ───────────────
+  # After first deploy, run:
+  #   az containerapp show -n plan-advisor-backend -g plan-advisor-rg \
+  #     --query "properties.configuration.ingress.fqdn" -o tsv
+  # and paste the result (prefixed with https:// / wss://) below.
+  - name: NEXT_PUBLIC_API_URL            # TODO: backend Container App HTTPS URL
+    value: "https://plan-advisor-backend.YOUR_ENV.eastus.azurecontainerapps.io"
+  - name: NEXT_PUBLIC_WS_URL             # TODO: same host, wss:// scheme, /ws/chat path
+    value: "wss://plan-advisor-backend.YOUR_ENV.eastus.azurecontainerapps.io/ws/chat"
+
+  # ── Derived (do not edit) ─────────────────────────────────────────────────
+  - name: BACKEND_IMAGE
+    value: "$(ACR_NAME).azurecr.io/plan-advisor-backend"
+  - name: FRONTEND_IMAGE
+    value: "$(ACR_NAME).azurecr.io/plan-advisor-frontend"
+  - name: TAG
+    value: "$(Build.BuildId)"
+
+# ── Stage 1: Build Docker images ──────────────────────────────────────────────
+stages:
+  - stage: Build
+    displayName: "Build"
+    jobs:
+      - job: BuildBackend
+        displayName: "Build backend image"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: Docker@2
+            displayName: "Build & push backend → ACR"
+            inputs:
+              containerRegistry: "$(ACR_SERVICE_CONNECTION)"
+              repository: "plan-advisor-backend"
+              command: "buildAndPush"
+              Dockerfile: "backend/Dockerfile"
+              buildContext: "backend"
+              tags: |
+                $(TAG)
+                latest
+
+      - job: BuildFrontend
+        displayName: "Build frontend image"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: Docker@2
+            displayName: "Build & push frontend → ACR"
+            inputs:
+              containerRegistry: "$(ACR_SERVICE_CONNECTION)"
+              repository: "plan-advisor-frontend"
+              command: "buildAndPush"
+              Dockerfile: "frontend/Dockerfile"
+              buildContext: "frontend"
+              # NEXT_PUBLIC_* vars are inlined at build time (not runtime)
+              arguments: >
+                --build-arg NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL)
+                --build-arg NEXT_PUBLIC_WS_URL=$(NEXT_PUBLIC_WS_URL)
+              tags: |
+                $(TAG)
+                latest
+
+  # ── Stage 2: Deploy to Azure Container Apps ────────────────────────────────
+  - stage: Deploy
+    displayName: "Deploy"
+    dependsOn: Build
+    # Only deploy on pushes to main (not PRs)
+    condition: and(succeeded(), eq(variables['Build.Reason'], 'IndividualCI'))
+    jobs:
+      - deployment: DeployBackend
+        displayName: "Deploy backend"
+        environment: "production"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  displayName: "Update backend Container App"
+                  inputs:
+                    azureSubscription: "$(AZURE_SERVICE_CONNECTION)"
+                    scriptType: "bash"
+                    scriptLocation: "inlineScript"
+                    inlineScript: |
+                      set -euo pipefail
+
+                      echo "Deploying $(BACKEND_IMAGE):$(TAG)"
+
+                      az containerapp update \
+                        --name "$(BACKEND_APP_NAME)" \
+                        --resource-group "$(RESOURCE_GROUP)" \
+                        --image "$(BACKEND_IMAGE):$(TAG)" \
+                        --set-env-vars \
+                          "DATABASE_URL=$(DATABASE_URL)" \
+                          "ANTHROPIC_API_KEY=$(ANTHROPIC_API_KEY)" \
+                          "OPENAI_API_KEY=$(OPENAI_API_KEY)" \
+                          "CLAUDE_MODEL=$(CLAUDE_MODEL)" \
+                          "SERPAPI_KEY=$(SERPAPI_KEY)" \
+                          "REDIS_URL=$(REDIS_URL)" \
+                          "SCRAPE_DO_TOKEN=$(SCRAPE_DO_TOKEN)" \
+                          "TRAVELPAYOUTS_TOKEN=$(TRAVELPAYOUTS_TOKEN)" \
+                          "ALLOWED_ORIGINS=https://$(FRONTEND_FQDN)"
+
+                      echo "Backend deployed ✓"
+
+                      BACKEND_FQDN=$(az containerapp show \
+                        --name "$(BACKEND_APP_NAME)" \
+                        --resource-group "$(RESOURCE_GROUP)" \
+                        --query "properties.configuration.ingress.fqdn" \
+                        -o tsv)
+                      echo "Backend URL: https://$BACKEND_FQDN"
+                      echo "##vso[task.setvariable variable=BACKEND_FQDN;isOutput=true]$BACKEND_FQDN"
+
+      - deployment: DeployFrontend
+        displayName: "Deploy frontend"
+        environment: "production"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  displayName: "Update frontend Container App"
+                  inputs:
+                    azureSubscription: "$(AZURE_SERVICE_CONNECTION)"
+                    scriptType: "bash"
+                    scriptLocation: "inlineScript"
+                    inlineScript: |
+                      set -euo pipefail
+
+                      echo "Deploying $(FRONTEND_IMAGE):$(TAG)"
+
+                      FRONTEND_FQDN=$(az containerapp show \
+                        --name "$(FRONTEND_APP_NAME)" \
+                        --resource-group "$(RESOURCE_GROUP)" \
+                        --query "properties.configuration.ingress.fqdn" \
+                        -o tsv)
+
+                      az containerapp update \
+                        --name "$(FRONTEND_APP_NAME)" \
+                        --resource-group "$(RESOURCE_GROUP)" \
+                        --image "$(FRONTEND_IMAGE):$(TAG)" \
+                        --set-env-vars \
+                          "NEXTAUTH_URL=https://$FRONTEND_FQDN" \
+                          "AUTH_TRUST_HOST=true" \
+                          "AUTH_SECRET=$(AUTH_SECRET)" \
+                          "AUTH_GOOGLE_ID=$(AUTH_GOOGLE_ID)" \
+                          "AUTH_GOOGLE_SECRET=$(AUTH_GOOGLE_SECRET)" \
+                          "AUTH_GITHUB_ID=$(AUTH_GITHUB_ID)" \
+                          "AUTH_GITHUB_SECRET=$(AUTH_GITHUB_SECRET)"
+
+                      echo "Frontend deployed ✓"
+                      echo "Frontend URL: https://$FRONTEND_FQDN"

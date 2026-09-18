@@ -1,0 +1,109 @@
+# ── Plan Advisor — Backend CI/CD ──────────────────────────────────────────────
+# Triggers only when backend code changes.
+# In Azure DevOps: Pipelines → New pipeline → GitHub → select repo
+#   → "Existing Azure Pipelines YAML file" → /backend/azure-pipeline.yml
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - backend/**
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - backend/**
+
+variables:
+  - group: plan-advisor-secrets        # Library variable group with all secrets
+
+  - name: AZURE_SERVICE_CONNECTION     # ARM service connection name in Azure DevOps
+    value: "plan-advisor-azure"
+  - name: ACR_SERVICE_CONNECTION       # Docker Registry service connection name
+    value: "plan-advisor-acr"
+  - name: ACR_NAME                     # Your Container Registry name (no hyphens)
+    value: "planadvisoracr"
+  - name: RESOURCE_GROUP
+    value: "plan-advisor-rg"
+  - name: BACKEND_APP_NAME
+    value: "plan-advisor-backend"
+  - name: FRONTEND_FQDN                # Frontend Container App hostname (no https://)
+    value: "plan-advisor-frontend.ashyocean-2012629c.eastus.azurecontainerapps.io"
+
+  - name: IMAGE
+    value: "$(ACR_NAME).azurecr.io/plan-advisor-backend"
+  - name: TAG
+    value: "$(Build.BuildId)"
+
+stages:
+  # ── Build ────────────────────────────────────────────────────────────────────
+  - stage: Build
+    displayName: "Build"
+    jobs:
+      - job: BuildImage
+        displayName: "Build & push backend image"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: Docker@2
+            displayName: "Build and push to ACR"
+            inputs:
+              containerRegistry: "$(ACR_SERVICE_CONNECTION)"
+              repository: "plan-advisor-backend"
+              command: "buildAndPush"
+              Dockerfile: "backend/Dockerfile"
+              buildContext: "backend"
+              tags: |
+                $(TAG)
+                latest
+
+  # ── Deploy (main branch only) ─────────────────────────────────────────────
+  - stage: Deploy
+    displayName: "Deploy"
+    dependsOn: Build
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: DeployBackend
+        displayName: "Deploy to Container App"
+        environment: "production"
+        pool:
+          vmImage: "ubuntu-latest"
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - task: AzureCLI@2
+                  displayName: "Update Container App image + env vars"
+                  inputs:
+                    azureSubscription: "$(AZURE_SERVICE_CONNECTION)"
+                    scriptType: "bash"
+                    scriptLocation: "inlineScript"
+                    inlineScript: |
+                      set -euo pipefail
+
+                      az containerapp update \
+                        --name "$(BACKEND_APP_NAME)" \
+                        --resource-group "$(RESOURCE_GROUP)" \
+                        --image "$(IMAGE):$(TAG)" \
+                        --set-env-vars \
+                          "ANTHROPIC_API_KEY=$(ANTHROPIC_API_KEY)" \
+                          "OPENAI_API_KEY=$(OPENAI_API_KEY)" \
+                          "CLAUDE_MODEL=$(CLAUDE_MODEL)" \
+                          "SERPAPI_KEY=$(SERPAPI_KEY)" \
+                          "REDIS_URL=$(REDIS_URL)" \
+                          "SCRAPE_DO_TOKEN=$(SCRAPE_DO_TOKEN)" \
+                          "TRAVELPAYOUTS_TOKEN=$(TRAVELPAYOUTS_TOKEN)" \
+                          "DATABASE_URL=$(DATABASE_URL)" \
+                          "ALLOWED_ORIGINS=https://$(FRONTEND_FQDN)"
+
+                      FQDN=$(az containerapp show \
+                        --name "$(BACKEND_APP_NAME)" \
+                        --resource-group "$(RESOURCE_GROUP)" \
+                        --query "properties.configuration.ingress.fqdn" -o tsv)
+
+                      echo "Deployed → https://$FQDN"
