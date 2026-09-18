@@ -88,18 +88,26 @@ stages:
           vmImage: "ubuntu-latest"
         steps:
           - task: Docker@2
-            displayName: "Build & push frontend → ACR"
+            displayName: "Login to ACR"
             inputs:
               containerRegistry: "$(ACR_SERVICE_CONNECTION)"
-              repository: "plan-advisor-frontend"
-              command: "buildAndPush"
-              Dockerfile: "frontend/Dockerfile"
-              buildContext: "frontend"
-              # NEXT_PUBLIC_* vars are inlined at build time (not runtime)
-              arguments: "--build-arg NEXT_PUBLIC_API_URL=$(NEXT_PUBLIC_API_URL) --build-arg NEXT_PUBLIC_WS_URL=$(NEXT_PUBLIC_WS_URL)"
-              tags: |
-                $(TAG)
-                latest
+              command: "login"
+          - task: Bash@3
+            displayName: "Build & push frontend → ACR"
+            inputs:
+              targetType: "inline"
+              script: |
+                set -euo pipefail
+                IMAGE="$(ACR_NAME).azurecr.io/plan-advisor-frontend"
+                docker build \
+                  --build-arg NEXT_PUBLIC_API_URL="$(NEXT_PUBLIC_API_URL)" \
+                  --build-arg NEXT_PUBLIC_WS_URL="$(NEXT_PUBLIC_WS_URL)" \
+                  -f frontend/Dockerfile \
+                  -t "$IMAGE:$(TAG)" \
+                  -t "$IMAGE:latest" \
+                  frontend
+                docker push "$IMAGE:$(TAG)"
+                docker push "$IMAGE:latest"
 
   # ── Stage 2: Deploy to Azure Container Apps ────────────────────────────────
   - stage: Deploy
