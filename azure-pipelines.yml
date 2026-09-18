@@ -50,9 +50,9 @@ variables:
   #     --query "properties.configuration.ingress.fqdn" -o tsv
   # and paste the result (prefixed with https:// / wss://) below.
   - name: NEXT_PUBLIC_API_URL
-    value: "https://plan-advisor-backend.ashyocean-2012629c.eastus.azurecontainerapps.io"
+    value: "https://api.planadvisors.in"
   - name: NEXT_PUBLIC_WS_URL
-    value: "wss://plan-advisor-backend.ashyocean-2012629c.eastus.azurecontainerapps.io/ws/chat"
+    value: "wss://api.planadvisors.in/ws/chat"
 
   # ── Derived (do not edit) ─────────────────────────────────────────────────
   - name: BACKEND_IMAGE
