@@ -47,10 +47,10 @@ variables:
   #   az containerapp show -n plan-advisor-backend -g plan-advisor-rg \
   #     --query "properties.configuration.ingress.fqdn" -o tsv
   # and paste the result (prefixed with https:// / wss://) below.
-  - name: NEXT_PUBLIC_API_URL            # TODO: backend Container App HTTPS URL
-    value: "https://plan-advisor-backend.YOUR_ENV.eastus.azurecontainerapps.io"
-  - name: NEXT_PUBLIC_WS_URL             # TODO: same host, wss:// scheme, /ws/chat path
-    value: "wss://plan-advisor-backend.YOUR_ENV.eastus.azurecontainerapps.io/ws/chat"
+  - name: NEXT_PUBLIC_API_URL
+    value: "https://plan-advisor-backend.ashyocean-2012629c.eastus.azurecontainerapps.io"
+  - name: NEXT_PUBLIC_WS_URL
+    value: "wss://plan-advisor-backend.ashyocean-2012629c.eastus.azurecontainerapps.io/ws/chat"
 
   # ── Derived (do not edit) ─────────────────────────────────────────────────
   - name: BACKEND_IMAGE
