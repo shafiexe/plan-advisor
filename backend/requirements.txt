@@ -1,0 +1,16 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+websockets>=12.0
+anthropic>=0.40.0
+openai>=1.50.0
+python-multipart>=0.0.9
+python-dotenv>=1.0.1
+httpx>=0.27.0
+redis[asyncio]>=5.0.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+# Database — SQLite for local dev, PostgreSQL for Azure production
+sqlalchemy>=2.0.0
+aiosqlite>=0.20.0      # SQLite async driver (local dev)
+asyncpg>=0.29.0        # PostgreSQL async driver (Azure / production)
+greenlet>=3.0.0        # required by SQLAlchemy async engine
