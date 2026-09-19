@@ -382,13 +382,27 @@ def _tool_label(name: str, tool_input: dict) -> str:
 
 # ── Streaming ─────────────────────────────────────────────────────────────────
 
+_MAX_HISTORY = int(os.getenv("MAX_HISTORY_MESSAGES", "30"))
+
+
+def _trim_history(messages: list) -> list:
+    """Keep the last _MAX_HISTORY messages, always starting with a user turn."""
+    if len(messages) <= _MAX_HISTORY:
+        return messages
+    trimmed = messages[-_MAX_HISTORY:]
+    # Anthropic requires the first message to have role "user"
+    while trimmed and trimmed[0].get("role") != "user":
+        trimmed = trimmed[1:]
+    return trimmed
+
+
 async def stream_response(messages: list, extra_system: str | None = None) -> AsyncGenerator[dict, None]:
     client = _get_client()
     model  = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5")
     system = SYSTEM_PROMPT.format(today=datetime.date.today().isoformat())
     if extra_system:
         system = system + "\n\n" + extra_system
-    current_messages = list(messages)
+    current_messages = _trim_history(list(messages))
 
     while True:
         async with client.messages.stream(

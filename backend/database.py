@@ -1,4 +1,5 @@
 import os
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.pool import NullPool, StaticPool
@@ -38,8 +39,16 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
         # Add columns that were introduced after the initial schema
         if is_sqlite:
+            # SQLite doesn't support IF NOT EXISTS on ALTER TABLE — catch the error instead
             for col_def in ("ALTER TABLE conversations ADD COLUMN pinned BOOLEAN DEFAULT 0",):
                 try:
-                    await conn.execute(__import__("sqlalchemy").text(col_def))
+                    await conn.execute(text(col_def))
                 except Exception:
-                    pass  # column already exists
+                    pass
+        else:
+            # PostgreSQL supports IF NOT EXISTS — safe to run on every startup
+            for col_def in ("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS pinned BOOLEAN DEFAULT FALSE",):
+                try:
+                    await conn.execute(text(col_def))
+                except Exception:
+                    pass

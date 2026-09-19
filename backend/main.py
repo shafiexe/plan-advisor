@@ -51,7 +51,7 @@ logging.getLogger("services.ota_scraper").setLevel(logging.DEBUG)
 
 import os
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, Query, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from routers import chat, transcribe, tts, passport, user_data, admin
@@ -108,44 +108,3 @@ async def health():
 
 
 
-@app.get("/debug/html")
-async def debug_html(
-    origin: str = Query("BLR"),
-    destination: str = Query("DXB"),
-    date: str = Query("2026-10-15"),
-    source: str = Query("mmt"),
-):
-    """Save raw scraped HTML to /tmp for selector inspection."""
-    import os as _os
-    from services.ota_scraper import _fetch, _to_mmddyyyy, _to_yyyymmdd, _to_ddmmyyyy, _MMT_CABIN, _CLEARTRIP_CABIN, _YATRA_CABIN
-
-    urls = {
-        "mmt":       f"https://www.makemytrip.com/flight/search?itinerary={origin.upper()}-{destination.upper()}-{_to_mmddyyyy(date)}&tripType=O&paxType=A-1_C-0_I-0&intl=Y&cabinClass=E",
-        "goibibo":   f"https://www.goibibo.com/flights/search/?source={origin.upper()}&destination={destination.upper()}&departureDate={_to_yyyymmdd(date)}&adults=1&children=0&infants=0&cabin=ECONOMY",
-        "cleartrip": f"https://www.cleartrip.com/flights/results/?from={origin.upper()}&to={destination.upper()}&depart_date={_to_ddmmyyyy(date, sep='-')}&adults=1&class=Economy",
-        "yatra":     f"https://flights.yatra.com/air-search-result?adult=1&child=0&infant=0&type=O&from={origin.upper()}&to={destination.upper()}&depart_date={_to_ddmmyyyy(date, sep='-')}&class=Y",
-    }
-    url = urls.get(source, urls["mmt"])
-    html = await _fetch(url)
-    if not html:
-        return {"error": "fetch failed"}
-    path = f"/tmp/ota_{source}.html"
-    with open(path, "w") as f:
-        f.write(html)
-    return {"saved_to": path, "html_length": len(html), "preview": html[:500]}
-
-
-@app.get("/debug/scrape")
-async def debug_scrape(
-    origin: str = Query("BLR"),
-    destination: str = Query("DXB"),
-    date: str = Query("2026-10-15"),
-    source: str = Query("mmt", description="mmt | goibibo | cleartrip | yatra"),
-):
-    """Test endpoint — scrapes one OTA and returns raw parse results + HTML length."""
-    from services.ota_scraper import _mmt, _goibibo, _cleartrip, _yatra
-    fn = {"mmt": _mmt, "goibibo": _goibibo, "cleartrip": _cleartrip, "yatra": _yatra}.get(source)
-    if not fn:
-        return {"error": f"Unknown source: {source}"}
-    results = await fn(origin.upper(), destination.upper(), date, 1, "ECONOMY", "USD", 5)
-    return {"source": source, "results_found": len(results), "results": results}
