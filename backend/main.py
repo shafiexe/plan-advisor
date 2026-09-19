@@ -94,6 +94,11 @@ app.include_router(admin.router,      tags=["admin"])
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception):
     log.error("Unhandled exception %s %s\n%s", request.method, request.url, traceback.format_exc())
+    try:
+        import sentry_sdk
+        sentry_sdk.capture_exception(exc)
+    except Exception:
+        pass
     return JSONResponse(status_code=500, content={"detail": str(exc)})
 
 
