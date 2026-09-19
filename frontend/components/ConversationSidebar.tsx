@@ -5,6 +5,7 @@ import { Message } from "./MessageBubble";
 import type { PassengerRecord } from "./PassengerFormModal";
 import type { AlertRecord } from "@/hooks/useServerSync";
 import ConversationSearchModal from "./ConversationSearchModal";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
 export type Conversation = {
   id: string;
@@ -272,6 +273,9 @@ export default function ConversationSidebar({
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const { supported: pushSupported, subscribed: pushSubscribed, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } =
+    usePushNotifications(sessionUser?.email);
 
   useEffect(() => {
     if (!showUserMenu) return;
@@ -566,6 +570,32 @@ export default function ConversationSidebar({
                       </div>
                     )}
                   </div>
+
+                  {/* Push notifications toggle */}
+                  {pushSupported && (
+                    <div className="px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm">{pushSubscribed ? "🔔" : "🔕"}</span>
+                        <div>
+                          <p className="text-xs font-semibold text-slate-300">Push Alerts</p>
+                          <p className="text-[10px] text-slate-600">
+                            {pushSubscribed ? "Price alerts via notification" : "Get notified when prices drop"}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => pushSubscribed ? pushUnsubscribe() : pushSubscribe()}
+                        className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${
+                          pushSubscribed ? "bg-indigo-600" : "bg-slate-700"
+                        }`}
+                        title={pushSubscribed ? "Disable push notifications" : "Enable push notifications"}
+                      >
+                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                          pushSubscribed ? "translate-x-4" : "translate-x-0.5"
+                        }`} />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Sign out */}
                   {onSignOut && (

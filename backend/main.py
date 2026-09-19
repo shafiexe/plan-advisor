@@ -54,7 +54,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from routers import chat, transcribe, tts, passport, user_data, admin, alerts
+from routers import chat, transcribe, tts, passport, user_data, admin, alerts, push
 from database import init_db
 
 # Allow-list: local dev + any Azure App Service / custom domain
@@ -117,6 +117,7 @@ app.include_router(passport.router,   tags=["passport"])
 app.include_router(user_data.router,  tags=["user"])
 app.include_router(admin.router,      tags=["admin"])
 app.include_router(alerts.router,     tags=["alerts"])
+app.include_router(push.router,       tags=["push"])
 
 
 @app.exception_handler(Exception)

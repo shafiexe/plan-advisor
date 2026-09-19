@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from models import PriceAlert
 from services.email import send_price_alert_email
+from services.push import send_price_alert_push
 from services.serpapi_flights import search_flights
 
 log = logging.getLogger(__name__)
@@ -197,6 +198,18 @@ async def _run_alert_check(db: AsyncSession) -> dict:
                         price=min_price,
                         threshold=alert.threshold_inr,
                     )
+                    # Also fire a browser push notification (non-fatal if it fails)
+                    try:
+                        await send_price_alert_push(
+                            db=db,
+                            user_email=alert.user_email,
+                            origin=alert.origin,
+                            destination=alert.destination,
+                            departure_date=alert.departure_date,
+                            price=min_price,
+                        )
+                    except Exception as _push_exc:
+                        log.warning("Push notification failed (non-fatal): %s", _push_exc)
                     alert.triggered = True
                     triggered += 1
 

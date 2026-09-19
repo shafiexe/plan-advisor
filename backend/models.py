@@ -54,6 +54,18 @@ class Passenger(Base):
     updated_at      = Column(DateTime, default=_now, onupdate=_now)
 
 
+class PushSubscription(Base):
+    """Browser push subscription — one row per device/browser per user."""
+    __tablename__ = "push_subscriptions"
+
+    id         = Column(Integer, primary_key=True, autoincrement=True)
+    user_email = Column(String, nullable=False, index=True)
+    endpoint   = Column(String, nullable=False, unique=True)
+    p256dh     = Column(String, nullable=False)
+    auth       = Column(String, nullable=False)
+    created_at = Column(DateTime, default=_now)
+
+
 class PriceAlert(Base):
     """Price alert — notify a user when a flight route drops below their threshold."""
     __tablename__ = "price_alerts"

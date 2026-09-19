@@ -22,3 +22,5 @@ sentry-sdk[fastapi]>=2.0.0
 # Price alerts — scheduler + email
 apscheduler>=3.10.0
 aiosmtplib>=3.0.0
+# Web Push notifications
+pywebpush>=2.0.0
