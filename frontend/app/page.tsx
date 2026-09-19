@@ -13,6 +13,7 @@ import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useSpeech } from "@/hooks/useSpeech";
 import { useServerSync } from "@/hooks/useServerSync";
 import { useTheme } from "@/hooks/useTheme";
+import { useUserLocation } from "@/hooks/useUserLocation";
 import type { FlightSearchResult, PriceCalendarResult } from "@/types/flights";
 import type { HotelSearchResult, RestaurantSearchResult } from "@/types/places";
 import type { BusSearchResult } from "@/types/buses";
@@ -48,6 +49,7 @@ export default function Home() {
 
   const sync = useServerSync(userEmail);
   const { theme, toggle: toggleTheme } = useTheme();
+  const userLocation = useUserLocation();
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeId, setActiveId]           = useState<string | null>(null);
@@ -344,6 +346,7 @@ export default function Home() {
     send(txt, history, {
       ...(passengerContext ? { passenger_context: passengerContext } : {}),
       ...(userEmail ? { user_email: userEmail } : {}),
+      ...(userLocation ? { user_location: userLocation.label } : {}),
     });
   }, [input, connected, streaming, typing, activeConversation, send, sync]);
 

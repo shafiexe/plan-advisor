@@ -55,6 +55,7 @@ async def websocket_chat(websocket: WebSocket):
             history: list = data.get("history", [])
             passenger_context: str | None = data.get("passenger_context") or None
             user_email: str | None = data.get("user_email") or None
+            user_location: str | None = data.get("user_location") or None
 
             if not user_text:
                 continue
@@ -73,13 +74,20 @@ async def websocket_chat(websocket: WebSocket):
 
             messages = history + [{"role": "user", "content": user_text}]
 
-            extra_system = None
+            extra_parts = []
+            if user_location:
+                extra_parts.append(
+                    f"User's current location: {user_location}. "
+                    "Use this as the default departure city/airport for flights and the default location for hotels "
+                    "whenever the user doesn't specify an origin. Do NOT ask them where they are — you already know."
+                )
             if passenger_context:
-                extra_system = (
+                extra_parts.append(
                     "The user has the following saved passengers. "
                     "When they refer to a passenger by name, use these details to fill in travel forms or answer questions:\n"
                     + passenger_context
                 )
+            extra_system = "\n\n".join(extra_parts) or None
 
             await websocket.send_json({"type": "typing"})
 
