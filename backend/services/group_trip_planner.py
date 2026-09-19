@@ -1,10 +1,206 @@
 import anthropic
+import httpx
 import json
 import os
 import logging
+from datetime import date
+from services.traffic_forecast import get_traffic_forecast
 
 log = logging.getLogger(__name__)
 
+# ── Attraction duration ground truth ─────────────────────────────────────────
+
+# Base visit durations (minutes) for solo/small group — used as ground truth in prompt
+ATTRACTION_DURATIONS: dict[str, int] = {
+    # Ooty / Nilgiris
+    "botanical garden": 120, "government botanical garden": 120,
+    "doddabetta peak": 60, "ooty lake": 75, "pine forest": 45,
+    "rose garden": 60, "tea factory": 45, "avalanche lake": 90,
+    "emerald lake": 60, "toy train": 75, "coonoor": 90,
+    "sim's park": 75, "lamb's rock": 45, "dolphin's nose": 60,
+
+    # Kodaikanal
+    "kodaikanal lake": 90, "coaker's walk": 45, "pillar rocks": 30,
+    "silver cascade": 30, "bryant park": 60, "bear shola falls": 45,
+
+    # Munnar / Kerala
+    "eravikulam": 90, "mattupetty dam": 45, "echo point": 30,
+    "top station": 60, "chinnar wildlife": 120, "tea museum": 60,
+    "attukal waterfalls": 45,
+
+    # Goa
+    "calangute beach": 120, "baga beach": 120, "anjuna beach": 90,
+    "chapora fort": 60, "basilica of bom jesus": 60, "se cathedral": 45,
+    "dudhsagar falls": 120, "old goa": 90,
+
+    # Kerala
+    "backwaters alleppey": 180, "periyar": 180, "varkala beach": 90,
+    "fort kochi": 120, "chinese fishing nets": 30, "mattancherry palace": 60,
+
+    # Karnataka
+    "mysore palace": 90, "chamundi hills": 60, "brindavan gardens": 90,
+    "coorg": 240, "abbey falls": 45, "namdroling monastery": 60,
+    "talakaveri": 60,
+
+    # Tamil Nadu
+    "meenakshi temple": 90, "rameshwaram": 120, "kanyakumari": 120,
+    "mahabalipuram": 150, "shore temple": 60, "five rathas": 45,
+    "kapaleeshwarar temple": 60, "marina beach": 90,
+
+    # Rajasthan
+    "amber fort": 120, "hawa mahal": 45, "city palace jaipur": 90,
+    "lake pichola": 60, "city palace udaipur": 90, "mehrangarh fort": 90,
+    "jaisalmer fort": 90, "pushkar lake": 45,
+
+    # Delhi / Agra / UP
+    "taj mahal": 120, "agra fort": 90, "red fort delhi": 75,
+    "qutub minar": 60, "humayun's tomb": 60, "lotus temple": 45,
+    "india gate": 30, "akshardham": 150,
+
+    # Mumbai
+    "gateway of india": 30, "elephanta caves": 120, "marine drive": 45,
+    "chhatrapati shivaji terminus": 30, "juhu beach": 60,
+
+    # Himachal / Hill Stations
+    "rohtang pass": 180, "solang valley": 120, "hadimba temple": 45,
+    "shimla mall road": 60, "jakhu temple": 45, "kufri": 90,
+    "dalhousie": 180, "khajjiar": 60,
+
+    # Ladakh / J&K
+    "pangong lake": 120, "nubra valley": 180, "leh palace": 60,
+    "shanti stupa": 45, "hemis monastery": 60,
+
+    # Default fallbacks by category
+    "beach": 90, "fort": 75, "temple": 60, "palace": 90,
+    "museum": 75, "park": 60, "lake": 60, "falls": 45, "peak": 60,
+}
+
+
+def get_attraction_duration(name: str, group_size: int) -> int:
+    """Return estimated visit duration in minutes, adjusted for group size."""
+    name_lower = name.lower()
+    base = 60  # default
+    for key, mins in ATTRACTION_DURATIONS.items():
+        if key in name_lower:
+            base = mins
+            break
+    # Group size multiplier: base × (1 + group_size / 150)
+    # 50 pax → ×1.33, 20 pax → ×1.13, 10 pax → ×1.07
+    multiplier = 1 + (group_size / 150)
+    return int(base * multiplier)
+
+
+def boarding_buffer(group_size: int) -> int:
+    """Extra minutes for group boarding/alighting at each stop."""
+    if group_size <= 4:   return 0
+    if group_size <= 15:  return 10
+    if group_size <= 30:  return 15
+    if group_size <= 50:  return 20
+    return 30
+
+
+def prayer_duration(group_size: int) -> int:
+    """Realistic Namaz stop duration for Muslim group."""
+    if group_size <= 10:  return 15
+    if group_size <= 30:  return 20
+    return 30  # 50 pax: wudu queue + salah
+
+
+def meal_duration(group_size: int, meal_type: str = "lunch") -> int:
+    """Time to serve + eat for group, in minutes."""
+    base = 30 if meal_type == "snack" else 45
+    if group_size > 20: base += 15
+    if group_size > 40: base += 15
+    return base
+
+
+# ── SerpAPI attraction lookup ─────────────────────────────────────────────────
+
+async def _fetch_attraction_info(attraction: str, location: str) -> dict:
+    """Fetch real attraction data from SerpAPI google_local — hours, rating, address."""
+    api_key = os.getenv("SERPAPI_KEY", "")
+    if not api_key:
+        return {}
+    try:
+        params = {
+            "engine": "google_local",
+            "q": f"{attraction} {location}",
+            "hl": "en",
+            "api_key": api_key,
+        }
+        async with httpx.AsyncClient() as c:
+            resp = await c.get("https://serpapi.com/search.json", params=params, timeout=10.0)
+            resp.raise_for_status()
+            results = resp.json().get("local_results", [])
+            if results:
+                r = results[0]
+                return {
+                    "rating": r.get("rating"),
+                    "reviews": r.get("reviews"),
+                    "hours": r.get("hours", ""),
+                    "address": r.get("address", ""),
+                    "type": r.get("type", ""),
+                }
+    except Exception:
+        pass
+    return {}
+
+
+# ── Transport cost database ───────────────────────────────────────────────────
+
+# Realistic transport costs (INR) — hardcoded from market rates
+TRANSPORT_COSTS = {
+    "bus": {
+        # Per day rates for AC Volvo/Tempo Traveller by capacity
+        "per_day_ac_volvo_50pax": 12000,
+        "per_day_ac_volvo_35pax": 9000,
+        "per_day_tempo_traveller_12pax": 4000,
+        "per_day_innova_7pax": 2500,
+        # Per km rates (approx) for self-drive / taxi
+        "per_km_ac": 18,
+        "per_km_non_ac": 12,
+    },
+    "fuel": {
+        # Own car petrol estimate
+        "petrol_per_litre": 105,
+        "avg_kmpl_car": 14,
+        "avg_kmpl_suv": 11,
+    }
+}
+
+
+def estimate_bus_cost(group_size: int, distance_km: int, days: int = 1) -> dict:
+    """Estimate bus rental cost for a group trip."""
+    if group_size > 35:
+        per_day = TRANSPORT_COSTS["bus"]["per_day_ac_volvo_50pax"]
+        vehicles = (group_size + 49) // 50
+        vehicle_type = "AC Volvo (50-seater)"
+    elif group_size > 12:
+        per_day = TRANSPORT_COSTS["bus"]["per_day_ac_volvo_35pax"]
+        vehicles = (group_size + 34) // 35
+        vehicle_type = "AC Volvo (35-seater)"
+    elif group_size > 6:
+        per_day = TRANSPORT_COSTS["bus"]["per_day_tempo_traveller_12pax"]
+        vehicles = (group_size + 11) // 12
+        vehicle_type = "Tempo Traveller (12-seater)"
+    else:
+        per_day = TRANSPORT_COSTS["bus"]["per_day_innova_7pax"]
+        vehicles = 1
+        vehicle_type = "Innova/Ertiga"
+
+    total = per_day * vehicles * days
+    per_person = total // group_size if group_size else total
+    return {
+        "vehicle_type": vehicle_type,
+        "vehicles_needed": vehicles,
+        "cost_per_day_per_vehicle": per_day,
+        "total_transport_cost": total,
+        "transport_per_person": per_person,
+        "note": f"{vehicles} × {vehicle_type} × {days} day(s)"
+    }
+
+
+# ── Main planner function ─────────────────────────────────────────────────────
 
 async def plan_group_trip(
     origin: str,
@@ -46,6 +242,42 @@ async def plan_group_trip(
     )
     needs_str = ", ".join(special_needs) if special_needs else "none mentioned"
 
+    # ── Pre-compute overhead values ───────────────────────────────────────────
+    board_buf = boarding_buffer(group_size)
+    prayer_dur = prayer_duration(group_size) if religion.lower() == "muslim" else 0
+    lunch_dur = meal_duration(group_size, "lunch")
+    snack_dur = meal_duration(group_size, "snack")
+
+    # Compute trip days
+    try:
+        if not is_day_trip and return_date:
+            trip_days = max(1, (date.fromisoformat(return_date) - date.fromisoformat(travel_date)).days)
+        else:
+            trip_days = 1
+    except Exception:
+        trip_days = 1
+
+    transport = estimate_bus_cost(group_size, distance_km=400, days=trip_days)
+
+    # Traffic forecast for realistic travel time
+    traffic = get_traffic_forecast(origin, destination, travel_date, departure_time)
+
+    # Build attraction times block: match destination keywords against known attractions
+    dest_lower = destination.lower()
+    dest_words = set(w for w in dest_lower.split() if len(w) > 3)
+    relevant_attractions: dict[str, int] = {}
+    for key in ATTRACTION_DURATIONS:
+        # Include if any dest word appears in key, or key appears in dest
+        if any(w in key for w in dest_words) or any(w in dest_lower for w in key.split()):
+            relevant_attractions[key] = get_attraction_duration(key, group_size)
+    # Always include generic fallback categories
+    for cat in ["beach", "fort", "temple", "palace", "museum", "park", "lake", "falls", "peak"]:
+        relevant_attractions[cat] = get_attraction_duration(cat, group_size)
+
+    attraction_lines = "\n".join(
+        f"  - {k}: {v} min" for k, v in sorted(relevant_attractions.items())
+    )
+
     prompt = f"""You are an expert travel planner. Plan a {duration} for {group_desc} from {origin} to {destination} on {travel_date}.
 
 Group type: {group_type}
@@ -59,6 +291,48 @@ Pre-booked activities:
 {activities_str}
 Special needs: {needs_str}
 Currency: {currency}, Nationality: {nationality}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+GROUND TRUTH — use these EXACTLY, do not override:
+
+GROUP SIZE OVERHEAD (for {group_size} people):
+- Boarding/alighting buffer per stop: {board_buf} min (add to every travel/sightseeing stop)
+- Prayer stop duration: {prayer_dur} min (Namaz + wudu queue for this group size)
+- Lunch serving duration: {lunch_dur} min
+- Snack stop duration: {snack_dur} min
+
+ATTRACTION VISIT TIMES (already adjusted for {group_size} people):
+{attraction_lines}
+  - Any unlisted attraction: use 75 min as default
+
+TRANSPORT COSTS (real market rates):
+- Vehicle: {transport['vehicle_type']} × {transport['vehicles_needed']}
+- Total transport cost: ₹{transport['total_transport_cost']:,}
+- Transport per person: ₹{transport['transport_per_person']:,}
+- Note: {transport['note']}
+
+TRAVEL TIME (traffic-adjusted for {travel_date}):
+- Base travel time {origin}→{destination}: {traffic['base_minutes']} min
+- Traffic level: {traffic['traffic_level'].upper()} ({traffic['reason']})
+- Estimated travel time with traffic: {traffic['estimated_hours_str']}
+- Traffic advice: {traffic['advice']}
+- Use {traffic['estimated_minutes']} min as the outbound travel time. Do NOT use any other estimate.
+- Also add {traffic['estimated_minutes']} min for return journey (traffic is usually lighter returning).
+
+TIMELINE RULES:
+1. Start at {departure_time}. Every stop must have a realistic start time based on cumulative durations.
+2. Add {board_buf} min boarding buffer after every travel segment.
+3. Never overlap prayer times with sightseeing — Dhuhr and Asr must have dedicated stops.
+4. Food serving takes {lunch_dur} min for this group — do not assign less.
+5. Factor in travel time between spots (use realistic road speeds: 30 km/h in hills, 60 km/h on highways).
+6. The plan MUST fit between {departure_time} and {return_time or '22:00'}. If it doesn't fit, remove the last activity.
+
+COST RULES:
+- Transport per person: ₹{transport['transport_per_person']:,} (use exactly this)
+- Entry fees: use local rates (Botanical Garden Ooty ₹30/adult, ₹15/child; Doddabetta ₹15; Ooty Lake boating ₹40/person, etc.)
+- Catering for {group_size} people: budget ₹120–180/person/meal for south Indian food
+- Miscellaneous (tips, parking, guides): ₹150–200/person
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Return ONLY valid JSON (no markdown fences) matching this EXACT schema:
 {{
@@ -193,7 +467,7 @@ RULES:
 - halal_note: ONLY include if religion is 'muslim'
 - petrol_estimate: ONLY include if transport_mode is 'own_car'. Estimate distance x Rs 8.5/km (average car mileage).
 - plastic_restricted: true for Ooty, hill stations in Tamil Nadu and Kerala with known restrictions
-- cost_breakdown: calculate totals (total_per_person = sum of all per-person costs, total_group = total_per_person x group_size)
+- cost_breakdown: use transport_per_person = {transport['transport_per_person']} exactly; calculate totals (total_per_person = sum of all per-person costs, total_group = total_per_person x group_size)
 - alerts: always include plastic restriction alert for Ooty; include motion sickness alert for bus + hills
 - packing_list: tailor to actual context — omit sections not relevant (e.g. omit catering_team if food_plan is 'restaurant')
 - dinner_hotel_suggestion: suggest on the return route, halal-certified if religion is muslim
@@ -211,7 +485,23 @@ RULES:
             text = text.split("```")[1]
             if text.startswith("json"):
                 text = text[4:]
-        return json.loads(text.strip())
+        result = json.loads(text.strip())
+
+        # Attach traffic forecast to result
+        result["traffic_forecast"] = traffic
+
+        # ── Enrich top attraction with real SerpAPI data ──────────────────────
+        if result.get("places") and os.getenv("SERPAPI_KEY"):
+            top_place = result["places"][0].get("name", "")
+            if top_place:
+                real_data = await _fetch_attraction_info(top_place, destination)
+                if real_data.get("hours"):
+                    result["places"][0]["opening_hours"] = real_data["hours"]
+                if real_data.get("rating"):
+                    result["places"][0]["real_rating"] = real_data["rating"]
+
+        return result
+
     except Exception as e:
         log.error("Group trip planner error: %s", e)
         return {

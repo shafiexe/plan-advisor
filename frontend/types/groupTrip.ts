@@ -25,6 +25,8 @@ export type TripPlace = {
   best_time: string;
   notes: string;
   plastic_restricted: boolean;
+  opening_hours?: string;
+  real_rating?: number;
 };
 
 export type ToiletStop = {
@@ -101,6 +103,17 @@ export type DinnerHotel = {
   notes: string;
 };
 
+export type TrafficForecast = {
+  estimated_hours_str: string;
+  traffic_level: "light" | "normal" | "heavy" | "very_heavy";
+  reason: string;
+  advice: string;
+  is_holiday: boolean;
+  is_weekend: boolean;
+  is_peak_season: boolean;
+  multiplier: number;
+};
+
 export type GroupTripPlan = {
   origin: string;
   destination: string;
@@ -118,6 +131,7 @@ export type GroupTripPlan = {
   alerts: TripAlert[];
   emergency_info: EmergencyInfo;
   dinner_hotel_suggestion?: DinnerHotel;
+  traffic_forecast?: TrafficForecast;
   summary: string;
   group_tips: string[];
   error?: string;

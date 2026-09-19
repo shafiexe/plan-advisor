@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { GroupTripPlan, TimelineItem, TripPlace, PackingList } from "@/types/groupTrip";
+import type { GroupTripPlan, TimelineItem, TripPlace, PackingList, TrafficForecast } from "@/types/groupTrip";
 
 type Props = { data: GroupTripPlan };
 
@@ -46,12 +46,22 @@ function PlaceActivityCard({ place, adults, children }: { place: TripPlace; adul
       <p className="text-xs text-slate-400 leading-relaxed">{place.notes}</p>
 
       <div className="flex flex-wrap gap-2 text-xs">
-        <span className="px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
+        <span className="px-2 py-0.5 rounded-full bg-indigo-900/40 border border-indigo-700/30 text-indigo-300 font-medium">
           ⏱ {place.duration_recommended}
         </span>
         <span className="px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
           🌅 Best: {place.best_time}
         </span>
+        {place.opening_hours && (
+          <span className="px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
+            🕐 {place.opening_hours}
+          </span>
+        )}
+        {place.real_rating != null && (
+          <span className="px-2 py-0.5 rounded-full bg-amber-950/40 border border-amber-700/30 text-amber-300">
+            ⭐ {place.real_rating}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-3 text-xs border-t border-slate-700/40 pt-2 mt-1">
@@ -70,6 +80,35 @@ function PlaceActivityCard({ place, adults, children }: { place: TripPlace; adul
           </span>
         )}
       </div>
+    </div>
+  );
+}
+
+const TRAFFIC_CONFIG: Record<TrafficForecast["traffic_level"], {
+  pill: string;
+  dot: string;
+  label: string;
+  advice_color: string;
+}> = {
+  light:      { pill: "bg-emerald-950/60 border-emerald-700/40 text-emerald-300", dot: "🟢", label: "Light traffic",                  advice_color: "text-emerald-400" },
+  normal:     { pill: "bg-blue-950/60 border-blue-700/40 text-blue-300",          dot: "🔵", label: "Normal traffic",                 advice_color: "text-blue-400" },
+  heavy:      { pill: "bg-amber-950/60 border-amber-700/40 text-amber-300",       dot: "🟡", label: "Heavy traffic — depart early",   advice_color: "text-amber-400" },
+  very_heavy: { pill: "bg-red-950/60 border-red-700/40 text-red-300",             dot: "🔴", label: "Very heavy traffic — depart by 5AM", advice_color: "text-red-400" },
+};
+
+function TrafficBanner({ tf, origin, destination }: { tf: TrafficForecast; origin: string; destination: string }) {
+  const cfg = TRAFFIC_CONFIG[tf.traffic_level];
+  return (
+    <div className="px-4 py-2.5 border-b border-slate-700/40 bg-slate-900/30 flex flex-col gap-1">
+      <div className="flex items-center gap-2 flex-wrap">
+        <span className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-semibold border ${cfg.pill}`}>
+          {cfg.dot} {cfg.label}
+        </span>
+        <span className="text-xs text-slate-400">
+          🚌 {origin} → {destination}: ~{tf.estimated_hours_str} (with traffic)
+        </span>
+      </div>
+      <p className={`text-xs ${cfg.advice_color}`}>{tf.advice}</p>
     </div>
   );
 }
@@ -181,6 +220,11 @@ export default function GroupTripCard({ data }: Props) {
         </div>
       )}
 
+      {/* Traffic forecast banner */}
+      {data.traffic_forecast && (
+        <TrafficBanner tf={data.traffic_forecast} origin={data.origin} destination={data.destination} />
+      )}
+
       {/* Tab bar */}
       <div className="flex overflow-x-auto gap-0.5 px-3 pt-3 pb-0 border-b border-slate-700/40 scrollbar-none">
         {tabs.map((tab) => (
@@ -229,7 +273,7 @@ export default function GroupTripCard({ data }: Props) {
                     <div className="text-xs text-slate-500 italic mt-0.5">{item.notes}</div>
                   )}
                   {item.duration_min > 0 && (
-                    <div className="text-[10px] text-slate-600 mt-0.5">⏱ {item.duration_min} min</div>
+                    <div className="text-xs text-slate-500 mt-0.5">⏱ {item.duration_min} min</div>
                   )}
                   {item.alert && (
                     <div className="mt-1.5 flex items-start gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-950/50 border border-amber-700/40 text-amber-200 text-xs">
@@ -295,12 +339,22 @@ export default function GroupTripCard({ data }: Props) {
                   {(place.entry_fee_adult === 0 && place.entry_fee_child === 0) && (
                     <span className="px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400">Free</span>
                   )}
-                  <span className="px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
+                  <span className="px-2 py-0.5 rounded-full bg-indigo-900/40 border border-indigo-700/30 text-indigo-300 font-medium">
                     ⏱ {place.duration_recommended}
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
                     🌅 {place.best_time}
                   </span>
+                  {place.opening_hours && (
+                    <span className="px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
+                      🕐 {place.opening_hours}
+                    </span>
+                  )}
+                  {place.real_rating != null && (
+                    <span className="px-2 py-0.5 rounded-full bg-amber-950/40 border border-amber-700/30 text-amber-300">
+                      ⭐ {place.real_rating}
+                    </span>
+                  )}
                 </div>
                 {place.notes && (
                   <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">{place.notes}</p>
@@ -336,6 +390,11 @@ export default function GroupTripCard({ data }: Props) {
             ))}
             {data.places.length === 0 && (
               <p className="text-slate-500 text-xs text-center py-6">No activities listed</p>
+            )}
+            {data.places.length > 0 && (
+              <p className="text-[11px] text-slate-500 italic px-1">
+                ⏱ Time includes boarding buffer for {data.group_size} people
+              </p>
             )}
             {/* Activities breakdown from cost_breakdown */}
             {data.cost_breakdown.activities_breakdown && data.cost_breakdown.activities_breakdown.length > 0 && (
