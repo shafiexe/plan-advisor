@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, KeyboardEvent, ChangeEvent, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const MAX_CHARS = 2000;
 
@@ -43,6 +44,9 @@ export default function InputBar({
   disabled,
   onPassportUpload,
 }: Props) {
+  const { t } = useLanguage();
+  const chatPlaceholder = t("chat.placeholder") || "Ask about vacations, flights, hotels, food…";
+
   const textareaRef  = useRef<HTMLTextAreaElement>(null);
   const fileRef      = useRef<HTMLInputElement>(null);
   const menuRef      = useRef<HTMLDivElement>(null);
@@ -183,7 +187,7 @@ export default function InputBar({
                 }}
                 onKeyDown={handleKey}
                 onInput={handleInput}
-                placeholder="Ask about vacations, flights, hotels, food…"
+                placeholder={chatPlaceholder}
                 rows={1}
                 disabled={disabled}
                 className="w-full resize-none bg-transparent text-slate-100

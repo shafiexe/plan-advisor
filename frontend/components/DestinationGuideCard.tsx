@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { DestinationGuide } from "@/types/destination";
+import { useDestinationTime } from "@/hooks/useDestinationTime";
 
 type Props = { data: DestinationGuide };
 
@@ -16,6 +17,7 @@ const SAFETY_STYLES: Record<string, string> = {
 
 export default function DestinationGuideCard({ data }: Props) {
   const [tab, setTab] = useState<Tab>("explore");
+  const { time, offset } = useDestinationTime(data.destination);
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "explore",   label: "Explore" },
@@ -38,6 +40,13 @@ export default function DestinationGuideCard({ data }: Props) {
             <h2 className="text-lg font-bold text-white leading-tight">{data.destination}</h2>
             {data.tagline && (
               <p className="text-sm text-indigo-300/80 mt-0.5 italic">{data.tagline}</p>
+            )}
+            {time && (
+              <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
+                <span className="text-slate-500">🕐</span>
+                <span className="font-mono text-slate-300">{time}</span>
+                <span className="text-slate-500">({offset})</span>
+              </div>
             )}
           </div>
           <span className="text-2xl shrink-0">🗺️</span>

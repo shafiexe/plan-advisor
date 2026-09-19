@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import MarkdownBody from "./MarkdownBody";
+import SaveTripButton from "./SaveTripButton";
 import FlightResultsCard from "./FlightResultsCard";
 import MultiCityFlightCard from "./MultiCityFlightCard";
 import PriceCalendarCard from "./PriceCalendarCard";
@@ -16,6 +18,10 @@ import VisaCard from "./VisaCard";
 import CurrencyCard from "./CurrencyCard";
 import DestinationGuideCard from "./DestinationGuideCard";
 import TripBudgetCard from "./TripBudgetCard";
+import ItineraryCard from "./ItineraryCard";
+import PricePredictionCard from "./PricePredictionCard";
+import PackingListCard from "./PackingListCard";
+import MapCard, { extractMapPins } from "./MapCard";
 import type { FlightSearchResult, PriceCalendarResult, RoundTripResult } from "@/types/flights";
 import type { HotelSearchResult, RestaurantSearchResult } from "@/types/places";
 import type { BusSearchResult } from "@/types/buses";
@@ -25,6 +31,17 @@ import type { VisaResult } from "@/types/visa";
 import type { DestinationGuide } from "@/types/destination";
 import type { CurrencyResult } from "@/types/currency";
 import type { TripBudget } from "@/types/budget";
+import type { Itinerary } from "@/types/itinerary";
+import type { PricePrediction } from "@/types/prediction";
+import type { PackingList } from "@/types/packingList";
+import type { FlightStatus } from "@/types/flightStatus";
+import FlightStatusCard from "./FlightStatusCard";
+import AirportTransitCard from "./AirportTransitCard";
+import PhrasebookCard from "./PhrasebookCard";
+import TravelInsuranceCard from "./TravelInsuranceCard";
+import type { AirportTransit } from "@/types/transit";
+import type { Phrasebook } from "@/types/phrasebook";
+import type { TravelInsurance } from "@/types/insurance";
 
 export type Message = {
   id: string;
@@ -44,6 +61,13 @@ export type Message = {
   guideData?: DestinationGuide;
   currencyData?: CurrencyResult;
   budgetData?: TripBudget;
+  itineraryData?: Itinerary;
+  predictionData?: PricePrediction;
+  packingData?: PackingList;
+  flightStatusData?: FlightStatus;
+  transitData?: AirportTransit;
+  phrasebookData?: Phrasebook;
+  insuranceData?: TravelInsurance;
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -55,18 +79,21 @@ type Props = {
   speaking?: boolean;
   onAction?: (text: string) => void;
   onSetAlert?: (data: AlertData) => void;
+  onSaveTrip?: (tripData: Record<string, unknown>, name: string, destination: string, dateRange: string) => Promise<void>;
 };
 
 function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert }: Props) {
-  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData } = message;
+export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip }: Props) {
+  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData, itineraryData, predictionData, packingData, flightStatusData, transitData, phrasebookData, insuranceData } = message;
   const isUser = role === "user";
   const isTransportComparison = !isUser && ((!!flightData && (!!busData || !!trainData)) || (!!busData && !!trainData));
-  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData);
+  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData || !!itineraryData || !!predictionData || !!packingData || !!flightStatusData || !!transitData || !!phrasebookData || !!insuranceData);
   const [copied, setCopied] = useState(false);
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(content);
@@ -111,6 +138,13 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
           <HotelResultsCard data={hotelData} streaming={streaming} />
         )}
 
+        {!isUser && (hotelData || restaurantData) && (() => {
+          const pins = extractMapPins(message);
+          if (!pins.length) return null;
+          const city = hotelData?.location ?? restaurantData?.location ?? "";
+          return <MapCard pins={pins} title={city ? `Map: ${city}` : "Map"} />;
+        })()}
+
         {!isUser && restaurantData && (
           <RestaurantCard data={restaurantData} streaming={streaming} />
         )}
@@ -145,6 +179,34 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
 
         {!isUser && budgetData && (
           <TripBudgetCard data={budgetData} />
+        )}
+
+        {!isUser && itineraryData && (
+          <ItineraryCard data={itineraryData} />
+        )}
+
+        {!isUser && predictionData && (
+          <PricePredictionCard data={predictionData} />
+        )}
+
+        {!isUser && packingData && (
+          <PackingListCard data={packingData} />
+        )}
+
+        {!isUser && flightStatusData && (
+          <FlightStatusCard data={flightStatusData} />
+        )}
+
+        {!isUser && transitData && (
+          <AirportTransitCard data={transitData} />
+        )}
+
+        {!isUser && phrasebookData && (
+          <PhrasebookCard data={phrasebookData} />
+        )}
+
+        {!isUser && insuranceData && (
+          <TravelInsuranceCard data={insuranceData} />
         )}
 
         {/* When a card is shown, render analysis text below it using MarkdownBody */}
@@ -215,6 +277,39 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
               {copied ? "✓" : "⧉"}
             </button>
           </div>
+        )}
+
+        {/* Save Trip button — only for assistant card messages with flight/hotel data, when logged in */}
+        {!isUser && hasCard && !streaming && (flightData || hotelData || roundTripData) && isLoggedIn && onSaveTrip && (
+          <SaveTripButton
+            defaultName={
+              flightData?.destination ??
+              roundTripData?.outbound?.destination ??
+              hotelData?.location ??
+              ""
+            }
+            onSave={async (name) => {
+              const destination =
+                flightData?.destination ??
+                roundTripData?.outbound?.destination ??
+                hotelData?.location ??
+                "";
+              const dateRange =
+                flightData?.legs?.[0]?.departure_date ??
+                roundTripData?.outbound?.legs?.[0]?.departure_date ??
+                (hotelData ? `${hotelData.check_in} – ${hotelData.check_out}` : "");
+              const tripData: Record<string, unknown> = {};
+              if (flightData)     tripData.flightData     = flightData;
+              if (hotelData)      tripData.hotelData      = hotelData;
+              if (guideData)      tripData.guideData      = guideData;
+              if (budgetData)     tripData.budgetData     = budgetData;
+              if (itineraryData)  tripData.itineraryData  = itineraryData;
+              if (weatherData)    tripData.weatherData    = weatherData;
+              if (predictionData) tripData.predictionData = predictionData;
+              if (roundTripData)  tripData.roundTripData  = roundTripData;
+              await onSaveTrip(tripData, name, destination, dateRange);
+            }}
+          />
         )}
 
         <span className="text-[11px] text-slate-600 px-1">{formatTime(timestamp)}</span>

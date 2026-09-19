@@ -39,6 +39,13 @@ function cleanMessages(messages: Message[]): Message[] {
       if (m.guideData)       Object.assign(base, { guideData: m.guideData });
       if (m.currencyData)    Object.assign(base, { currencyData: m.currencyData });
       if (m.budgetData)      Object.assign(base, { budgetData: m.budgetData });
+      if (m.itineraryData)   Object.assign(base, { itineraryData: m.itineraryData });
+      if (m.predictionData)  Object.assign(base, { predictionData: m.predictionData });
+      if (m.packingData)       Object.assign(base, { packingData: m.packingData });
+      if (m.flightStatusData)  Object.assign(base, { flightStatusData: m.flightStatusData });
+      if (m.transitData)       Object.assign(base, { transitData: m.transitData });
+      if (m.phrasebookData)    Object.assign(base, { phrasebookData: m.phrasebookData });
+      if (m.insuranceData)     Object.assign(base, { insuranceData: m.insuranceData });
       return base;
     });
 }
@@ -226,6 +233,97 @@ export function useServerSync(userEmail: string | null | undefined) {
     } catch { return false; }
   }, [enabled, userEmail]);
 
+  /* ── Saved trips ───────────────────────────────────────── */
+  const loadTrips = useCallback(async (): Promise<SavedTrip[]> => {
+    if (!enabled) return [];
+    try {
+      const resp = await fetch(`${API}/api/trips`, { headers: { "X-User-Email": userEmail! } });
+      if (!resp.ok) return [];
+      return await resp.json() as SavedTrip[];
+    } catch { return []; }
+  }, [enabled, userEmail]);
+
+  const saveTrip = useCallback(async (trip: { name: string; destination: string; date_range: string; data: Record<string, unknown> }): Promise<SavedTrip | null> => {
+    if (!enabled) return null;
+    try {
+      const resp = await fetch(`${API}/api/trips`, {
+        method: "POST",
+        headers: authHeaders(userEmail!),
+        body: JSON.stringify(trip),
+      });
+      if (!resp.ok) return null;
+      return await resp.json() as SavedTrip;
+    } catch { return null; }
+  }, [enabled, userEmail]);
+
+  const deleteTrip = useCallback(async (id: number): Promise<boolean> => {
+    if (!enabled) return false;
+    try {
+      const resp = await fetch(`${API}/api/trips/${id}`, { method: "DELETE", headers: { "X-User-Email": userEmail! } });
+      return resp.ok || resp.status === 204;
+    } catch { return false; }
+  }, [enabled, userEmail]);
+
+  const renameTrip = useCallback(async (id: number, name: string): Promise<boolean> => {
+    if (!enabled) return false;
+    try {
+      const resp = await fetch(`${API}/api/trips/${id}`, {
+        method: "PATCH",
+        headers: authHeaders(userEmail!),
+        body: JSON.stringify({ name }),
+      });
+      return resp.ok;
+    } catch { return false; }
+  }, [enabled, userEmail]);
+
+  const shareTrip = useCallback(async (id: number): Promise<string | null> => {
+    if (!enabled) return null;
+    try {
+      const resp = await fetch(`${API}/api/trips/${id}/share`, {
+        method: "POST",
+        headers: { "X-User-Email": userEmail! },
+      });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      return data.share_url as string;
+    } catch { return null; }
+  }, [enabled, userEmail]);
+
+  const emailTrip = useCallback(async (id: number, toEmail: string, message: string): Promise<boolean> => {
+    if (!enabled) return false;
+    try {
+      const resp = await fetch(`${API}/api/trips/${id}/email`, {
+        method: "POST",
+        headers: authHeaders(userEmail!),
+        body: JSON.stringify({ to_email: toEmail, message }),
+      });
+      return resp.ok;
+    } catch { return false; }
+  }, [enabled, userEmail]);
+
+  const addCollaborator = useCallback(async (id: number, collabEmail: string): Promise<boolean> => {
+    if (!enabled) return false;
+    try {
+      const resp = await fetch(`${API}/api/trips/${id}/collaborators`, {
+        method: "POST",
+        headers: authHeaders(userEmail!),
+        body: JSON.stringify({ email: collabEmail }),
+      });
+      return resp.ok;
+    } catch { return false; }
+  }, [enabled, userEmail]);
+
+  const removeCollaborator = useCallback(async (id: number, collabEmail: string): Promise<boolean> => {
+    if (!enabled) return false;
+    try {
+      const resp = await fetch(`${API}/api/trips/${id}/collaborators/${encodeURIComponent(collabEmail)}`, {
+        method: "DELETE",
+        headers: { "X-User-Email": userEmail! },
+      });
+      return resp.ok;
+    } catch { return false; }
+  }, [enabled, userEmail]);
+
   return {
     enabled,
     loadConversations,
@@ -241,8 +339,28 @@ export function useServerSync(userEmail: string | null | undefined) {
     addAlert,
     loadAlerts,
     deleteAlert,
+    loadTrips,
+    saveTrip,
+    deleteTrip,
+    renameTrip,
+    shareTrip,
+    emailTrip,
+    addCollaborator,
+    removeCollaborator,
   };
 }
+
+export type SavedTrip = {
+  id: number;
+  name: string;
+  destination: string;
+  date_range: string;
+  created_at: string;
+  share_token?: string | null;
+  collaborators?: string[];
+  is_owner?: boolean;
+  data?: Record<string, unknown>;
+};
 
 export type AlertRecord = {
   id: number;

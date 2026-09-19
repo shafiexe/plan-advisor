@@ -5,7 +5,7 @@ import datetime
 from typing import AsyncGenerator
 import anthropic
 
-from services.serpapi_flights import search_flights, search_round_trip
+from services.serpapi_flights import search_flights, search_round_trip, get_flight_status
 
 SYSTEM_PROMPT = """You are Plan Advisor, a full-service AI travel and lifestyle assistant based in India.
 You help users plan every step of their journey — from picking a destination to booking transport, finding hotels and discovering where to eat.
@@ -76,6 +76,27 @@ Destination Guide:
 
 Budget:
 • `calculate_trip_budget` — Show itemized trip cost breakdown with total. Call when user asks about total cost or after confirming flight + hotel. Estimate meals at ₹2,000-5,000/day depending on destination; activities at 15-20% of total if not specified.
+
+Price analysis:
+• `predict_flight_price` — Evaluate if a flight price is a good deal vs typical prices for that route/month. Call when user asks if a price is good/reasonable/worth it.
+
+Itinerary:
+• `get_itinerary` — Day-by-day hour-by-hour itinerary (morning/afternoon/evening). Call after confirming travel dates and destination, or when user asks for a schedule/day plan.
+
+Flight status:
+• `get_flight_status` — Real-time flight status (on time/delayed/landed), gate, terminal. Call when user asks about a specific flight number.
+
+Packing:
+• `get_packing_list` — AI-generated packing list by category (documents, clothing, electronics, etc.). Call when user asks what to pack.
+
+Airport transfer:
+• `get_airport_transit` — How to get from airport to hotel/area (metro/bus/taxi/Uber, costs, steps). Call when user asks about airport transport or transfers.
+
+Language:
+• `get_phrasebook` — Essential local language phrases (greetings, directions, food, emergency) with pronunciation. Call when user asks for language help or local phrases.
+
+Travel Insurance:
+• `get_travel_insurance` — Travel insurance guidance (coverage types, cost estimate, providers). Call when user asks about travel insurance.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IATA CITY CODES
@@ -364,6 +385,131 @@ TOOLS = [
         },
     },
     {
+        "name": "get_itinerary",
+        "description": (
+            "Generate a detailed day-by-day travel itinerary with morning/afternoon/evening slots. "
+            "Call after flights and hotels are confirmed, or when user asks for a day plan, itinerary, or schedule. "
+            "Use the confirmed travel dates if known."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination":  {"type": "string", "description": "City/country e.g. 'Dubai'"},
+                "start_date":   {"type": "string", "description": "YYYY-MM-DD — first day at destination"},
+                "end_date":     {"type": "string", "description": "YYYY-MM-DD — last day at destination"},
+                "interests":    {"type": "array", "items": {"type": "string"}, "description": "e.g. ['food', 'beaches', 'shopping']"},
+                "hotel_area":   {"type": "string", "description": "Hotel location to plan routes from"},
+            },
+            "required": ["destination", "start_date", "end_date"],
+        },
+    },
+    {
+        "name": "predict_flight_price",
+        "description": (
+            "Check if a flight price is a good deal. Fetches typical prices for the route/month "
+            "and returns a verdict: Great Deal / Good Price / Fair Price / A Bit Pricey / Overpriced. "
+            "Call when user asks 'is this a good deal?', 'is this price reasonable?', or shares a flight price and wants an opinion."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "origin":         {"type": "string", "description": "IATA code e.g. BLR"},
+                "destination":    {"type": "string", "description": "IATA code e.g. DXB"},
+                "departure_date": {"type": "string", "description": "YYYY-MM-DD"},
+                "price":          {"type": "number",  "description": "The price to evaluate"},
+                "currency":       {"type": "string",  "description": "Currency code, default INR"},
+            },
+            "required": ["origin", "destination", "departure_date", "price"],
+        },
+    },
+    {
+        "name": "get_flight_status",
+        "description": (
+            "Get real-time or scheduled status for a specific flight number. "
+            "Call when user asks about a flight status, delay, gate, or arrival time. "
+            "Requires a flight number (e.g. 'EK504', 'AI101') and optionally a date."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "flight_number":  {"type": "string", "description": "IATA flight number e.g. EK504"},
+                "departure_date": {"type": "string", "description": "YYYY-MM-DD, defaults to today"},
+            },
+            "required": ["flight_number"],
+        },
+    },
+    {
+        "name": "get_packing_list",
+        "description": (
+            "Generate a categorized packing list for a trip. "
+            "Call when user asks what to pack, packing advice, or packing list. "
+            "Try to use known destination, duration, and trip type from the conversation."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination":   {"type": "string", "description": "Destination city/country"},
+                "duration_days": {"type": "integer", "description": "Trip length in days"},
+                "trip_type":     {"type": "string", "enum": ["leisure", "business", "adventure", "beach"], "description": "Type of trip"},
+                "weather":       {"type": "string", "enum": ["warm", "cold", "rainy", "mixed"], "description": "Expected weather"},
+                "activities":    {"type": "array", "items": {"type": "string"}, "description": "e.g. ['swimming', 'hiking', 'fine dining']"},
+            },
+            "required": ["destination"],
+        },
+    },
+    {
+        "name": "get_airport_transit",
+        "description": (
+            "Describe how to get from an airport to a hotel or area. "
+            "Covers metro, bus, taxi, Uber/Grab, shuttle with costs and travel times. "
+            "Call when user asks how to get from airport to hotel/city, or about airport transport."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "airport_iata": {"type": "string", "description": "Airport IATA code e.g. DXB"},
+                "airport_name": {"type": "string", "description": "Full airport name e.g. Dubai International Airport"},
+                "hotel_area":   {"type": "string", "description": "Hotel name or area e.g. Downtown Dubai"},
+                "currency":     {"type": "string", "description": "User's currency for cost estimates e.g. INR"},
+            },
+            "required": ["airport_iata"],
+        },
+    },
+    {
+        "name": "get_phrasebook",
+        "description": (
+            "Generate a travel phrasebook with essential phrases in the local language. "
+            "Covers greetings, directions, food, shopping, and emergency phrases with pronunciation. "
+            "Call when user asks for local phrases, language help, or how to communicate at destination."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination": {"type": "string", "description": "Destination city or country"},
+                "language":    {"type": "string", "description": "Language name if known e.g. 'Arabic'"},
+            },
+            "required": ["destination"],
+        },
+    },
+    {
+        "name": "get_travel_insurance",
+        "description": (
+            "Provide travel insurance guidance: what coverage to get, cost estimates, and providers. "
+            "Call when user asks about travel insurance, whether they need it, or what to get."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination":   {"type": "string"},
+                "duration_days": {"type": "integer"},
+                "trip_cost":     {"type": "number", "description": "Total trip cost for trip cancellation coverage estimate"},
+                "activities":    {"type": "array", "items": {"type": "string"}},
+                "currency":      {"type": "string"},
+            },
+            "required": ["destination"],
+        },
+    },
+    {
         "name": "calculate_trip_budget",
         "description": (
             "Calculate total trip cost and show an itemized budget breakdown. "
@@ -589,6 +735,88 @@ async def _run_tool(name: str, tool_input: dict) -> str:
                 "rates": [],
             })
 
+    # ── Itinerary ──
+    if name == "get_itinerary":
+        from services.itinerary import get_itinerary
+        result = await get_itinerary(
+            destination=tool_input.get("destination", ""),
+            start_date=tool_input.get("start_date", ""),
+            end_date=tool_input.get("end_date", ""),
+            interests=tool_input.get("interests"),
+            hotel_area=tool_input.get("hotel_area", ""),
+        )
+        return json.dumps(result)
+
+    # ── Packing list ──
+    if name == "get_packing_list":
+        from services.packing_list import get_packing_list
+        result = await get_packing_list(
+            destination=tool_input.get("destination", ""),
+            duration_days=tool_input.get("duration_days", 7),
+            trip_type=tool_input.get("trip_type", "leisure"),
+            weather=tool_input.get("weather", "warm"),
+            activities=tool_input.get("activities"),
+        )
+        return json.dumps(result)
+
+    # ── Price prediction ──
+    if name == "predict_flight_price":
+        from services.price_prediction import predict_flight_price
+        try:
+            result = await predict_flight_price(
+                origin=tool_input.get("origin", ""),
+                destination=tool_input.get("destination", ""),
+                departure_date=tool_input.get("departure_date", ""),
+                price=float(tool_input.get("price", 0)),
+                currency=tool_input.get("currency", "INR"),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({"error": str(e)})
+
+    # ── Flight status ──
+    if name == "get_flight_status":
+        try:
+            result = await get_flight_status(
+                flight_number=tool_input.get("flight_number", ""),
+                departure_date=tool_input.get("departure_date", ""),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({"error": str(e), "flight_number": tool_input.get("flight_number", ""), "status": "Unknown"})
+
+    # ── Airport transit ──
+    if name == "get_airport_transit":
+        from services.airport_transit import get_airport_transit
+        result = await get_airport_transit(
+            airport_iata=tool_input.get("airport_iata", ""),
+            airport_name=tool_input.get("airport_name", ""),
+            hotel_area=tool_input.get("hotel_area", ""),
+            currency=tool_input.get("currency", "INR"),
+        )
+        return json.dumps(result)
+
+    # ── Phrasebook ──
+    if name == "get_phrasebook":
+        from services.phrasebook import get_phrasebook
+        result = await get_phrasebook(
+            destination=tool_input.get("destination", ""),
+            language=tool_input.get("language", ""),
+        )
+        return json.dumps(result)
+
+    # ── Travel insurance ──
+    if name == "get_travel_insurance":
+        from services.travel_insurance import get_travel_insurance
+        result = await get_travel_insurance(
+            destination=tool_input.get("destination", ""),
+            duration_days=tool_input.get("duration_days", 7),
+            trip_cost=float(tool_input.get("trip_cost", 0)),
+            activities=tool_input.get("activities"),
+            currency=tool_input.get("currency", "INR"),
+        )
+        return json.dumps(result)
+
     # ── Trip budget ──
     if name == "calculate_trip_budget":
         try:
@@ -669,8 +897,26 @@ def _tool_label(name: str, tool_input: dict) -> str:
         return f"Generating destination guide for {tool_input.get('destination', '')}…"
     if name == "convert_currency":
         return f"Converting {tool_input.get('amount', '')} {tool_input.get('from_currency', '')}…"
+    if name == "predict_flight_price":
+        return f"Analysing price for {tool_input.get('origin','')} → {tool_input.get('destination','')}…"
     if name == "calculate_trip_budget":
         return f"Calculating trip budget for {tool_input.get('destination', '')}…"
+    if name == "get_itinerary":
+        return f"Building {tool_input.get('destination', '')} itinerary…"
+    if name == "get_packing_list":
+        return f"Building packing list for {tool_input.get('destination', '')}…"
+    if name == "get_flight_status":
+        fn = tool_input.get("flight_number", "")
+        return f"Checking status for {fn}…"
+    if name == "get_airport_transit":
+        airport_iata = tool_input.get("airport_iata", "")
+        return f"Finding transit options from {airport_iata}…"
+    if name == "get_phrasebook":
+        destination = tool_input.get("destination", "")
+        return f"Building {destination} phrasebook…"
+    if name == "get_travel_insurance":
+        destination = tool_input.get("destination", "")
+        return f"Checking insurance for {destination}…"
     return f"Running {name}…"
 
 
@@ -818,6 +1064,53 @@ async def stream_response(messages: list, extra_system: str | None = None) -> As
                         bd = json.loads(result_str)
                         if not bd.get("error") and bd.get("total", 0) > 0:
                             yield {"type": "budget_results", "data": bd}
+                    except Exception:
+                        pass
+                elif block.name == "predict_flight_price":
+                    try:
+                        pd_ = json.loads(result_str)
+                        if not pd_.get("error"):
+                            yield {"type": "prediction_results", "data": pd_}
+                    except Exception:
+                        pass
+                elif block.name == "get_itinerary":
+                    try:
+                        it = json.loads(result_str)
+                        if not it.get("error") and it.get("days"):
+                            yield {"type": "itinerary_results", "data": it}
+                    except Exception:
+                        pass
+                elif block.name == "get_packing_list":
+                    try:
+                        pl = json.loads(result_str)
+                        if not pl.get("error") and pl.get("categories"):
+                            yield {"type": "packing_results", "data": pl}
+                    except Exception:
+                        pass
+                elif block.name == "get_flight_status":
+                    try:
+                        fsd = json.loads(result_str)
+                        if not fsd.get("error") and fsd.get("flight_number"):
+                            yield {"type": "flight_status_results", "data": fsd}
+                    except Exception:
+                        pass
+                elif block.name == "get_airport_transit":
+                    try:
+                        td = json.loads(result_str)
+                        yield {"type": "transit_results", "data": td}
+                    except Exception:
+                        pass
+                elif block.name == "get_phrasebook":
+                    try:
+                        pb = json.loads(result_str)
+                        yield {"type": "phrasebook_results", "data": pb}
+                    except Exception:
+                        pass
+                elif block.name == "get_travel_insurance":
+                    try:
+                        ins = json.loads(result_str)
+                        if not ins.get("error") or ins.get("coverage_types"):
+                            yield {"type": "insurance_results", "data": ins}
                     except Exception:
                         pass
 

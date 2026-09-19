@@ -18,6 +18,13 @@ export type WsMessage =
   | { type: "guide_results"; data: unknown }
   | { type: "currency_results"; data: unknown }
   | { type: "budget_results"; data: unknown }
+  | { type: "prediction_results"; data: unknown }
+  | { type: "itinerary_results"; data: unknown }
+  | { type: "packing_results"; data: unknown }
+  | { type: "flight_status_results"; data: unknown }
+  | { type: "transit_results"; data: unknown }
+  | { type: "phrasebook_results"; data: unknown }
+  | { type: "insurance_results"; data: unknown }
   | { type: "done" }
   | { type: "error"; content: string };
 
@@ -41,6 +48,13 @@ type Options = {
   onGuideResults?: (data: unknown) => void;
   onCurrencyResults?: (data: unknown) => void;
   onBudgetResults?: (data: unknown) => void;
+  onPredictionResults?: (data: unknown) => void;
+  onItineraryResults?: (data: unknown) => void;
+  onPackingResults?: (data: unknown) => void;
+  onFlightStatusResults?: (data: unknown) => void;
+  onTransitResults?: (data: unknown) => void;
+  onPhrasebookResults?: (data: unknown) => void;
+  onInsuranceResults?: (data: unknown) => void;
 };
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000/ws/chat";
@@ -74,7 +88,14 @@ export function useWebSocket(opts: Options) {
       else if (msg.type === "visa_results")       optsRef.current.onVisaResults?.(msg.data);
       else if (msg.type === "guide_results")      optsRef.current.onGuideResults?.(msg.data);
       else if (msg.type === "currency_results")   optsRef.current.onCurrencyResults?.(msg.data);
-      else if (msg.type === "budget_results")     optsRef.current.onBudgetResults?.(msg.data);
+      else if (msg.type === "budget_results")      optsRef.current.onBudgetResults?.(msg.data);
+      else if (msg.type === "prediction_results")  optsRef.current.onPredictionResults?.(msg.data);
+      else if (msg.type === "itinerary_results")  optsRef.current.onItineraryResults?.(msg.data);
+      else if (msg.type === "packing_results")         optsRef.current.onPackingResults?.(msg.data);
+      else if (msg.type === "flight_status_results")   optsRef.current.onFlightStatusResults?.(msg.data);
+      else if (msg.type === "transit_results")          optsRef.current.onTransitResults?.(msg.data);
+      else if (msg.type === "phrasebook_results")       optsRef.current.onPhrasebookResults?.(msg.data);
+      else if (msg.type === "insurance_results")        optsRef.current.onInsuranceResults?.(msg.data);
     };
 
     ws.onclose = () => {

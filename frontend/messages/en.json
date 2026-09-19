@@ -1,0 +1,47 @@
+{
+  "app": {
+    "name": "Plan Advisor",
+    "tagline": "Your travel & lifestyle advisor"
+  },
+  "chat": {
+    "placeholder": "Ask about flights, hotels, visa, weather...",
+    "send": "Send",
+    "newChat": "New Chat",
+    "thinking": "Thinking...",
+    "offline": "You're offline — saved trips are still available"
+  },
+  "suggestions": [
+    "✈️  Suggest the best vacation spots for this season",
+    "🚆  Compare flights, trains & buses from Bangalore to Goa",
+    "🏨  Find hotels and restaurants near my destination",
+    "🗺️  Plan a complete trip — transport, stay & food"
+  ],
+  "sidebar": {
+    "chats": "Chats",
+    "savedTrips": "Saved Trips",
+    "settings": "Settings",
+    "passengers": "Passengers",
+    "search": "Search conversations...",
+    "noConversations": "No conversations yet",
+    "pinned": "Pinned",
+    "today": "Today",
+    "yesterday": "Yesterday"
+  },
+  "trips": {
+    "save": "Save trip",
+    "saved": "Saved!",
+    "share": "Share",
+    "linkCopied": "Link copied!",
+    "email": "Email",
+    "invite": "Invite",
+    "sharedWithMe": "shared with me",
+    "deleteConfirm": "Delete this saved trip?"
+  },
+  "language": {
+    "select": "Language",
+    "en": "English",
+    "hi": "हिंदी",
+    "ar": "العربية",
+    "ta": "தமிழ்"
+  }
+}

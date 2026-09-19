@@ -13,7 +13,7 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useSpeech } from "@/hooks/useSpeech";
 import { useServerSync } from "@/hooks/useServerSync";
-import type { AlertRecord } from "@/hooks/useServerSync";
+import type { AlertRecord, SavedTrip } from "@/hooks/useServerSync";
 import { useTheme } from "@/hooks/useTheme";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import type { FlightSearchResult, PriceCalendarResult, RoundTripResult } from "@/types/flights";
@@ -25,6 +25,13 @@ import type { VisaResult } from "@/types/visa";
 import type { DestinationGuide } from "@/types/destination";
 import type { CurrencyResult } from "@/types/currency";
 import type { TripBudget } from "@/types/budget";
+import type { Itinerary } from "@/types/itinerary";
+import type { PricePrediction } from "@/types/prediction";
+import type { PackingList } from "@/types/packingList";
+import type { FlightStatus } from "@/types/flightStatus";
+import type { AirportTransit } from "@/types/transit";
+import type { Phrasebook } from "@/types/phrasebook";
+import type { TravelInsurance } from "@/types/insurance";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
 
@@ -98,6 +105,7 @@ export default function Home() {
   const [alertData, setAlertData] = useState<{ origin: string; destination: string; departureDate: string; price: number } | null>(null);
   const [editingAlertId, setEditingAlertId] = useState<number | null>(null);
   const [savedAlerts, setSavedAlerts] = useState<AlertRecord[]>([]);
+  const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
   const serverLoadedRef = useRef(false);
   // Set during page-load only; cleared once fired; prevents duplicate auto-sends
   type AutoSendPending = { convId: string; text: string; history: { role: string; content: string }[] };
@@ -121,6 +129,13 @@ export default function Home() {
   const pendingGuideRef       = useRef<DestinationGuide | null>(null);
   const pendingCurrencyRef    = useRef<CurrencyResult | null>(null);
   const pendingBudgetRef      = useRef<TripBudget | null>(null);
+  const pendingItineraryRef   = useRef<Itinerary | null>(null);
+  const pendingPredictionRef  = useRef<PricePrediction | null>(null);
+  const pendingPackingRef     = useRef<PackingList | null>(null);
+  const pendingFlightStatusRef = useRef<FlightStatus | null>(null);
+  const pendingTransitRef      = useRef<AirportTransit | null>(null);
+  const pendingPhrasebookRef   = useRef<Phrasebook | null>(null);
+  const pendingInsuranceRef    = useRef<TravelInsurance | null>(null);
 
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
@@ -156,6 +171,7 @@ export default function Home() {
     // Logged in: DB is the single source of truth — never read localStorage for convs
     sync.loadPassengers().then(setSavedPassengers).catch(() => {});
     sync.loadAlerts().then(setSavedAlerts).catch(() => {});
+    sync.loadTrips().then(setSavedTrips).catch(() => {});
 
     sync.loadConversations().then((serverConvs) => {
       serverLoadedRef.current = true;
@@ -208,15 +224,27 @@ export default function Home() {
     const visaData       = pendingVisaRef.current       ?? undefined;
     const guideData      = pendingGuideRef.current      ?? undefined;
     const currencyData   = pendingCurrencyRef.current   ?? undefined;
-    if (calendarData)   pendingCalendarRef.current   = null;
-    if (hotelData)      pendingHotelRef.current      = null;
-    if (restaurantData) pendingRestaurantRef.current = null;
-    if (weatherData)    pendingWeatherRef.current    = null;
-    if (visaData)       pendingVisaRef.current       = null;
-    if (guideData)      pendingGuideRef.current      = null;
-    if (currencyData)   pendingCurrencyRef.current   = null;
+    const itineraryData  = pendingItineraryRef.current  ?? undefined;
+    const packingData       = pendingPackingRef.current       ?? undefined;
+    const flightStatusData  = pendingFlightStatusRef.current  ?? undefined;
+    const transitData       = pendingTransitRef.current       ?? undefined;
+    const phrasebookData    = pendingPhrasebookRef.current    ?? undefined;
+    const insuranceData     = pendingInsuranceRef.current     ?? undefined;
+    if (calendarData)      pendingCalendarRef.current      = null;
+    if (hotelData)         pendingHotelRef.current         = null;
+    if (restaurantData)    pendingRestaurantRef.current    = null;
+    if (weatherData)       pendingWeatherRef.current       = null;
+    if (visaData)          pendingVisaRef.current          = null;
+    if (guideData)         pendingGuideRef.current         = null;
+    if (currencyData)      pendingCurrencyRef.current      = null;
+    if (itineraryData)     pendingItineraryRef.current     = null;
+    if (packingData)       pendingPackingRef.current       = null;
+    if (flightStatusData)  pendingFlightStatusRef.current  = null;
+    if (transitData)       pendingTransitRef.current       = null;
+    if (phrasebookData)    pendingPhrasebookRef.current    = null;
+    if (insuranceData)     pendingInsuranceRef.current     = null;
 
-    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData);
+    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData);
     updateActive((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!hasCard && last?.role === "assistant" && last.streaming) {
@@ -224,7 +252,7 @@ export default function Home() {
       }
       return [
         ...msgs,
-        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData },
+        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData },
       ];
     });
   }, [updateActive]);
@@ -233,16 +261,18 @@ export default function Home() {
     setTyping(false);
     setStreaming(false);
     // Flush transport refs — reading outside the updater avoids Strict Mode double-invoke
-    const flightData    = pendingFlightRef.current    ?? undefined;
-    const busData       = pendingBusRef.current       ?? undefined;
-    const trainData     = pendingTrainRef.current     ?? undefined;
-    const roundTripData = pendingRoundTripRef.current ?? undefined;
-    const budgetData    = pendingBudgetRef.current    ?? undefined;
-    pendingFlightRef.current    = null;
-    pendingBusRef.current       = null;
-    pendingTrainRef.current     = null;
-    pendingRoundTripRef.current = null;
-    pendingBudgetRef.current    = null;
+    const flightData      = pendingFlightRef.current      ?? undefined;
+    const busData         = pendingBusRef.current         ?? undefined;
+    const trainData       = pendingTrainRef.current       ?? undefined;
+    const roundTripData   = pendingRoundTripRef.current   ?? undefined;
+    const budgetData      = pendingBudgetRef.current      ?? undefined;
+    const predictionData  = pendingPredictionRef.current  ?? undefined;
+    pendingFlightRef.current      = null;
+    pendingBusRef.current         = null;
+    pendingTrainRef.current       = null;
+    pendingRoundTripRef.current   = null;
+    pendingBudgetRef.current      = null;
+    pendingPredictionRef.current  = null;
 
     setConversations((prev) => {
       const convId = activeIdRef.current;
@@ -253,11 +283,12 @@ export default function Home() {
         const finished = {
           ...(last ?? {}),
           streaming: false,
-          ...(flightData    && { flightData }),
-          ...(busData       && { busData }),
-          ...(trainData     && { trainData }),
-          ...(roundTripData && { roundTripData }),
-          ...(budgetData    && { budgetData }),
+          ...(flightData      && { flightData }),
+          ...(busData         && { busData }),
+          ...(trainData       && { trainData }),
+          ...(roundTripData   && { roundTripData }),
+          ...(budgetData      && { budgetData }),
+          ...(predictionData  && { predictionData }),
         } as typeof last;
         if (last?.streaming && autoSpeakRef.current) speak(finished.content);
         const updated: Conversation = {
@@ -331,6 +362,34 @@ export default function Home() {
     },
     onBudgetResults: (data) => {
       pendingBudgetRef.current = data as TripBudget;
+      setToolLabel(null);
+    },
+    onPredictionResults: (data) => {
+      pendingPredictionRef.current = data as PricePrediction;
+      setToolLabel(null);
+    },
+    onItineraryResults: (data) => {
+      pendingItineraryRef.current = data as Itinerary;
+      setToolLabel(null);
+    },
+    onPackingResults: (data) => {
+      pendingPackingRef.current = data as PackingList;
+      setToolLabel(null);
+    },
+    onFlightStatusResults: (data) => {
+      pendingFlightStatusRef.current = data as FlightStatus;
+      setToolLabel(null);
+    },
+    onTransitResults: (data) => {
+      pendingTransitRef.current = data as AirportTransit;
+      setToolLabel(null);
+    },
+    onPhrasebookResults: (data) => {
+      pendingPhrasebookRef.current = data as Phrasebook;
+      setToolLabel(null);
+    },
+    onInsuranceResults: (data) => {
+      pendingInsuranceRef.current = data as TravelInsurance;
       setToolLabel(null);
     },
   });
@@ -603,6 +662,73 @@ export default function Home() {
     });
   }, []);
 
+  /* ── Saved trips ─── */
+  const handleSaveTrip = useCallback(async (
+    tripData: Record<string, unknown>,
+    name: string,
+    destination: string,
+    dateRange: string,
+  ) => {
+    const saved = await sync.saveTrip({ name, destination, date_range: dateRange, data: tripData });
+    if (saved) setSavedTrips(prev => [saved, ...prev]);
+  }, [sync]);
+
+  const handleRecallTrip = useCallback(async (tripId: number) => {
+    const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+    try {
+      const resp = await fetch(`${API}/api/trips/${tripId}`, {
+        headers: { "X-User-Email": userEmail! },
+      });
+      if (!resp.ok) return;
+      const trip = await resp.json() as SavedTrip & { data: Record<string, unknown> };
+      const d = trip.data ?? {};
+
+      // Ensure there's an active conversation to append to
+      let convId = activeId;
+      if (!convId) {
+        const conv = {
+          id: `chat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          title: trip.name,
+          messages: [] as Message[],
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+        };
+        setConversations(prev => [conv, ...prev]);
+        setActiveId(conv.id);
+        convId = conv.id;
+      }
+
+      const recallMsg: Message = {
+        id:             `recall-${Date.now()}`,
+        role:           "assistant",
+        content:        `Here's your saved trip to **${trip.destination || trip.name}**:`,
+        timestamp:      Date.now(),
+        ...(d.flightData     ? { flightData:     d.flightData     as Message["flightData"] }     : {}),
+        ...(d.hotelData      ? { hotelData:      d.hotelData      as Message["hotelData"] }      : {}),
+        ...(d.guideData      ? { guideData:      d.guideData      as Message["guideData"] }      : {}),
+        ...(d.budgetData     ? { budgetData:     d.budgetData     as Message["budgetData"] }     : {}),
+        ...(d.itineraryData  ? { itineraryData:  d.itineraryData  as Message["itineraryData"] }  : {}),
+        ...(d.weatherData    ? { weatherData:    d.weatherData    as Message["weatherData"] }    : {}),
+        ...(d.predictionData ? { predictionData: d.predictionData as Message["predictionData"] } : {}),
+        ...(d.roundTripData  ? { roundTripData:  d.roundTripData  as Message["roundTripData"] }  : {}),
+      };
+
+      setConversations(prev => prev.map(c =>
+        c.id !== convId ? c : { ...c, messages: [...c.messages, recallMsg], updatedAt: Date.now() }
+      ));
+    } catch {}
+  }, [activeId, userEmail]);
+
+  const handleDeleteTrip = useCallback(async (tripId: number) => {
+    await sync.deleteTrip(tripId);
+    setSavedTrips(prev => prev.filter(t => t.id !== tripId));
+  }, [sync]);
+
+  const handleShareTrip = useCallback(async (tripId: number): Promise<string | null> => {
+    const shareUrl = await sync.shareTrip(tripId);
+    return shareUrl;
+  }, [sync]);
+
   const renameChat = useCallback((id: string, title: string) => {
     setConversations(prev => {
       const next = prev.map(c => c.id === id ? { ...c, title } : c);
@@ -787,6 +913,26 @@ export default function Home() {
           setSavedPassengers(prev => prev.filter(p => p.id !== id));
         }}
         onAddPassenger={() => { setEditingPassenger(null); setShowPassengerModal(true); }}
+        savedTrips={savedTrips}
+        onRecallTrip={handleRecallTrip}
+        onDeleteTrip={handleDeleteTrip}
+        onShareTrip={handleShareTrip}
+        onEmailTrip={async (id, toEmail, message) => sync.emailTrip(id, toEmail, message)}
+        onAddCollaborator={async (id, email) => {
+          const ok = await sync.addCollaborator(id, email);
+          if (ok) setSavedTrips(prev => prev.map(t =>
+            t.id !== id ? t : { ...t, collaborators: [...(t.collaborators ?? []).filter(e => e !== email), email] }
+          ));
+          return ok;
+        }}
+        onRemoveCollaborator={async (id, email) => {
+          const ok = await sync.removeCollaborator(id, email);
+          if (ok) setSavedTrips(prev => prev.map(t =>
+            t.id !== id ? t : { ...t, collaborators: (t.collaborators ?? []).filter(e => e !== email) }
+          ));
+          return ok;
+        }}
+        userEmail={userEmail}
         sessionUser={session?.user}
         theme={theme}
         onToggleTheme={toggleTheme}
@@ -863,6 +1009,7 @@ export default function Home() {
           onStopSpeak={stop}
           speaking={speaking}
           onSetAlert={setAlertData}
+          onSaveTrip={handleSaveTrip}
         />
 
         {/* Input */}

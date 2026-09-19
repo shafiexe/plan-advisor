@@ -81,6 +81,7 @@ def _parse_hotels(raw: dict, max_results: int, location: str, currency: str) -> 
             "link":          h.get("link", ""),
             "description":   h.get("description", ""),
             "nearby":        h.get("nearby_places", []),
+            "gps_coordinates": h.get("gps_coordinates"),
         })
 
     return {
@@ -140,6 +141,7 @@ def _parse_restaurants(raw: dict, max_results: int, location: str, cuisine: str)
             "price":     r.get("price", ""),
             "thumbnail": r.get("thumbnail", ""),
             "phone":     r.get("phone", ""),
+            "gps_coordinates": r.get("gps_coordinates"),
         })
 
     return {

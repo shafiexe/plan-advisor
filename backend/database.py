@@ -42,6 +42,7 @@ async def init_db():
             for col_def in (
                 "ALTER TABLE conversations ADD COLUMN pinned BOOLEAN DEFAULT 0",
                 "ALTER TABLE conversations ADD COLUMN share_token TEXT",
+                "ALTER TABLE trips ADD COLUMN collaborators JSON",
             ):
                 try:
                     await conn.execute(text(col_def))
@@ -51,6 +52,7 @@ async def init_db():
             for col_def in (
                 "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS pinned BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS share_token TEXT UNIQUE",
+                "ALTER TABLE trips ADD COLUMN IF NOT EXISTS collaborators JSON",
             ):
                 try:
                     await conn.execute(text(col_def))

@@ -1,0 +1,20 @@
+export type FlightStatus = {
+  flight_number: string;
+  airline: string;
+  origin_iata: string;
+  destination_iata: string;
+  origin_name: string;
+  destination_name: string;
+  scheduled_departure: string;
+  scheduled_arrival: string;
+  estimated_departure?: string | null;
+  estimated_arrival?: string | null;
+  status: "On Time" | "Delayed" | "Landed" | "Cancelled" | "Unknown";
+  delay_minutes?: number | null;
+  gate_departure?: string | null;
+  gate_arrival?: string | null;
+  terminal?: string | null;
+  aircraft_type?: string | null;
+  duration_minutes?: number | null;
+  note?: string | null;
+};

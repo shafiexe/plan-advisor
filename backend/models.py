@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, Column, Integer, String, Text, DateTime, UniqueConstraint, Uuid
+from sqlalchemy import Boolean, Column, Integer, String, Text, DateTime, UniqueConstraint, Uuid, JSON
 import uuid
 from database import Base
 
@@ -64,6 +64,22 @@ class PushSubscription(Base):
     p256dh     = Column(String, nullable=False)
     auth       = Column(String, nullable=False)
     created_at = Column(DateTime, default=_now)
+
+
+class Trip(Base):
+    """Saved trip snapshot — full plan (flights, hotel, guide, budget, itinerary)."""
+    __tablename__ = "trips"
+
+    id            = Column(Integer, primary_key=True, autoincrement=True)
+    user_email    = Column(String, nullable=False, index=True)
+    name          = Column(String, nullable=False)
+    destination   = Column(String, nullable=False, default="")
+    date_range    = Column(String, nullable=False, default="")
+    data          = Column(JSON, nullable=False)   # full plan snapshot
+    share_token   = Column(String, unique=True, nullable=True, index=True)
+    collaborators = Column(JSON, nullable=True, default=list)  # list of email strings
+    created_at    = Column(DateTime, default=_now)
+    updated_at    = Column(DateTime, default=_now, onupdate=_now)
 
 
 class PriceAlert(Base):

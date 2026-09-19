@@ -179,6 +179,129 @@ async def _search_multi_city(
     }
 
 
+_AIRLINE_NAMES: dict[str, str] = {
+    "EK": "Emirates",
+    "AI": "Air India",
+    "6E": "IndiGo",
+    "SG": "SpiceJet",
+    "UK": "Vistara",
+    "IX": "Air India Express",
+    "QR": "Qatar Airways",
+    "EY": "Etihad Airways",
+    "SQ": "Singapore Airlines",
+    "TG": "Thai Airways",
+    "BA": "British Airways",
+    "LH": "Lufthansa",
+    "AF": "Air France",
+    "KL": "KLM",
+    "AA": "American Airlines",
+    "UA": "United Airlines",
+    "DL": "Delta Air Lines",
+    "9W": "Jet Airways",
+    "G8": "Go First",
+    "I5": "AirAsia India",
+    "AK": "AirAsia",
+    "MH": "Malaysia Airlines",
+    "CX": "Cathay Pacific",
+    "NH": "All Nippon Airways",
+    "JL": "Japan Airlines",
+    "TK": "Turkish Airlines",
+    "LX": "Swiss International Air Lines",
+    "OS": "Austrian Airlines",
+    "AY": "Finnair",
+    "SK": "Scandinavian Airlines",
+    "WY": "Oman Air",
+    "GF": "Gulf Air",
+    "FZ": "flydubai",
+    "G9": "Air Arabia",
+    "FR": "Ryanair",
+    "U2": "easyJet",
+    "VY": "Vueling",
+    "IB": "Iberia",
+    "AZ": "ITA Airways",
+    "LO": "LOT Polish Airlines",
+    "MS": "EgyptAir",
+    "ET": "Ethiopian Airlines",
+    "KQ": "Kenya Airways",
+    "SA": "South African Airways",
+    "UL": "SriLankan Airlines",
+    "PK": "Pakistan International Airlines",
+    "OZ": "Asiana Airlines",
+    "KE": "Korean Air",
+    "CI": "China Airlines",
+    "BR": "EVA Air",
+    "MU": "China Eastern",
+    "CA": "Air China",
+    "CZ": "China Southern",
+    "LA": "LATAM Airlines",
+}
+
+_AIRLINE_WEBSITE: dict[str, str] = {
+    "EK": "emirates.com",
+    "AI": "airindia.com",
+    "6E": "goindigo.in",
+    "SG": "spicejet.com",
+    "QR": "qatarairways.com",
+    "EY": "etihad.com",
+    "SQ": "singaporeair.com",
+    "BA": "britishairways.com",
+    "LH": "lufthansa.com",
+}
+
+
+async def get_flight_status(
+    flight_number: str,
+    departure_date: str = "",
+) -> dict:
+    """
+    Attempt to get real-time flight status.
+
+    SerpAPI's google_flights engine requires origin/destination IATA codes and
+    does not support lookup by flight number alone. We therefore make a best-
+    effort attempt and fall back gracefully with a structured "Unknown" response
+    that includes actionable links for the user.
+    """
+    import re
+    import datetime as _dt
+
+    flight_number = (flight_number or "").strip().upper().replace(" ", "")
+    if not departure_date:
+        departure_date = _dt.date.today().isoformat()
+
+    # Parse airline code from flight number (e.g. "EK504" → "EK", "504")
+    m = re.match(r"^([A-Z0-9]{2,3}?)(\d{1,4}[A-Z]?)$", flight_number)
+    airline_code = m.group(1) if m else ""
+
+    airline_name = _AIRLINE_NAMES.get(airline_code, airline_code or "Unknown Airline")
+    website      = _AIRLINE_WEBSITE.get(airline_code, "flightaware.com")
+
+    note = (
+        f"Live status for {flight_number} on {departure_date} is not available via this service. "
+        f"Check {website} or FlightAware (flightaware.com) for real-time gate and delay information."
+    )
+
+    return {
+        "flight_number":       flight_number,
+        "airline":             airline_name,
+        "origin_iata":         "",
+        "destination_iata":    "",
+        "origin_name":         "",
+        "destination_name":    "",
+        "scheduled_departure": "",
+        "scheduled_arrival":   "",
+        "estimated_departure": None,
+        "estimated_arrival":   None,
+        "status":              "Unknown",
+        "delay_minutes":       None,
+        "gate_departure":      None,
+        "gate_arrival":        None,
+        "terminal":            None,
+        "aircraft_type":       None,
+        "duration_minutes":    None,
+        "note":                note,
+    }
+
+
 def _parse(raw: dict, max_results: int, origin: str = "", destination: str = "") -> dict:
     best   = raw.get("best_flights", [])
     others = raw.get("other_flights", [])

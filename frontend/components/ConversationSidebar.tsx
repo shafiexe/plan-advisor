@@ -3,9 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import { Message } from "./MessageBubble";
 import type { PassengerRecord } from "./PassengerFormModal";
-import type { AlertRecord } from "@/hooks/useServerSync";
+import type { AlertRecord, SavedTrip } from "@/hooks/useServerSync";
 import ConversationSearchModal from "./ConversationSearchModal";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useLanguage } from "@/contexts/LanguageContext";
+import type { Locale } from "@/contexts/LanguageContext";
 
 export type Conversation = {
   id: string;
@@ -38,6 +40,15 @@ type Props = {
   alerts?: AlertRecord[];
   onDeleteAlert?: (id: number) => void;
   onEditAlert?: (alert: AlertRecord) => void;
+  /* Saved trips */
+  savedTrips?: SavedTrip[];
+  onRecallTrip?: (tripId: number) => void;
+  onDeleteTrip?: (tripId: number) => void;
+  onShareTrip?: (tripId: number) => Promise<string | null>;
+  onEmailTrip?: (tripId: number, toEmail: string, message: string) => Promise<boolean>;
+  onAddCollaborator?: (tripId: number, email: string) => Promise<boolean>;
+  onRemoveCollaborator?: (tripId: number, email: string) => Promise<boolean>;
+  userEmail?: string | null;
   /* Bottom bar */
   sessionUser?: SessionUser | null;
   theme?: "dark" | "light";
@@ -242,6 +253,294 @@ function AlertRow({
   );
 }
 
+function SavedTripRow({
+  trip, onRecall, onDelete, onShare, onEmail, onAddCollaborator, onRemoveCollaborator, isOwner,
+}: {
+  trip: SavedTrip;
+  onRecall: () => void;
+  onDelete: () => void;
+  onShare?: () => Promise<string | null>;
+  onEmail?: (toEmail: string, message: string) => Promise<boolean>;
+  onAddCollaborator?: (email: string) => Promise<boolean>;
+  onRemoveCollaborator?: (email: string) => Promise<boolean>;
+  isOwner?: boolean;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [sharing, setSharing] = useState(false);
+
+  // Email form state
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [emailTo, setEmailTo] = useState("");
+  const [emailMsg, setEmailMsg] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+
+  // WhatsApp tooltip state
+  const [waTooltip, setWaTooltip] = useState(false);
+
+  // Collaborator form state
+  const [showCollabForm, setShowCollabForm] = useState(false);
+  const [collabEmail, setCollabEmail] = useState("");
+  const [addingCollab, setAddingCollab] = useState(false);
+  const [localCollabs, setLocalCollabs] = useState<string[]>(trip.collaborators ?? []);
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onShare) return;
+    setSharing(true);
+    try {
+      const url = await onShare();
+      if (url) {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } finally {
+      setSharing(false);
+    }
+  };
+
+  const handleWhatsApp = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!trip.share_token) {
+      setWaTooltip(true);
+      setTimeout(() => setWaTooltip(false), 2500);
+      return;
+    }
+    const shareUrl = `${window.location.origin}/trip/${trip.share_token}`;
+    const text = encodeURIComponent(`Check out my trip plan: ${trip.name}\n${shareUrl}`);
+    window.open(`https://wa.me/?text=${text}`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleSendEmail = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onEmail || !emailTo.trim()) return;
+    setSendingEmail(true);
+    try {
+      const ok = await onEmail(emailTo.trim(), emailMsg.trim());
+      if (ok) {
+        setEmailSent(true);
+        setTimeout(() => { setEmailSent(false); setShowEmailForm(false); setEmailTo(""); setEmailMsg(""); }, 2000);
+      }
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const handleAddCollab = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!onAddCollaborator || !collabEmail.trim()) return;
+    setAddingCollab(true);
+    try {
+      const ok = await onAddCollaborator(collabEmail.trim().toLowerCase());
+      if (ok) {
+        setLocalCollabs(prev => [...prev.filter(e => e !== collabEmail.trim().toLowerCase()), collabEmail.trim().toLowerCase()]);
+        setCollabEmail("");
+      }
+    } finally {
+      setAddingCollab(false);
+    }
+  };
+
+  const handleRemoveCollab = async (e: React.MouseEvent, ce: string) => {
+    e.stopPropagation();
+    if (!onRemoveCollaborator) return;
+    const ok = await onRemoveCollaborator(ce);
+    if (ok) setLocalCollabs(prev => prev.filter(x => x !== ce));
+  };
+
+  return (
+    <div
+      className="group relative rounded-xl border border-slate-700/40 bg-slate-800/30
+        hover:border-slate-600/60 hover:bg-slate-800/60 transition-all mb-0.5"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => { setHovered(false); setWaTooltip(false); }}
+    >
+      <div
+        className="px-2.5 py-2 pr-20 cursor-pointer"
+        onClick={onRecall}
+      >
+        <p className="text-xs font-medium text-slate-300 truncate">
+          {tripDestinationEmoji(trip.destination)} {trip.name}
+        </p>
+        {trip.date_range && (
+          <p className="text-[10px] text-slate-600 truncate mt-0.5">{trip.date_range}</p>
+        )}
+        {!isOwner && (
+          <p className="text-[10px] text-slate-500 italic mt-0.5">👥 shared</p>
+        )}
+        {copied && (
+          <p className="text-[10px] text-emerald-400 mt-0.5">Link copied!</p>
+        )}
+      </div>
+
+      {/* Action buttons — visible on hover */}
+      {hovered && (
+        <div className="absolute top-1.5 right-1.5 flex gap-0.5">
+          {/* WhatsApp */}
+          <div className="relative">
+            <button
+              onClick={handleWhatsApp}
+              title={trip.share_token ? "Share via WhatsApp" : "Generate share link first (🔗)"}
+              className="w-5 h-5 rounded-md flex items-center justify-center
+                text-slate-500 hover:text-green-400 hover:bg-green-950/40 transition-all text-[10px]"
+            >
+              📱
+            </button>
+            {waTooltip && (
+              <div className="absolute right-0 top-6 z-50 whitespace-nowrap bg-slate-800 border border-slate-600 rounded-lg px-2 py-1 text-[10px] text-slate-300 shadow-lg">
+                Generate share link first (🔗)
+              </div>
+            )}
+          </div>
+
+          {/* Email */}
+          <button
+            onClick={e => { e.stopPropagation(); setShowEmailForm(v => !v); setShowCollabForm(false); }}
+            title="Send trip by email"
+            className="w-5 h-5 rounded-md flex items-center justify-center
+              text-slate-500 hover:text-blue-400 hover:bg-blue-950/40 transition-all text-[10px]"
+          >
+            ✉️
+          </button>
+
+          {/* Collaborators — owner only */}
+          {isOwner && (
+            <button
+              onClick={e => { e.stopPropagation(); setShowCollabForm(v => !v); setShowEmailForm(false); }}
+              title="Invite collaborator"
+              className="w-5 h-5 rounded-md flex items-center justify-center
+                text-slate-500 hover:text-purple-400 hover:bg-purple-950/40 transition-all text-[10px]"
+            >
+              👥
+            </button>
+          )}
+
+          {/* Share link */}
+          {onShare && (
+            <button
+              onClick={handleShare}
+              title="Copy share link"
+              disabled={sharing}
+              className="w-5 h-5 rounded-md flex items-center justify-center
+                text-slate-500 hover:text-emerald-400 hover:bg-emerald-950/40
+                transition-all text-[10px] disabled:opacity-50"
+            >
+              🔗
+            </button>
+          )}
+
+          {/* Delete */}
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              if (window.confirm(`Delete saved trip "${trip.name}"?`)) onDelete();
+            }}
+            title="Delete trip"
+            className="w-5 h-5 rounded-md flex items-center justify-center
+              text-slate-500 hover:text-red-400 hover:bg-red-950/40 transition-all text-[10px]"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Email inline form */}
+      {showEmailForm && (
+        <div className="mx-2 mb-2 p-2.5 rounded-xl border border-blue-500/30 bg-blue-950/20" onClick={e => e.stopPropagation()}>
+          <p className="text-[10px] font-bold text-blue-400 mb-1.5">✉️ Send trip by email</p>
+          <input
+            type="email"
+            value={emailTo}
+            onChange={e => setEmailTo(e.target.value)}
+            placeholder="friend@email.com"
+            className="w-full text-[11px] bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5
+              text-slate-200 placeholder-slate-600 outline-none focus:border-blue-500/60 mb-1.5"
+          />
+          <textarea
+            value={emailMsg}
+            onChange={e => setEmailMsg(e.target.value)}
+            placeholder="Add a note... (optional)"
+            rows={2}
+            className="w-full text-[11px] bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5
+              text-slate-200 placeholder-slate-600 outline-none focus:border-blue-500/60 resize-none mb-2"
+          />
+          <div className="flex gap-1.5">
+            <button
+              onClick={handleSendEmail}
+              disabled={sendingEmail || !emailTo.trim()}
+              className="flex-1 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 disabled:opacity-50
+                text-white text-[11px] font-bold transition-all"
+            >
+              {emailSent ? "✓ Sent!" : sendingEmail ? "Sending…" : "Send"}
+            </button>
+            <button
+              onClick={e => { e.stopPropagation(); setShowEmailForm(false); setEmailTo(""); setEmailMsg(""); }}
+              className="px-3 py-1.5 rounded-lg border border-slate-600 text-slate-400
+                hover:text-white text-[11px] transition-all"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Collaborator inline form */}
+      {showCollabForm && (
+        <div className="mx-2 mb-2 p-2.5 rounded-xl border border-purple-500/30 bg-purple-950/20" onClick={e => e.stopPropagation()}>
+          <p className="text-[10px] font-bold text-purple-400 mb-1.5">👥 Invite collaborator</p>
+          <div className="flex gap-1 mb-1.5">
+            <input
+              type="email"
+              value={collabEmail}
+              onChange={e => setCollabEmail(e.target.value)}
+              placeholder="Invite email..."
+              onKeyDown={e => { if (e.key === "Enter") handleAddCollab(e as unknown as React.MouseEvent); }}
+              className="flex-1 text-[11px] bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5
+                text-slate-200 placeholder-slate-600 outline-none focus:border-purple-500/60"
+            />
+            <button
+              onClick={handleAddCollab}
+              disabled={addingCollab || !collabEmail.trim()}
+              className="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-50
+                text-white text-[11px] font-bold transition-all"
+            >
+              Add
+            </button>
+          </div>
+          {localCollabs.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {localCollabs.map(ce => (
+                <span
+                  key={ce}
+                  className="flex items-center gap-1 text-[10px] bg-slate-700 text-slate-300 px-1.5 py-0.5 rounded-full"
+                >
+                  {ce}
+                  <button
+                    onClick={e => handleRemoveCollab(e, ce)}
+                    className="text-slate-500 hover:text-red-400 transition-colors"
+                  >✕</button>
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function tripDestinationEmoji(destination: string): string {
+  const d = destination.toLowerCase();
+  if (d.includes("goa") || d.includes("beach") || d.includes("bali") || d.includes("phuket") || d.includes("maldive")) return "🏖️";
+  if (d.includes("paris") || d.includes("rome") || d.includes("london") || d.includes("amsterdam") || d.includes("barcelona")) return "🏛️";
+  if (d.includes("dubai") || d.includes("singapore") || d.includes("hong kong") || d.includes("nyc") || d.includes("new york")) return "🏙️";
+  if (d.includes("manali") || d.includes("shimla") || d.includes("snow") || d.includes("alps") || d.includes("himalaya")) return "🏔️";
+  if (d.includes("safari") || d.includes("kenya") || d.includes("serengeti") || d.includes("africa")) return "🦁";
+  return "✈️";
+}
+
 export default function ConversationSidebar({
   conversations,
   activeId,
@@ -260,12 +559,21 @@ export default function ConversationSidebar({
   alerts = [],
   onDeleteAlert,
   onEditAlert,
+  savedTrips = [],
+  onRecallTrip,
+  onDeleteTrip,
+  onShareTrip,
+  onEmailTrip,
+  onAddCollaborator,
+  onRemoveCollaborator,
+  userEmail,
   sessionUser,
   theme = "dark",
   onToggleTheme,
   connected = true,
   onSignOut,
 }: Props) {
+  const { locale, setLocale, t } = useLanguage();
   const [tab, setTab] = useState<"chats" | "passengers">("chats");
   const [pendingDelete, setPendingDelete] = useState<Conversation | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -376,7 +684,7 @@ export default function ConversationSidebar({
                 : "text-slate-500 hover:text-slate-300"
             }`}
           >
-            💬 Chats
+            💬 {t("sidebar.chats")}
           </button>
           <button
             onClick={() => setTab("passengers")}
@@ -386,7 +694,7 @@ export default function ConversationSidebar({
                 : "text-slate-500 hover:text-slate-300"
             }`}
           >
-            👤 Passengers
+            👤 {t("sidebar.passengers")}
             {passengers.length > 0 && (
               <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-500 text-[9px] font-bold text-white flex items-center justify-center">
                 {passengers.length}
@@ -406,14 +714,60 @@ export default function ConversationSidebar({
                   transition-colors shadow-lg shadow-indigo-900/30"
               >
                 <span className="text-base">＋</span>
-                New Chat
+                {t("chat.newChat")}
               </button>
             </div>
+
+            {/* ── Saved Trips ── */}
+            {savedTrips.length > 0 && (
+              <div className="px-2 mb-1">
+                <p className="px-1 pt-1 pb-1 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  🗺️ {t("sidebar.savedTrips")}
+                </p>
+                <div className="space-y-0.5 max-h-40 overflow-y-auto">
+                  {savedTrips.map((trip) => (
+                    <SavedTripRow
+                      key={trip.id}
+                      trip={trip}
+                      isOwner={trip.is_owner !== false}
+                      onRecall={() => { onRecallTrip?.(trip.id); onClose(); }}
+                      onDelete={() => onDeleteTrip?.(trip.id)}
+                      onShare={onShareTrip
+                        ? async () => {
+                            const shareUrl = await onShareTrip(trip.id);
+                            if (!shareUrl) return null;
+                            return window.location.origin + shareUrl;
+                          }
+                        : undefined
+                      }
+                      onEmail={onEmailTrip
+                        ? async (toEmail, message) => onEmailTrip(trip.id, toEmail, message)
+                        : undefined
+                      }
+                      onAddCollaborator={onAddCollaborator && trip.is_owner !== false
+                        ? async (email) => {
+                            const ok = await onAddCollaborator(trip.id, email);
+                            return ok;
+                          }
+                        : undefined
+                      }
+                      onRemoveCollaborator={onRemoveCollaborator && trip.is_owner !== false
+                        ? async (email) => {
+                            const ok = await onRemoveCollaborator(trip.id, email);
+                            return ok;
+                          }
+                        : undefined
+                      }
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
 
             <div className="flex-1 overflow-y-auto px-2 pb-4">
               {sorted.length === 0 && (
                 <p className="text-slate-600 text-xs text-center mt-8 px-4">
-                  No conversations yet. Start a new chat above.
+                  {t("sidebar.noConversations")}
                 </p>
               )}
 
@@ -622,6 +976,26 @@ export default function ConversationSidebar({
                       )}
                     </div>
                   )}
+
+                  {/* Language selector */}
+                  <div className="border-t border-slate-700/50 mt-2 pt-2 pb-2">
+                    <p className="text-xs text-slate-500 px-3 pb-1">{t("language.select")}</p>
+                    <div className="flex gap-1 px-3 flex-wrap">
+                      {(([["en", "🇬🇧"], ["hi", "🇮🇳"], ["ar", "🇦🇪"], ["ta", "🇮🇳"]] as [Locale, string][])).map(([l, flag]) => (
+                        <button
+                          key={l}
+                          onClick={() => setLocale(l)}
+                          className={`px-2 py-0.5 rounded text-xs transition-all ${
+                            locale === l
+                              ? "bg-indigo-600 text-white"
+                              : "text-slate-400 hover:text-white"
+                          }`}
+                        >
+                          {flag} {t(`language.${l}`)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
                   {/* Sign out */}
                   {onSignOut && (
