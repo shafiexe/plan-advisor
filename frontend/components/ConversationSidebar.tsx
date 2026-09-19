@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Message } from "./MessageBubble";
 import type { PassengerRecord } from "./PassengerFormModal";
+import BrandLogo from "./BrandLogo";
 import type { AlertRecord, SavedTrip } from "@/hooks/useServerSync";
 import ConversationSearchModal from "./ConversationSearchModal";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
@@ -645,13 +646,7 @@ export default function ConversationSidebar({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 flex-shrink-0 min-w-[256px]">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold shadow-lg shadow-indigo-900/30 shrink-0">
-              ✦
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-100 leading-none">Plan Advisor</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">AI Assistant</p>
-            </div>
+            <BrandLogo size={32} />
           </div>
           {/* Search button */}
           <button
