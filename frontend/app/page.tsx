@@ -341,7 +341,10 @@ export default function Home() {
         }).join("\n")
       : null;
 
-    send(txt, history, passengerContext ? { passenger_context: passengerContext } : undefined);
+    send(txt, history, {
+      ...(passengerContext ? { passenger_context: passengerContext } : {}),
+      ...(userEmail ? { user_email: userEmail } : {}),
+    });
   }, [input, connected, streaming, typing, activeConversation, send, sync]);
 
   /* ── Voice input ─── */
