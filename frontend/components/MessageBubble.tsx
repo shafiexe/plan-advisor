@@ -48,6 +48,16 @@ import GroupSplitCard from "./GroupSplitCard";
 import type { GroupSplit } from "@/types/expenseSplit";
 import HotelComparisonCard from "./HotelComparisonCard";
 import type { HotelComparison } from "@/types/hotelComparison";
+import DocumentCheckCard from "./DocumentCheckCard";
+import type { DocumentCheck } from "@/types/documentCheck";
+import LocalEventsCard from "./LocalEventsCard";
+import type { LocalEvents } from "@/types/localEvents";
+import WeatherForecastCard from "./WeatherForecastCard";
+import type { WeatherForecast } from "@/types/weatherForecast";
+import TripRecapCard from "./TripRecapCard";
+import type { TripRecap } from "@/types/tripRecap";
+import LayoverGuideCard from "./LayoverGuideCard";
+import type { LayoverGuide } from "@/types/layoverGuide";
 
 export type Message = {
   id: string;
@@ -77,6 +87,11 @@ export type Message = {
   timelineData?: TripTimeline;
   splitData?: GroupSplit;
   hotelComparisonData?: HotelComparison;
+  eventsData?: LocalEvents;
+  documentCheckData?: DocumentCheck;
+  recapData?: TripRecap;
+  layoverData?: LayoverGuide;
+  forecastData?: WeatherForecast;
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -96,10 +111,10 @@ function formatTime(ts: number) {
 }
 
 export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip }: Props) {
-  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData, itineraryData, predictionData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData } = message;
+  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData, itineraryData, predictionData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData } = message;
   const isUser = role === "user";
   const isTransportComparison = !isUser && ((!!flightData && (!!busData || !!trainData)) || (!!busData && !!trainData));
-  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData || !!itineraryData || !!predictionData || !!packingData || !!flightStatusData || !!transitData || !!phrasebookData || !!insuranceData || !!timelineData || !!splitData || !!hotelComparisonData);
+  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData || !!itineraryData || !!predictionData || !!packingData || !!flightStatusData || !!transitData || !!phrasebookData || !!insuranceData || !!timelineData || !!splitData || !!hotelComparisonData || !!eventsData || !!documentCheckData || !!recapData || !!layoverData || !!forecastData);
   const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
@@ -228,6 +243,26 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
 
         {!isUser && hotelComparisonData && (
           <HotelComparisonCard data={hotelComparisonData} />
+        )}
+
+        {!isUser && eventsData && (
+          <LocalEventsCard data={eventsData} />
+        )}
+
+        {!isUser && documentCheckData && (
+          <DocumentCheckCard data={documentCheckData} />
+        )}
+
+        {!isUser && recapData && (
+          <TripRecapCard data={recapData} />
+        )}
+
+        {!isUser && layoverData && (
+          <LayoverGuideCard data={layoverData} />
+        )}
+
+        {!isUser && forecastData && (
+          <WeatherForecastCard data={forecastData} />
         )}
 
         {/* When a card is shown, render analysis text below it using MarkdownBody */}

@@ -28,6 +28,11 @@ export type WsMessage =
   | { type: "timeline_results"; data: unknown }
   | { type: "split_results"; data: unknown }
   | { type: "hotel_comparison_results"; data: unknown }
+  | { type: "events_results"; data: unknown }
+  | { type: "document_check_results"; data: unknown }
+  | { type: "recap_results"; data: unknown }
+  | { type: "layover_results"; data: unknown }
+  | { type: "forecast_results"; data: unknown }
   | { type: "done" }
   | { type: "error"; content: string };
 
@@ -61,6 +66,11 @@ type Options = {
   onTimelineResults?: (data: unknown) => void;
   onSplitResults?: (data: unknown) => void;
   onHotelComparisonResults?: (data: unknown) => void;
+  onEventsResults?: (data: unknown) => void;
+  onDocumentCheckResults?: (data: unknown) => void;
+  onRecapResults?: (data: unknown) => void;
+  onLayoverResults?: (data: unknown) => void;
+  onForecastResults?: (data: unknown) => void;
 };
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000/ws/chat";
@@ -105,6 +115,11 @@ export function useWebSocket(opts: Options) {
       else if (msg.type === "timeline_results")         optsRef.current.onTimelineResults?.(msg.data);
       else if (msg.type === "split_results")            optsRef.current.onSplitResults?.(msg.data);
       else if (msg.type === "hotel_comparison_results") optsRef.current.onHotelComparisonResults?.(msg.data);
+      else if (msg.type === "events_results")            optsRef.current.onEventsResults?.(msg.data);
+      else if (msg.type === "document_check_results")   optsRef.current.onDocumentCheckResults?.(msg.data);
+      else if (msg.type === "recap_results")             optsRef.current.onRecapResults?.(msg.data);
+      else if (msg.type === "layover_results")           optsRef.current.onLayoverResults?.(msg.data);
+      else if (msg.type === "forecast_results")          optsRef.current.onForecastResults?.(msg.data);
     };
 
     ws.onclose = () => {

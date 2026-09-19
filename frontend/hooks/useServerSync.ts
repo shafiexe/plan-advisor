@@ -49,6 +49,11 @@ function cleanMessages(messages: Message[]): Message[] {
       if (m.timelineData)      Object.assign(base, { timelineData: m.timelineData });
       if (m.splitData)              Object.assign(base, { splitData: m.splitData });
       if (m.hotelComparisonData)    Object.assign(base, { hotelComparisonData: m.hotelComparisonData });
+      if (m.documentCheckData)      Object.assign(base, { documentCheckData: m.documentCheckData });
+      if (m.eventsData)             Object.assign(base, { eventsData: m.eventsData });
+      if (m.recapData)              Object.assign(base, { recapData: m.recapData });
+      if (m.layoverData)            Object.assign(base, { layoverData: m.layoverData });
+      if (m.forecastData)           Object.assign(base, { forecastData: m.forecastData });
       return base;
     });
 }
@@ -385,6 +390,7 @@ export type UserPreferences = {
   home_iata: string;
   currency: string;
   travel_style: string;
+  passport_expiry?: string;
   onboarding_done: boolean;
 };
 

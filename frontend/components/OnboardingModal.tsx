@@ -74,6 +74,7 @@ const DEFAULT_PREFS: UserPreferences = {
   home_iata: "",
   currency: "INR",
   travel_style: "",
+  passport_expiry: "",
   onboarding_done: false,
 };
 
@@ -132,6 +133,20 @@ export default function OnboardingModal({ onComplete }: Props) {
                   <option key={c} value={c}>{c}</option>
                 ))}
               </select>
+
+              <div className="mt-4">
+                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Passport expiry (optional)
+                </label>
+                <input
+                  type="date"
+                  value={prefs.passport_expiry ?? ""}
+                  onChange={(e) => update({ passport_expiry: e.target.value })}
+                  className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5
+                    text-slate-200 text-sm outline-none focus:border-indigo-500 transition-colors"
+                />
+                <p className="text-xs text-slate-600 mt-1.5">We&apos;ll warn you before it expires</p>
+              </div>
             </div>
           )}
 

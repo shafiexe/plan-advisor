@@ -92,6 +92,7 @@ class UserPreferences(Base):
     home_iata       = Column(String, nullable=True, default="")   # IATA code e.g. BLR
     currency        = Column(String, nullable=True, default="INR")
     travel_style    = Column(String, nullable=True, default="")   # budget | mid-range | luxury
+    passport_expiry = Column(String, nullable=True, default="")   # YYYY-MM-DD
     onboarding_done = Column(Boolean, nullable=False, default=False)
     created_at      = Column(DateTime(timezone=True), server_default=func.now())
     updated_at      = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

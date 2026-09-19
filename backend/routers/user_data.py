@@ -360,6 +360,7 @@ class PreferencesBody(BaseModel):
     home_iata:       str = ""
     currency:        str = "INR"
     travel_style:    str = ""
+    passport_expiry: str = ""
     onboarding_done: bool = False
 
 
@@ -374,7 +375,8 @@ async def get_preferences(
     if not prefs:
         return {
             "nationality": "India", "home_city": "", "home_iata": "",
-            "currency": "INR", "travel_style": "", "onboarding_done": False,
+            "currency": "INR", "travel_style": "", "passport_expiry": "",
+            "onboarding_done": False,
         }
     return {
         "nationality":     prefs.nationality,
@@ -382,6 +384,7 @@ async def get_preferences(
         "home_iata":       prefs.home_iata,
         "currency":        prefs.currency,
         "travel_style":    prefs.travel_style,
+        "passport_expiry": prefs.passport_expiry or "",
         "onboarding_done": prefs.onboarding_done,
     }
 
@@ -402,6 +405,7 @@ async def save_preferences(
         prefs.home_iata       = body.home_iata
         prefs.currency        = body.currency
         prefs.travel_style    = body.travel_style
+        prefs.passport_expiry = body.passport_expiry
         prefs.onboarding_done = body.onboarding_done
     else:
         db.add(UserPreferences(
@@ -411,6 +415,7 @@ async def save_preferences(
             home_iata=body.home_iata,
             currency=body.currency,
             travel_style=body.travel_style,
+            passport_expiry=body.passport_expiry,
             onboarding_done=body.onboarding_done,
         ))
 

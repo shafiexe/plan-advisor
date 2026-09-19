@@ -89,17 +89,19 @@ async def websocket_chat(websocket: WebSocket):
                     + passenger_context
                 )
             if user_preferences:
-                nat   = user_preferences.get("nationality", "India")
-                home  = user_preferences.get("home_city", "")
-                iata  = user_preferences.get("home_iata", "")
-                curr  = user_preferences.get("currency", "INR")
-                style = user_preferences.get("travel_style", "")
+                nat             = user_preferences.get("nationality", "India")
+                home            = user_preferences.get("home_city", "")
+                iata            = user_preferences.get("home_iata", "")
+                curr            = user_preferences.get("currency", "INR")
+                style           = user_preferences.get("travel_style", "")
+                passport_expiry = user_preferences.get("passport_expiry", "")
                 pref_block = (
                     "User preferences (use these as defaults unless overridden by the conversation):\n"
                     f"- Nationality: {nat} (use for visa checks)\n"
                     f"- Home city: {home} ({iata}) — use as origin for flights unless specified\n"
                     f"- Currency: {curr} — show all prices in this currency\n"
-                    f"- Travel style: {style or 'not specified'}"
+                    f"- Travel style: {style or 'not specified'}\n"
+                    + (f"- Passport expiry: {passport_expiry} — pass this as passport_expiry when calling check_travel_documents" if passport_expiry else "- Passport expiry: not provided")
                 )
                 extra_parts.append(pref_block)
             extra_system = "\n\n".join(extra_parts) or None

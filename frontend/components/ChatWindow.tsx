@@ -14,7 +14,8 @@ const TOOL_ICONS: Record<string, string> = {
   search_buses:      "🚌",
   search_hotels:     "🏨",
   find_restaurants:  "🍽️",
-  get_weather:       "🌤️",
+  get_weather:          "🌤️",
+  get_weather_forecast: "🌤️",
   get_visa_requirements: "🛂",
   get_destination_guide:  "🗺️",
   convert_currency:       "💱",
@@ -29,6 +30,10 @@ const TOOL_ICONS: Record<string, string> = {
   get_trip_timeline:      "📅",
   split_group_expenses:   "👥",
   compare_hotels:         "🔍",
+  get_local_events:       "🎉",
+  check_travel_documents: "📋",
+  get_trip_recap:         "📖",
+  get_layover_guide:      "🛋️",
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -230,6 +235,45 @@ function getSuggestions(msg: Message): string[] {
       winner ? `Book the ${winner}` : "Book the recommended hotel",
       winner ? `Find restaurants near ${winner}` : "Find restaurants nearby",
       "What's the weather like there?",
+    ];
+  }
+  if (msg.eventsData) {
+    const dest = msg.eventsData.destination ?? "";
+    return [
+      "Add events to my itinerary",
+      dest ? `Find restaurants near event venues in ${dest}` : "Find restaurants near event venues",
+      dest ? `Build packing list for ${dest}` : "Build packing list",
+    ];
+  }
+  if (msg.documentCheckData) {
+    const dest = msg.documentCheckData.destination ?? "";
+    return [
+      "Renew Indian passport online — passportindia.gov.in",
+      dest ? `Check visa requirements for ${dest}` : "Check visa requirements",
+      dest ? `Build packing list for ${dest}` : "Build packing list",
+    ];
+  }
+  if (msg.recapData) {
+    const dest = msg.recapData.destination ?? "";
+    return [
+      "Share this recap",
+      dest ? `Plan my next trip to ${dest}` : "Plan my next trip",
+      dest ? `Build a packing list for ${dest}` : "Build a packing list",
+    ];
+  }
+  if (msg.layoverData) {
+    return [
+      "Find airport lounges with Priority Pass",
+      "What visa do I need for transit?",
+      "Book my onward flight",
+    ];
+  }
+  if (msg.forecastData) {
+    const dest = msg.forecastData.destination?.split(",")[0] ?? "";
+    return [
+      "Build a packing list for this weather",
+      dest ? `Plan outdoor activities on sunny days in ${dest}` : "Plan outdoor activities on sunny days",
+      dest ? `What should I wear in ${dest}?` : "What should I wear?",
     ];
   }
   if (msg.busData || msg.trainData) {

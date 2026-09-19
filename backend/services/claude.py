@@ -102,6 +102,24 @@ Travel Insurance:
 Trip Timeline:
 • `get_trip_timeline` — Assemble a visual trip timeline from flights, hotel, and itinerary. Call when user asks to see the full trip overview or timeline.
 
+Hotel comparison:
+• `compare_hotels` — Side-by-side hotel comparison with pros/cons and winner. Call when user asks which hotel to pick or to compare options.
+
+Travel documents:
+• `check_travel_documents` — Check passport validity, visa lead times, and travel document readiness. Call when travel dates and destination are known, or when user asks about documents/passport.
+
+Local events:
+• `get_local_events` — Local events, festivals, concerts, and holidays during the trip dates. Call when user asks what's happening or what's on at the destination.
+
+Layover guide:
+• `get_layover_guide` — Layover guide: whether to leave the airport, lounges, city options, time plan. Call when user has a stopover and asks what to do during a layover.
+
+Trip recap:
+• `get_trip_recap` — Post-trip recap and review. Call when user asks to recap, review, or summarize a completed or planned trip.
+
+7-Day Forecast:
+• `get_weather_forecast` — 7-day weather forecast with daily conditions, temperatures, and packing tips. Call when user asks about weather at the destination, what to expect weather-wise, or what to pack for weather.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IATA CITY CODES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -575,6 +593,115 @@ TOOLS = [
         },
     },
     {
+        "name": "compare_hotels",
+        "description": (
+            "Compare 2–5 hotels side-by-side with pros, cons, value scores, and a winner recommendation. "
+            "Call when user asks which hotel to pick, wants to compare hotels, or asks for a recommendation "
+            "after hotel results have been shown. Use the hotel names and details from the previous search."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "hotels": {
+                    "type": "array",
+                    "description": "List of hotels to compare",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name":        {"type": "string"},
+                            "rating":      {"type": "number"},
+                            "price":       {"type": "string", "description": "Price per night"},
+                            "hotel_class": {"type": "string"},
+                            "amenities":   {"type": "array", "items": {"type": "string"}},
+                            "description": {"type": "string"},
+                        },
+                        "required": ["name"],
+                    },
+                },
+                "currency": {"type": "string", "description": "Currency code e.g. INR"},
+            },
+            "required": ["hotels"],
+        },
+    },
+    {
+        "name": "check_travel_documents",
+        "description": (
+            "Check if the user's travel documents are valid for the planned trip. "
+            "Warns if passport expires within 6 months of travel, reminds about visa lead times. "
+            "Call when user mentions travel dates, or when they ask about documents, validity, or passport."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "travel_date":     {"type": "string", "description": "YYYY-MM-DD — first day of travel"},
+                "return_date":     {"type": "string", "description": "YYYY-MM-DD — return date (optional)"},
+                "destination":     {"type": "string", "description": "Destination country"},
+                "nationality":     {"type": "string", "description": "User's nationality e.g. India"},
+                "passport_expiry": {"type": "string", "description": "YYYY-MM-DD — passport expiry date"},
+                "visa_type":       {"type": "string", "description": "Visa type if known e.g. tourist visa, e-visa"},
+            },
+            "required": ["travel_date", "destination"],
+        },
+    },
+    {
+        "name": "get_local_events",
+        "description": (
+            "Find festivals, concerts, sports events, exhibitions, and local happenings at the destination "
+            "during the trip dates. Call when user asks what's on, what's happening, local events, or "
+            "festivals at the destination during their travel dates."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination": {"type": "string"},
+                "travel_date": {"type": "string", "description": "YYYY-MM-DD — first day of trip"},
+                "return_date": {"type": "string", "description": "YYYY-MM-DD — return date"},
+                "interests":   {"type": "array", "items": {"type": "string"}, "description": "e.g. ['music', 'food', 'sports']"},
+            },
+            "required": ["destination", "travel_date"],
+        },
+    },
+    {
+        "name": "get_trip_recap",
+        "description": (
+            "Generate a warm post-trip recap / review summary. "
+            "Call when the user asks to recap, review, or summarize a trip they took or planned, "
+            "or asks 'how was my trip', 'summarize my Japan trip', 'give me a trip review'."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination":    {"type": "string"},
+                "travel_date":    {"type": "string", "description": "YYYY-MM-DD departure date"},
+                "return_date":    {"type": "string", "description": "YYYY-MM-DD return date"},
+                "hotel":          {"type": "string", "description": "Hotel name if known"},
+                "total_budget":   {"type": "string", "description": "Total trip budget e.g. '₹82,000'"},
+                "places_visited": {"type": "array", "items": {"type": "string"}, "description": "Places or activities during the trip"},
+                "highlights":     {"type": "array", "items": {"type": "string"}, "description": "Memorable moments or highlights"},
+                "trip_style":     {"type": "string", "description": "e.g. family, solo, couple, group"},
+            },
+            "required": ["destination"],
+        },
+    },
+    {
+        "name": "get_weather_forecast",
+        "description": (
+            "Get a 7-day weather forecast for the destination. Shows daily conditions, "
+            "temperatures, rain chance, UV index, sunrise/sunset and travel tips for each day. "
+            "Call when user asks about weather, climate, what to pack for weather, "
+            "or when helping plan activities around weather."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination": {"type": "string", "description": "City or destination name e.g. 'Paris', 'Bali'"},
+                "travel_date": {"type": "string", "description": "YYYY-MM-DD — start of forecast window"},
+                "days":        {"type": "integer", "description": "Number of forecast days (default 7, max 8)"},
+            },
+            "required": ["destination"],
+        },
+    },
+    {
         "name": "get_trip_timeline",
         "description": (
             "Assemble a complete trip timeline combining flights, hotel check-in/out, and daily activities. "
@@ -633,6 +760,25 @@ TOOLS = [
                 },
             },
             "required": ["destination"],
+        },
+    },
+    {
+        "name": "get_layover_guide",
+        "description": (
+            "Generate a practical layover guide for what to do during a stopover at an airport. "
+            "Covers whether to leave the airport, lounge options, city attractions reachable in time, "
+            "and a minute-by-minute time plan. Call when user mentions a layover, stopover, or transit "
+            "at an airport and asks what to do."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "airport":                {"type": "string", "description": "Airport name and IATA code e.g. 'Dubai International (DXB)'"},
+                "layover_duration_hours": {"type": "number", "description": "Layover duration in hours e.g. 4.5"},
+                "nationality":            {"type": "string", "description": "Traveller nationality e.g. 'India'"},
+                "has_priority_pass":      {"type": "boolean", "description": "Whether traveller has Priority Pass lounge access"},
+            },
+            "required": ["airport", "layover_duration_hours"],
         },
     },
 ]
@@ -1030,6 +1176,164 @@ async def _run_tool(name: str, tool_input: dict) -> str:
         except Exception as e:
             return json.dumps({"error": str(e), "items": [], "total": 0})
 
+    # ── Hotel comparison ──
+    if name == "compare_hotels":
+        from services.hotel_comparison import compare_hotels
+        result = await compare_hotels(
+            hotels=tool_input.get("hotels", []),
+            currency=tool_input.get("currency", "INR"),
+        )
+        return json.dumps(result)
+
+    # ── Local events ──
+    if name == "get_local_events":
+        from services.local_events import get_local_events
+        result = await get_local_events(
+            destination=tool_input.get("destination", ""),
+            travel_date=tool_input.get("travel_date", ""),
+            return_date=tool_input.get("return_date", ""),
+            interests=tool_input.get("interests"),
+        )
+        return json.dumps(result)
+
+    # ── Travel document check ──
+    if name == "check_travel_documents":
+        import json as _json
+        from datetime import date, timedelta
+
+        travel_date_str   = tool_input.get("travel_date", "")
+        return_date_str   = tool_input.get("return_date", "")
+        destination       = tool_input.get("destination", "")
+        nationality       = tool_input.get("nationality", "India")
+        passport_expiry_s = tool_input.get("passport_expiry", "")
+        visa_type         = tool_input.get("visa_type", "")
+
+        today = date.today()
+        warnings = []
+        checks = []
+
+        try:
+            travel_date = date.fromisoformat(travel_date_str)
+        except Exception:
+            travel_date = today + timedelta(days=30)
+
+        try:
+            return_date = date.fromisoformat(return_date_str) if return_date_str else travel_date + timedelta(days=7)
+        except Exception:
+            return_date = travel_date + timedelta(days=7)
+
+        days_until_travel = (travel_date - today).days
+
+        passport_status = "unknown"
+        passport_days_left = None
+        if passport_expiry_s:
+            try:
+                passport_expiry = date.fromisoformat(passport_expiry_s)
+                passport_days_left = (passport_expiry - today).days
+                required_expiry = return_date + timedelta(days=180)
+
+                if passport_expiry < today:
+                    passport_status = "expired"
+                    warnings.append("⛔ Your passport has expired — renew immediately before booking.")
+                elif passport_expiry < required_expiry:
+                    months_left = passport_days_left // 30
+                    passport_status = "expiring_soon"
+                    warnings.append(f"⚠️ Passport expires in {months_left} months — most countries require 6 months validity beyond your return date. Consider renewing before travel.")
+                else:
+                    passport_status = "valid"
+                    checks.append(f"✅ Passport valid until {passport_expiry.strftime('%b %Y')} — good for this trip.")
+            except Exception:
+                passport_status = "unknown"
+        else:
+            warnings.append("ℹ️ Add your passport expiry date to get validity checks.")
+
+        visa_reminders = []
+        destination_lower = destination.lower()
+
+        LONG_LEAD = {
+            "usa": ("US Visa (B1/B2)", 60, "Book appointment well in advance — wait times can be 2-3 months."),
+            "united states": ("US Visa (B1/B2)", 60, "Book appointment well in advance — wait times can be 2-3 months."),
+            "uk": ("UK Visa", 21, "Apply at least 3 weeks before travel."),
+            "united kingdom": ("UK Visa", 21, "Apply at least 3 weeks before travel."),
+            "canada": ("Canada Visa / eTA", 14, "Apply online — eTA is quick but visitor visa takes 2-4 weeks."),
+            "australia": ("Australia eVisitor/ETA", 7, "ETA is usually instant; subclass 600 takes 2-4 weeks."),
+            "schengen": ("Schengen Visa", 30, "Apply 3-6 weeks in advance; submit at the embassy of your main destination."),
+            "germany": ("Schengen Visa", 30, "Apply 3-6 weeks in advance."),
+            "france": ("Schengen Visa", 30, "Apply 3-6 weeks in advance."),
+            "italy": ("Schengen Visa", 30, "Apply 3-6 weeks in advance."),
+            "china": ("China Visa", 14, "Apply at least 2 weeks before travel."),
+            "russia": ("Russia Visa", 21, "Apply at least 3 weeks before; e-visa is available for some ports of entry."),
+            "japan": ("Japan Visa", 7, "Usually processed in 4-5 business days for Indian passport holders."),
+        }
+
+        EASY_VISA = {
+            "dubai": "UAE — Visa on arrival (30 days) or e-visa. Usually approved within 24-48 hours.",
+            "uae": "UAE — Visa on arrival (30 days) or e-visa. Usually approved within 24-48 hours.",
+            "thailand": "Thailand — Visa on arrival (30 days) for Indian passport holders.",
+            "singapore": "Singapore — Apply for e-visa at least 1 week before.",
+            "malaysia": "Malaysia — Visa on arrival (30 days) for Indians.",
+            "maldives": "Maldives — Visa on arrival (30 days), free of charge.",
+            "sri lanka": "Sri Lanka — e-visa available online (usually instant).",
+            "nepal": "Nepal — Visa on arrival.",
+            "bhutan": "Bhutan — Permit required (organized via tour operator).",
+            "indonesia": "Indonesia — Visa on arrival (30 days).",
+        }
+
+        for keyword, (visa_name, lead_days, note) in LONG_LEAD.items():
+            if keyword in destination_lower:
+                if days_until_travel < lead_days:
+                    warnings.append(f"⚠️ {visa_name}: Apply immediately — only {days_until_travel} days until travel (recommend {lead_days}+ days lead time). {note}")
+                else:
+                    visa_reminders.append(f"📋 {visa_name}: Apply by {(travel_date - timedelta(days=lead_days)).strftime('%b %d')}. {note}")
+                break
+
+        for keyword, note in EASY_VISA.items():
+            if keyword in destination_lower:
+                checks.append(f"✅ {note}")
+                break
+
+        if 0 < days_until_travel <= 2:
+            warnings.append("⚠️ Online check-in usually opens 24-48 hours before departure — check your airline's website.")
+
+        result = {
+            "destination":        destination,
+            "travel_date":        travel_date_str,
+            "return_date":        return_date_str,
+            "days_until_travel":  days_until_travel,
+            "passport_status":    passport_status,
+            "passport_days_left": passport_days_left,
+            "warnings":           warnings,
+            "checks":             checks,
+            "visa_reminders":     visa_reminders,
+            "overall_status":     "warning" if warnings else "ok",
+        }
+        return _json.dumps(result)
+
+    # ── Trip recap ──
+    if name == "get_trip_recap":
+        from services.trip_recap import get_trip_recap as _recap
+        result = await _recap(
+            destination=tool_input.get("destination", ""),
+            travel_date=tool_input.get("travel_date", ""),
+            return_date=tool_input.get("return_date", ""),
+            hotel=tool_input.get("hotel", ""),
+            total_budget=tool_input.get("total_budget", ""),
+            places_visited=tool_input.get("places_visited"),
+            highlights=tool_input.get("highlights"),
+            trip_style=tool_input.get("trip_style", ""),
+        )
+        return json.dumps(result)
+
+    # ── 7-day weather forecast ──
+    if name == "get_weather_forecast":
+        from services.weather_forecast import get_weather_forecast as _get_forecast
+        result = await _get_forecast(
+            destination=tool_input.get("destination", ""),
+            travel_date=tool_input.get("travel_date", ""),
+            days=int(tool_input.get("days", 7)),
+        )
+        return json.dumps(result)
+
     # ── Trip timeline ──
     if name == "get_trip_timeline":
         import json as _json
@@ -1041,6 +1345,17 @@ async def _run_tool(name: str, tool_input: dict) -> str:
             "itinerary_days": tool_input.get("itinerary_days", []),
         }
         return _json.dumps(timeline)
+
+    # ── Layover guide ──
+    if name == "get_layover_guide":
+        from services.layover_guide import get_layover_guide
+        result = await get_layover_guide(
+            airport=tool_input.get("airport", ""),
+            layover_duration_hours=float(tool_input.get("layover_duration_hours", 3.0)),
+            nationality=tool_input.get("nationality", "India"),
+            has_priority_pass=bool(tool_input.get("has_priority_pass", False)),
+        )
+        return json.dumps(result)
 
     return json.dumps({"error": f"Unknown tool: {name}"})
 
@@ -1105,6 +1420,19 @@ def _tool_label(name: str, tool_input: dict) -> str:
         return f"Building trip timeline for {tool_input.get('destination', '')}…"
     if name == "split_group_expenses":
         return "Splitting group expenses…"
+    if name == "compare_hotels":
+        return "Comparing hotels…"
+    if name == "check_travel_documents":
+        return f"Checking travel documents for {tool_input.get('destination', '')}…"
+    if name == "get_local_events":
+        destination = tool_input.get("destination", "")
+        return f"Finding events in {destination} for your dates…"
+    if name == "get_trip_recap":
+        return f"Writing trip recap for {tool_input.get('destination', '')}…"
+    if name == "get_layover_guide":
+        return f"Building layover guide for {tool_input.get('airport', '')}…"
+    if name == "get_weather_forecast":
+        return f"Fetching weather forecast for {tool_input.get('destination', '')}…"
     return f"Running {name}…"
 
 
@@ -1313,6 +1641,48 @@ async def stream_response(messages: list, extra_system: str | None = None) -> As
                         split = json.loads(result_str)
                         if split.get("members"):
                             yield {"type": "split_results", "data": split}
+                    except Exception:
+                        pass
+                elif block.name == "compare_hotels":
+                    try:
+                        hc = json.loads(result_str)
+                        if not hc.get("error") and hc.get("hotels"):
+                            yield {"type": "hotel_comparison_results", "data": hc}
+                    except Exception:
+                        pass
+                elif block.name == "check_travel_documents":
+                    try:
+                        td = json.loads(result_str)
+                        if td.get("destination"):
+                            yield {"type": "document_check_results", "data": td}
+                    except Exception:
+                        pass
+                elif block.name == "get_local_events":
+                    try:
+                        ev = json.loads(result_str)
+                        if not ev.get("error") and ev.get("events") is not None:
+                            yield {"type": "events_results", "data": ev}
+                    except Exception:
+                        pass
+                elif block.name == "get_trip_recap":
+                    try:
+                        recap = json.loads(result_str)
+                        if recap.get("destination"):
+                            yield {"type": "recap_results", "data": recap}
+                    except Exception:
+                        pass
+                elif block.name == "get_weather_forecast":
+                    try:
+                        fc = json.loads(result_str)
+                        if not fc.get("error") and fc.get("days"):
+                            yield {"type": "forecast_results", "data": fc}
+                    except Exception:
+                        pass
+                elif block.name == "get_layover_guide":
+                    try:
+                        lg = json.loads(result_str)
+                        if lg.get("airport"):
+                            yield {"type": "layover_results", "data": lg}
                     except Exception:
                         pass
 

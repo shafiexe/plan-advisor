@@ -36,6 +36,11 @@ import type { TravelInsurance } from "@/types/insurance";
 import type { GroupSplit } from "@/types/expenseSplit";
 import type { TripTimeline } from "@/types/timeline";
 import type { HotelComparison } from "@/types/hotelComparison";
+import type { LocalEvents } from "@/types/localEvents";
+import type { DocumentCheck } from "@/types/documentCheck";
+import type { TripRecap } from "@/types/tripRecap";
+import type { LayoverGuide } from "@/types/layoverGuide";
+import type { WeatherForecast } from "@/types/weatherForecast";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
 
@@ -145,6 +150,11 @@ export default function Home() {
   const pendingTimelineRef     = useRef<TripTimeline | null>(null);
   const pendingSplitRef        = useRef<GroupSplit | null>(null);
   const pendingHotelComparisonRef = useRef<HotelComparison | null>(null);
+  const pendingEventsRef          = useRef<LocalEvents | null>(null);
+  const pendingDocumentCheckRef   = useRef<DocumentCheck | null>(null);
+  const pendingRecapRef           = useRef<TripRecap | null>(null);
+  const pendingLayoverRef         = useRef<LayoverGuide | null>(null);
+  const pendingForecastRef        = useRef<WeatherForecast | null>(null);
 
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
@@ -250,6 +260,11 @@ export default function Home() {
     const timelineData      = pendingTimelineRef.current      ?? undefined;
     const splitData              = pendingSplitRef.current              ?? undefined;
     const hotelComparisonData    = pendingHotelComparisonRef.current    ?? undefined;
+    const eventsData             = pendingEventsRef.current             ?? undefined;
+    const documentCheckData      = pendingDocumentCheckRef.current      ?? undefined;
+    const recapData              = pendingRecapRef.current              ?? undefined;
+    const layoverData            = pendingLayoverRef.current            ?? undefined;
+    const forecastData           = pendingForecastRef.current           ?? undefined;
     if (calendarData)      pendingCalendarRef.current      = null;
     if (hotelData)         pendingHotelRef.current         = null;
     if (restaurantData)    pendingRestaurantRef.current    = null;
@@ -266,8 +281,13 @@ export default function Home() {
     if (timelineData)      pendingTimelineRef.current      = null;
     if (splitData)              pendingSplitRef.current              = null;
     if (hotelComparisonData)    pendingHotelComparisonRef.current    = null;
+    if (eventsData)             pendingEventsRef.current             = null;
+    if (documentCheckData)      pendingDocumentCheckRef.current      = null;
+    if (recapData)              pendingRecapRef.current              = null;
+    if (layoverData)            pendingLayoverRef.current            = null;
+    if (forecastData)           pendingForecastRef.current           = null;
 
-    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData || timelineData || splitData || hotelComparisonData);
+    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData || timelineData || splitData || hotelComparisonData || eventsData || documentCheckData || recapData || layoverData || forecastData);
     updateActive((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!hasCard && last?.role === "assistant" && last.streaming) {
@@ -275,7 +295,7 @@ export default function Home() {
       }
       return [
         ...msgs,
-        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData },
+        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData },
       ];
     });
   }, [updateActive]);
@@ -425,6 +445,26 @@ export default function Home() {
     },
     onHotelComparisonResults: (data) => {
       pendingHotelComparisonRef.current = data as HotelComparison;
+      setToolLabel(null);
+    },
+    onEventsResults: (data) => {
+      pendingEventsRef.current = data as LocalEvents;
+      setToolLabel(null);
+    },
+    onDocumentCheckResults: (data) => {
+      pendingDocumentCheckRef.current = data as DocumentCheck;
+      setToolLabel(null);
+    },
+    onRecapResults: (data) => {
+      pendingRecapRef.current = data as TripRecap;
+      setToolLabel(null);
+    },
+    onLayoverResults: (data) => {
+      pendingLayoverRef.current = data as LayoverGuide;
+      setToolLabel(null);
+    },
+    onForecastResults: (data) => {
+      pendingForecastRef.current = data as WeatherForecast;
       setToolLabel(null);
     },
   });
@@ -850,11 +890,12 @@ export default function Home() {
       ...(userLocation ? { user_location: userLocation.label } : {}),
       ...(userPrefs ? {
         user_preferences: {
-          nationality:  userPrefs.nationality,
-          home_city:    userPrefs.home_city,
-          home_iata:    userPrefs.home_iata,
-          currency:     userPrefs.currency,
-          travel_style: userPrefs.travel_style,
+          nationality:    userPrefs.nationality,
+          home_city:      userPrefs.home_city,
+          home_iata:      userPrefs.home_iata,
+          currency:       userPrefs.currency,
+          travel_style:   userPrefs.travel_style,
+          passport_expiry: userPrefs.passport_expiry ?? "",
         },
       } : {}),
     });
