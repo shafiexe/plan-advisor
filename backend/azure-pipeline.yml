@@ -33,7 +33,7 @@ variables:
   - name: BACKEND_APP_NAME
     value: "plan-advisor-backend"
   - name: FRONTEND_FQDN                # Frontend Container App hostname (no https://)
-    value: "plan-advisor-frontend.ashyocean-2012629c.eastus.azurecontainerapps.io"
+    value: "www.planadvisors.in"
 
   - name: IMAGE
     value: "$(ACR_NAME).azurecr.io/plan-advisor-backend"
