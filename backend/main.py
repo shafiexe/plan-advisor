@@ -6,6 +6,7 @@ import traceback
 logging.basicConfig(level=logging.INFO)
 
 # ── Sentry error tracking ──────────────────────────────────────────────────────
+import os as _os
 _sentry_dsn = _os.getenv("SENTRY_DSN", "")
 if _sentry_dsn:
     try:
@@ -24,7 +25,6 @@ if _sentry_dsn:
 # ───────────────────────────────────────────────────────────────────────────────
 
 # ── Arize Phoenix tracing (must init before anthropic client is created) ───────
-import os as _os
 _phoenix_key = _os.getenv("PHOENIX_API_KEY", "")
 if _phoenix_key:
     try:
