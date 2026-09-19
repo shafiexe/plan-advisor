@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useMemo } from "react";
 import MessageBubble, { Message } from "./MessageBubble";
 import TypingDots from "./TypingDots";
+import BrandLogo from "./BrandLogo";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const TOOL_ICONS: Record<string, string> = {
@@ -167,13 +168,8 @@ function EmptyState({ onSuggestion, recentMessages = [] }: EmptyProps) {
   return (
     <div className="flex flex-col items-center justify-center h-full gap-6 px-4 text-center">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-3xl shadow-xl shadow-indigo-900/30">
-          ✦
-        </div>
-        <div>
-          <p className="text-xl font-semibold text-slate-200">{t("app.name")}</p>
-          <p className="text-sm text-slate-500 mt-1">{t("app.tagline")}</p>
-        </div>
+        <BrandLogo size={64} />
+        <p className="text-sm text-slate-500">{t("app.tagline")}</p>
       </div>
 
       <div className="flex flex-col gap-2 w-full max-w-sm">

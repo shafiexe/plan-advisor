@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "प्लान एडवाइज़र",
-    "tagline": "आपका यात्रा सहायक"
+    "name": "planadviros",
+    "tagline": "Smart Assistance"
   },
   "chat": {
     "placeholder": "उड़ानें, होटल, वीज़ा, मौसम के बारे में पूछें...",

@@ -16,8 +16,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Plan Advisor",
-  description: "AI-powered advisory chat assistant",
+  title: "planadviros",
+  description: "Tours and Guidance — Smart Travel Planning",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    apple: "/icon-192.png",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -35,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           }}
         />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#6366f1" />
+        <meta name="theme-color" content="#1e3a8a" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>

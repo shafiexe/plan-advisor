@@ -3,6 +3,7 @@
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import BrandLogo from "@/components/BrandLogo";
 
 function LoginCard() {
   const searchParams = useSearchParams();
@@ -12,8 +13,8 @@ function LoginCard() {
     <div className="min-h-screen flex items-center justify-center bg-slate-950 px-4">
       {/* Background glow */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -left-40 w-96 h-96 rounded-full blur-3xl" style={{ background: "#1e3a8a15" }} />
+        <div className="absolute -bottom-40 -right-40 w-96 h-96 rounded-full blur-3xl" style={{ background: "#d4a01710" }} />
       </div>
 
       <div className="relative w-full max-w-sm">
@@ -22,13 +23,8 @@ function LoginCard() {
 
           {/* Logo */}
           <div className="flex flex-col items-center gap-3 mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-2xl font-bold shadow-xl shadow-indigo-900/40">
-              ✦
-            </div>
-            <div className="text-center">
-              <h1 className="text-xl font-semibold text-slate-100 tracking-tight">Plan Advisor</h1>
-              <p className="text-sm text-slate-500 mt-1">Sign in to continue</p>
-            </div>
+            <BrandLogo size={56} />
+            <p className="text-sm text-slate-500">Sign in to continue</p>
           </div>
 
           {/* Auth buttons */}

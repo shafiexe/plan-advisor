@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "مستشار السفر",
-    "tagline": "مساعدك للسفر والحياة"
+    "name": "planadviros",
+    "tagline": "Smart Assistance"
   },
   "chat": {
     "placeholder": "اسأل عن الرحلات، الفنادق، التأشيرة، الطقس...",

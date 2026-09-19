@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import MarkdownBody from "@/components/MarkdownBody";
+import BrandLogo from "@/components/BrandLogo";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
@@ -36,8 +37,8 @@ export default function SharePage() {
         <div className="text-5xl mb-4">🔗</div>
         <p className="text-slate-300 text-lg font-medium">Link not found</p>
         <p className="text-slate-500 text-sm mt-2">{error}</p>
-        <a href="/" className="mt-6 inline-block px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition-colors">
-          Open Plan Advisor
+        <a href="/" className="mt-6 inline-block px-4 py-2 rounded-xl text-white text-sm font-medium transition-colors" style={{ background: "#1e3a8a" }}>
+          Open planadviros
         </a>
       </div>
     </div>
@@ -54,18 +55,14 @@ export default function SharePage() {
       {/* Header */}
       <div className="border-b border-slate-800 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-sm font-bold shadow-lg">
-              ✦
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-100 leading-none">Plan Advisor</p>
-              <p className="text-[11px] text-slate-500 mt-0.5">Shared trip plan</p>
-            </div>
+          <div className="flex items-center gap-2">
+            <BrandLogo size={28} />
+            <p className="text-[11px] text-slate-500 ml-1">Shared trip plan</p>
           </div>
           <a
             href="/"
-            className="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors"
+            className="px-3 py-1.5 rounded-lg text-white text-xs font-medium transition-colors"
+            style={{ background: "#1e3a8a" }}
           >
             Plan your trip →
           </a>
@@ -83,8 +80,8 @@ export default function SharePage() {
           {conv.messages.filter(m => m.role !== "tool").map((m, i) => (
             <div key={m.id ?? i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
               {m.role === "assistant" && (
-                <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-xs font-bold mr-2 mt-1 shrink-0">
-                  ✦
+                <div className="mr-2 mt-1 shrink-0">
+                  <BrandLogo variant="icon" size={28} />
                 </div>
               )}
               <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm
@@ -105,9 +102,10 @@ export default function SharePage() {
           <p className="text-xs text-slate-600 mb-3">Want to plan your own trip?</p>
           <a
             href="/"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium transition-colors shadow-lg shadow-indigo-900/30"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-white text-sm font-medium transition-colors shadow-lg"
+            style={{ background: "#1e3a8a" }}
           >
-            ✦ Try Plan Advisor free
+            Try planadviros free →
           </a>
         </div>
       </div>

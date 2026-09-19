@@ -1,7 +1,7 @@
 {
   "app": {
-    "name": "பயண ஆலோசகர்",
-    "tagline": "உங்கள் பயண உதவியாளர்"
+    "name": "planadviros",
+    "tagline": "Smart Assistance"
   },
   "chat": {
     "placeholder": "விமானங்கள், ஹோட்டல்கள், விசா, வானிலை பற்றி கேளுங்கள்...",
