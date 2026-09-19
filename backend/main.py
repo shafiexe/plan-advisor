@@ -56,6 +56,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from routers import chat, transcribe, tts, passport, user_data, admin, alerts, push, trips
 from routers import agent_auth, agent_packages, agent_tickets, agent_visa
+from routers import explore, agent_enquiries
 from database import init_db
 
 # Allow-list: local dev + any Azure App Service / custom domain
@@ -124,6 +125,8 @@ app.include_router(agent_auth.router,     tags=["agent"])
 app.include_router(agent_packages.router, tags=["agent-packages"])
 app.include_router(agent_tickets.router,  tags=["agent-tickets"])
 app.include_router(agent_visa.router,     tags=["agent-visa"])
+app.include_router(explore.router,           tags=["explore"])
+app.include_router(agent_enquiries.router,   tags=["agent-enquiries"])
 
 
 @app.exception_handler(Exception)

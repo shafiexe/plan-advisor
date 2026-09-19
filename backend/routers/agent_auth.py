@@ -260,7 +260,7 @@ async def dashboard_stats(
     db: AsyncSession = Depends(get_db),
 ):
     """Return counts for the agent dashboard."""
-    from models import TourPackage, Ticket, VisaService
+    from models import TourPackage, Ticket, VisaService, Enquiry
     from sqlalchemy import func
 
     packages = (await db.execute(
@@ -292,7 +292,9 @@ async def dashboard_stats(
         "published_packages": published_packages,
         "tickets":            tickets,
         "visa":               visa,
-        "enquiries":          0,  # Phase 4
+        "enquiries":          (await db.execute(
+            select(func.count()).where(Enquiry.agent_email == profile.user_email, Enquiry.is_read == False)
+        )).scalar() or 0,
         "recent_packages": [
             {"id": p.id, "title": p.title, "status": p.status, "destinations": p.destinations or []}
             for p in recent_pkgs

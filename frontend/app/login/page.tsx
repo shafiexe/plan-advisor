@@ -62,6 +62,12 @@ function LoginCard() {
           <p className="text-center text-xs text-slate-600 mt-6">
             By signing in you agree to our terms of service
           </p>
+
+          <div className="text-center mt-4">
+            <a href="/explore" className="text-xs text-slate-500 hover:text-slate-300 transition-colors">
+              Just browsing? Explore listings →
+            </a>
+          </div>
         </div>
       </div>
     </div>

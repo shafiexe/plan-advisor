@@ -887,6 +887,13 @@ export default function ConversationSidebar({
               })}
             </div>
 
+            {/* ── Explore shortcut ── */}
+            <div className="px-3 pb-2">
+              <a href="/explore" className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500 hover:text-slate-300 rounded-xl hover:bg-slate-800/60 transition-all w-full">
+                🌐 <span>Explore Listings</span>
+              </a>
+            </div>
+
             {/* ── Bottom user bar ── */}
             <div ref={userMenuRef} className="relative px-3 py-3 border-t border-slate-800 flex-shrink-0">
 

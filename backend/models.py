@@ -254,3 +254,22 @@ def make_slug(title: str, suffix: str) -> str:
     """Generate a URL-friendly slug: 'Ooty Family Tour' -> 'ooty-family-tour-ab12'"""
     base = _re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-')[:80]
     return f"{base}-{suffix}"
+
+
+class Enquiry(Base):
+    """Traveller enquiry about a listing — stored and shown in agent dashboard."""
+    __tablename__ = "enquiries"
+
+    id             = Column(Integer, primary_key=True, autoincrement=True)
+    agent_email    = Column(String, nullable=False, index=True)
+    listing_type   = Column(String(20), nullable=False)   # package / ticket / visa
+    listing_id     = Column(Integer, nullable=False)
+    listing_title  = Column(String(200), default="")
+    enquirer_name  = Column(String(100), default="")
+    enquirer_email = Column(String(120), default="")
+    enquirer_phone = Column(String(30), default="")
+    travel_date    = Column(String(20), default="")       # YYYY-MM-DD
+    num_travelers  = Column(Integer, default=1)
+    message        = Column(Text, default="")
+    is_read        = Column(Boolean, default=False)
+    created_at     = Column(DateTime, default=_now)

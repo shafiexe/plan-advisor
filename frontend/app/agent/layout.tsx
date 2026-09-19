@@ -69,7 +69,10 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
           })}
         </nav>
 
-        <div className="p-3 border-t border-white/10">
+        <div className="p-3 border-t border-white/10 flex flex-col gap-1">
+          <Link href="/explore" className="flex items-center gap-2 px-3 py-2 text-xs text-blue-300/50 hover:text-blue-200 rounded-lg hover:bg-white/5 transition-all">
+            🌐 Explore Listings
+          </Link>
           <Link href="/" className="flex items-center gap-2 px-3 py-2 text-xs text-blue-300/50 hover:text-blue-200 rounded-lg hover:bg-white/5 transition-all">
             ← Back to Chat
           </Link>

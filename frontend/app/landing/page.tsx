@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BrandLogo from "@/components/BrandLogo";
+import LandingNav from "@/components/LandingNav";
 
 export const metadata = {
   title: "planadviros — Tours and Guidance",
@@ -11,18 +12,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       {/* ── Navbar ───────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md border-b border-slate-800/60 bg-slate-950/80">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 flex items-center justify-between h-14">
-          <BrandLogo size={32} />
-          <Link
-            href="/login"
-            className="px-4 py-1.5 rounded-lg border border-[#1e3a8a]/70 text-[#d4a017] text-sm font-medium
-              hover:bg-[#1e3a8a]/10 hover:border-[#1e3a8a] transition-colors duration-150"
-          >
-            Sign in
-          </Link>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden pt-20 pb-16 sm:pt-28 sm:pb-24 px-4 sm:px-6">
@@ -267,6 +257,27 @@ export default function LandingPage() {
               style={{ background: "#1e3a8a" }}
             >
               Start Planning Free →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Explore listings callout ─────────────────────────── */}
+      <section className="py-12 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto bg-slate-900/60 border border-slate-800/60 rounded-2xl px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-1">Browse Tour Packages, Tickets & Visa</h3>
+            <p className="text-sm text-slate-400">View listings from verified agents across India — no sign-up needed.</p>
+          </div>
+          <div className="flex gap-3 shrink-0">
+            <Link href="/explore/packages" className="px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors" style={{ background: "#1e3a8a" }}>
+              🌍 Packages
+            </Link>
+            <Link href="/explore/tickets" className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white transition-all">
+              🎫 Tickets
+            </Link>
+            <Link href="/explore/visa" className="px-5 py-2.5 rounded-xl text-sm font-semibold border border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white transition-all">
+              🛂 Visa
             </Link>
           </div>
         </div>

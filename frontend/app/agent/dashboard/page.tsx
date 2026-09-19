@@ -19,11 +19,21 @@ export default function AgentDashboard() {
   const { data: session } = useSession();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileSlug, setProfileSlug] = useState<string | null>(null);
 
   useEffect(() => {
     if (!session?.user?.email) return;
-    fetch(`${API}/api/agent/dashboard/stats`, { headers: { "X-User-Email": session.user.email } })
+    const headers = { "X-User-Email": session.user.email };
+    fetch(`${API}/api/agent/dashboard/stats`, { headers })
       .then(r => r.json()).then(setStats).catch(console.error).finally(() => setLoading(false));
+    fetch(`${API}/api/agent/check`, { headers })
+      .then(r => r.json())
+      .then(d => {
+        if (d.profile?.id && d.profile?.name) {
+          const base = d.profile.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
+          setProfileSlug(`${base}-${d.profile.id}`);
+        }
+      }).catch(console.error);
   }, [session]);
 
   const STAT_CARDS = [
@@ -35,9 +45,17 @@ export default function AgentDashboard() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
-        <p className="text-slate-400 text-sm mt-1">Manage your listings and track performance</p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
+          <p className="text-slate-400 text-sm mt-1">Manage your listings and track performance</p>
+        </div>
+        {profileSlug && (
+          <Link href={`/explore/agents/${profileSlug}`}
+            className="shrink-0 text-xs px-3 py-2 rounded-lg border border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 transition-all">
+            🌐 View public profile
+          </Link>
+        )}
       </div>
 
       {/* Stats */}
