@@ -42,8 +42,8 @@ function ItemRow({
         <div
           className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
             checked
-              ? "bg-indigo-600 border-indigo-500"
-              : "bg-slate-800 border-slate-600 group-hover:border-indigo-400"
+              ? "bg-[#1e3a8a] border-[#1e3a8a]"
+              : "bg-slate-800 border-slate-600 group-hover:border-[#1e40af]"
           }`}
         >
           {checked && (
@@ -145,7 +145,7 @@ export default function PackingListCard({
       {/* Progress bar */}
       <div className="h-1 bg-slate-800">
         <div
-          className="h-full bg-indigo-500 transition-all duration-300"
+          className="h-full bg-[#1e40af] transition-all duration-300"
           style={{ width: `${progressPct}%` }}
         />
       </div>
@@ -170,7 +170,7 @@ export default function PackingListCard({
           {checkedCount < totalItems ? (
             <button
               onClick={packAll}
-              className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-700/40 border border-indigo-600/40 text-indigo-300 hover:bg-indigo-700/60 transition-colors"
+              className="text-[11px] px-2 py-0.5 rounded-full bg-[#1d4ed8]/40 border border-[#1e3a8a]/40 text-[#d4a017] hover:bg-[#1d4ed8]/60 transition-colors"
             >
               Pack all
             </button>
@@ -193,7 +193,7 @@ export default function PackingListCard({
             onClick={() => setActiveTab(i)}
             className={`shrink-0 px-3 py-2.5 text-xs font-semibold transition-colors whitespace-nowrap border-b-2 ${
               i === activeTab
-                ? "border-indigo-500 text-indigo-300 bg-indigo-950/30"
+                ? "border-[#1e3a8a] text-[#d4a017] bg-[#172554]/30"
                 : "border-transparent text-slate-500 hover:text-slate-300 hover:border-slate-600"
             }`}
           >
@@ -228,7 +228,7 @@ export default function PackingListCard({
           <ul className="space-y-1">
             {data.tips.map((tip, i) => (
               <li key={i} className="text-xs text-slate-400 flex gap-1.5">
-                <span className="text-indigo-400 shrink-0">•</span>
+                <span className="text-[#d4a017] shrink-0">•</span>
                 {tip}
               </li>
             ))}

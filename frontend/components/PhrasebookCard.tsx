@@ -22,7 +22,7 @@ function PhraseRow({ phrase }: { phrase: Phrase }) {
         <button
           onClick={handleCopy}
           title="Copy pronunciation"
-          className="text-xs text-indigo-300 italic hover:text-indigo-200 transition-colors text-left"
+          className="text-xs text-[#d4a017] italic hover:text-[#d4a017] transition-colors text-left"
         >
           {copied ? (
             <span className="text-emerald-400 not-italic font-medium">Copied!</span>
@@ -54,7 +54,7 @@ export default function PhrasebookCard({ data }: Props) {
           <span className="text-xs text-slate-500">{data.destination}</span>
         </div>
         {data.script && data.script !== "Latin" && (
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1e3a8a]/20 text-[#d4a017] border border-[#1e3a8a]/30">
             {data.script} script
           </span>
         )}
@@ -68,7 +68,7 @@ export default function PhrasebookCard({ data }: Props) {
             onClick={() => setActiveTab(i)}
             className={`flex items-center gap-1.5 px-3 py-2.5 text-xs whitespace-nowrap transition-colors shrink-0
               ${activeTab === i
-                ? "text-indigo-300 border-b-2 border-indigo-400 bg-indigo-950/30"
+                ? "text-[#d4a017] border-b-2 border-[#1e40af] bg-[#172554]/30"
                 : "text-slate-400 hover:text-slate-200 border-b-2 border-transparent"}`}
           >
             <span>{cat.emoji}</span>

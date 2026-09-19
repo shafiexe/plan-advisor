@@ -5,7 +5,7 @@ import type { Itinerary, ItineraryDay, ItinerarySlot } from "@/types/itinerary";
 import { useDestinationTime } from "@/hooks/useDestinationTime";
 
 const TYPE_DOT: Record<ItinerarySlot["type"], string> = {
-  sightseeing: "bg-indigo-500",
+  sightseeing: "bg-[#1e40af]",
   food:        "bg-amber-500",
   transport:   "bg-slate-400",
   leisure:     "bg-emerald-500",
@@ -57,7 +57,7 @@ function DayView({ day }: { day: ItineraryDay }) {
 
   return (
     <div className="space-y-5">
-      <p className="text-sm font-semibold text-indigo-300">
+      <p className="text-sm font-semibold text-[#d4a017]">
         🌅 {day.theme}
       </p>
       {PERIOD_ORDER.map((period) => {
@@ -132,7 +132,7 @@ export default function ItineraryCard({ data }: { data: Itinerary }) {
             onClick={() => setActiveDay(i)}
             className={`shrink-0 px-4 py-2.5 text-xs font-semibold transition-colors whitespace-nowrap border-b-2 ${
               i === activeDay
-                ? "border-indigo-500 text-indigo-300 bg-indigo-950/30"
+                ? "border-[#1e3a8a] text-[#d4a017] bg-[#172554]/30"
                 : "border-transparent text-slate-500 hover:text-slate-300 hover:border-slate-600"
             }`}
           >

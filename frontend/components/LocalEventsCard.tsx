@@ -4,13 +4,13 @@ import { useState } from "react";
 import type { LocalEvents, LocalEvent } from "@/types/localEvents";
 
 const TYPE_BADGE: Record<LocalEvent["type"], string> = {
-  festival:   "bg-purple-900/60 text-purple-300 border-purple-700/50",
+  festival:   "bg-purple-900/60 text-[#d4a017] border-purple-700/50",
   concert:    "bg-pink-900/60 text-pink-300 border-pink-700/50",
   sports:     "bg-blue-900/60 text-blue-300 border-blue-700/50",
   holiday:    "bg-amber-900/60 text-amber-300 border-amber-700/50",
   exhibition: "bg-teal-900/60 text-teal-300 border-teal-700/50",
   market:     "bg-emerald-900/60 text-emerald-300 border-emerald-700/50",
-  cultural:   "bg-indigo-900/60 text-indigo-300 border-indigo-700/50",
+  cultural:   "bg-[#1e3a8a]/60 text-[#d4a017] border-indigo-700/50",
   food:       "bg-orange-900/60 text-orange-300 border-orange-700/50",
 };
 
@@ -37,7 +37,7 @@ export default function LocalEventsCard({ data }: { data: LocalEvents }) {
       <div className="px-5 py-4 flex flex-col gap-4">
         {/* Season note */}
         {data.season_note && (
-          <p className="text-xs italic text-indigo-300/90">
+          <p className="text-xs italic text-[#d4a017]/90">
             ✨ {data.season_note}
           </p>
         )}
@@ -108,8 +108,8 @@ export default function LocalEventsCard({ data }: { data: LocalEvents }) {
                   {ev.highlights && ev.highlights.length > 0 && (
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 mb-1.5">
                       {ev.highlights.map((h, j) => (
-                        <span key={j} className="text-[11px] text-indigo-300/80 flex items-center gap-1">
-                          <span className="w-1 h-1 rounded-full bg-indigo-400/60 inline-block" />
+                        <span key={j} className="text-[11px] text-[#d4a017]/80 flex items-center gap-1">
+                          <span className="w-1 h-1 rounded-full bg-[#1e40af]/60 inline-block" />
                           {h}
                         </span>
                       ))}
@@ -136,7 +136,7 @@ export default function LocalEventsCard({ data }: { data: LocalEvents }) {
         {events.length > 6 && (
           <button
             onClick={() => setShowAll((v) => !v)}
-            className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors self-start"
+            className="text-xs text-[#d4a017] hover:text-[#d4a017] transition-colors self-start"
           >
             {showAll ? "Show less ▲" : `Show ${events.length - 6} more ▼`}
           </button>

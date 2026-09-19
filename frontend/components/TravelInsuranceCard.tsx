@@ -21,7 +21,7 @@ export default function TravelInsuranceCard({ data }: { data: TravelInsurance })
             <h2 className="text-lg font-bold text-white leading-tight">
               Travel Insurance
             </h2>
-            <p className="text-sm text-indigo-300/80 mt-0.5">{data.destination}</p>
+            <p className="text-sm text-[#d4a017]/80 mt-0.5">{data.destination}</p>
           </div>
           <span className="text-2xl shrink-0">🛡️</span>
         </div>
@@ -39,7 +39,7 @@ export default function TravelInsuranceCard({ data }: { data: TravelInsurance })
 
         {/* Recommendation */}
         {data.recommendation && (
-          <div className="px-4 py-3 rounded-xl bg-indigo-950/40 border border-indigo-700/40 text-sm text-indigo-200 leading-relaxed">
+          <div className="px-4 py-3 rounded-xl bg-[#172554]/40 border border-indigo-700/40 text-sm text-[#d4a017] leading-relaxed">
             {data.recommendation}
           </div>
         )}
@@ -70,7 +70,7 @@ export default function TravelInsuranceCard({ data }: { data: TravelInsurance })
                         {c.essential ? "Essential" : "Optional"}
                       </span>
                       {c.recommended_minimum && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-900/40 border border-indigo-700/40 text-indigo-300">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#1e3a8a]/40 border border-indigo-700/40 text-[#d4a017]">
                           {c.recommended_minimum}
                         </span>
                       )}
@@ -93,7 +93,7 @@ export default function TravelInsuranceCard({ data }: { data: TravelInsurance })
             </h3>
             <div className="rounded-xl bg-slate-800/60 border border-slate-700/40 p-4 text-center">
               <p className="text-2xl font-bold text-white">{data.cost_estimate.range}</p>
-              <p className="text-xs text-indigo-300/80 mt-1">{data.cost_estimate.per}</p>
+              <p className="text-xs text-[#d4a017]/80 mt-1">{data.cost_estimate.per}</p>
               {data.cost_estimate.note && (
                 <p className="text-xs text-slate-500 mt-1">{data.cost_estimate.note}</p>
               )}
@@ -128,7 +128,7 @@ export default function TravelInsuranceCard({ data }: { data: TravelInsurance })
             <ul className="space-y-1.5">
               {data.tips.map((t, i) => (
                 <li key={i} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
-                  <span className="text-indigo-400 shrink-0">•</span>
+                  <span className="text-[#d4a017] shrink-0">•</span>
                   <span>{t}</span>
                 </li>
               ))}

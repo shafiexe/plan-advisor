@@ -21,9 +21,9 @@ export function parseInline(text: string, key: string | number): React.ReactNode
     } else if (match[3] !== undefined) {
       parts.push(<em key={`${key}-e${i++}`} className="italic text-slate-300">{match[3]}</em>);
     } else if (match[4] !== undefined) {
-      parts.push(<code key={`${key}-c${i++}`} className="md-inline-code bg-slate-800 text-indigo-300 px-1.5 py-0.5 rounded text-xs font-mono">{match[4]}</code>);
+      parts.push(<code key={`${key}-c${i++}`} className="md-inline-code bg-slate-800 text-[#d4a017] px-1.5 py-0.5 rounded text-xs font-mono">{match[4]}</code>);
     } else if (match[5] !== undefined) {
-      parts.push(<a key={`${key}-a${i++}`} href={match[6]} target="_blank" rel="noopener noreferrer" className="md-link text-indigo-400 underline hover:text-indigo-300 transition-colors">{match[5]}</a>);
+      parts.push(<a key={`${key}-a${i++}`} href={match[6]} target="_blank" rel="noopener noreferrer" className="md-link text-[#d4a017] underline hover:text-[#d4a017] transition-colors">{match[5]}</a>);
     } else if (match[7] !== undefined) {
       parts.push(<s key={`${key}-s${i++}`} className="text-slate-500">{match[7]}</s>);
     }
@@ -122,7 +122,7 @@ export default function MarkdownBody({ text }: { text: string }) {
     // Blockquote
     if (line.startsWith("> ")) {
       nodes.push(
-        <blockquote key={i} className="border-l-2 border-indigo-500 pl-3 my-2 text-slate-400 italic">
+        <blockquote key={i} className="border-l-2 border-[#1e3a8a] pl-3 my-2 text-slate-400 italic">
           {parseInline(line.slice(2), i)}
         </blockquote>
       ); i++; continue;

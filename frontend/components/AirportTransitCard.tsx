@@ -49,7 +49,7 @@ function OptionRow({ option, defaultOpen }: { option: TransitOption; defaultOpen
             <ol className="flex flex-col gap-1 mb-2">
               {option.steps.map((step, i) => (
                 <li key={i} className="flex gap-2 text-sm text-slate-300">
-                  <span className="text-indigo-400 font-bold shrink-0">{i + 1}.</span>
+                  <span className="text-[#d4a017] font-bold shrink-0">{i + 1}.</span>
                   <span>{step}</span>
                 </li>
               ))}

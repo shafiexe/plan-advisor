@@ -32,7 +32,7 @@ function FlightSection({ data }: { data: FlightSearchResult }) {
       <div className="px-4 py-2.5 bg-slate-800/50 border-b border-slate-700/40 flex items-center gap-2">
         <span className="text-base">✈️</span>
         <span className="text-xs font-bold text-slate-200 uppercase tracking-wide">Flight Options</span>
-        <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/20">Fastest</span>
+        <span className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-semibold bg-[#1e3a8a]/20 text-[#d4a017] border border-[#1e3a8a]/20">Fastest</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs border-collapse">
@@ -136,7 +136,7 @@ function TrainSection({ data }: { data: TrainSearchResult }) {
                 <td className="px-3 py-2.5">
                   {t.link && (
                     <a href={t.link} target="_blank" rel="noopener noreferrer"
-                      className="px-2 py-1 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/30 hover:bg-indigo-600/40 transition-colors text-[10px] font-medium whitespace-nowrap">
+                      className="px-2 py-1 rounded-lg bg-[#1e3a8a]/20 text-[#d4a017] border border-[#1e3a8a]/30 hover:bg-[#1e3a8a]/40 transition-colors text-[10px] font-medium whitespace-nowrap">
                       Book →
                     </a>
                   )}
@@ -179,7 +179,7 @@ function BusSection({ data }: { data: BusSearchResult }) {
             <span className="text-xs text-slate-400">Search live availability on:</span>
             {data.book_at.map((b, i) => (
               <a key={i} href={b.url} target="_blank" rel="noopener noreferrer"
-                className="px-2.5 py-1 rounded-full bg-slate-700/60 border border-slate-600/40 text-indigo-300 text-xs hover:bg-slate-600/60 transition-colors">
+                className="px-2.5 py-1 rounded-full bg-slate-700/60 border border-slate-600/40 text-[#d4a017] text-xs hover:bg-slate-600/60 transition-colors">
                 {b.name}
               </a>
             ))}
@@ -234,7 +234,7 @@ function BusSection({ data }: { data: BusSearchResult }) {
                   <td className="px-3 py-2.5">
                     {b.booking_link && (
                       <a href={b.booking_link} target="_blank" rel="noopener noreferrer"
-                        className="px-2 py-1 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/30 hover:bg-indigo-600/40 transition-colors text-[10px] font-medium whitespace-nowrap">
+                        className="px-2 py-1 rounded-lg bg-[#1e3a8a]/20 text-[#d4a017] border border-[#1e3a8a]/30 hover:bg-[#1e3a8a]/40 transition-colors text-[10px] font-medium whitespace-nowrap">
                         Book →
                       </a>
                     )}
@@ -273,7 +273,7 @@ export default function TransportComparisonCard({ flightData, trainData, busData
     <div className="w-full rounded-2xl overflow-hidden border border-slate-700/60 bg-slate-900/80 shadow-lg divide-y divide-slate-700/40">
       {/* Header */}
       <div className="px-4 py-3 bg-slate-800/60 flex items-center gap-3">
-        <div className="w-7 h-7 rounded-lg bg-indigo-600/30 flex items-center justify-center text-sm">🗺️</div>
+        <div className="w-7 h-7 rounded-lg bg-[#1e3a8a]/30 flex items-center justify-center text-sm">🗺️</div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-white truncate">
             Transport Comparison

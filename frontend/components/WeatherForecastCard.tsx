@@ -48,8 +48,8 @@ export default function WeatherForecastCard({ data }: Props) {
 
       {/* Overall summary */}
       {data.overall_summary && (
-        <div className="px-4 py-2 bg-indigo-950/30 border-b border-indigo-900/20">
-          <p className="text-xs text-indigo-300">✨ {data.overall_summary}</p>
+        <div className="px-4 py-2 bg-[#172554]/30 border-b border-indigo-900/20">
+          <p className="text-xs text-[#d4a017]">✨ {data.overall_summary}</p>
         </div>
       )}
 

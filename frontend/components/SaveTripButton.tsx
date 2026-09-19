@@ -45,12 +45,12 @@ export default function SaveTripButton({ onSave, defaultName }: Props) {
           }}
           placeholder="Trip name…"
           className="text-xs bg-slate-800 border border-slate-600 rounded-lg px-2 py-1
-            text-slate-200 placeholder-slate-600 outline-none focus:ring-1 focus:ring-indigo-500
+            text-slate-200 placeholder-slate-600 outline-none focus:ring-1 focus:ring-[#1e3a8a]
             w-40"
         />
         <button
           onClick={handleSave}
-          className="text-xs px-2 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500
+          className="text-xs px-2 py-1 rounded-lg bg-[#1e3a8a] hover:bg-[#1e40af]
             text-white font-semibold transition-colors"
         >
           Save

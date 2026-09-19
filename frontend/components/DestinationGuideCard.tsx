@@ -39,7 +39,7 @@ export default function DestinationGuideCard({ data }: Props) {
           <div>
             <h2 className="text-lg font-bold text-white leading-tight">{data.destination}</h2>
             {data.tagline && (
-              <p className="text-sm text-indigo-300/80 mt-0.5 italic">{data.tagline}</p>
+              <p className="text-sm text-[#d4a017]/80 mt-0.5 italic">{data.tagline}</p>
             )}
             {time && (
               <div className="flex items-center gap-1.5 text-xs text-slate-400 mt-1">
@@ -52,7 +52,7 @@ export default function DestinationGuideCard({ data }: Props) {
           <span className="text-2xl shrink-0">🗺️</span>
         </div>
         {data.best_time && (
-          <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-indigo-900/40 border border-indigo-700/40 text-xs text-indigo-200">
+          <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#1e3a8a]/40 border border-indigo-700/40 text-xs text-[#d4a017]">
             <span>🗓️</span>
             <span><strong>Best time:</strong> {data.best_time}</span>
           </div>
@@ -67,7 +67,7 @@ export default function DestinationGuideCard({ data }: Props) {
             onClick={() => setTab(key)}
             className={`flex-1 py-2.5 text-xs font-semibold transition-colors
               ${tab === key
-                ? "text-indigo-300 border-b-2 border-indigo-400 bg-indigo-950/30"
+                ? "text-[#d4a017] border-b-2 border-[#1e40af] bg-[#172554]/30"
                 : "text-slate-500 hover:text-slate-300 border-b-2 border-transparent"
               }`}
           >
@@ -96,7 +96,7 @@ export default function DestinationGuideCard({ data }: Props) {
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <span className="text-sm font-semibold text-white">{a.name}</span>
                         {a.duration && (
-                          <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-indigo-900/50 border border-indigo-700/40 text-indigo-300">
+                          <span className="shrink-0 text-[10px] px-2 py-0.5 rounded-full bg-[#1e3a8a]/50 border border-indigo-700/40 text-[#d4a017]">
                             {a.duration}
                           </span>
                         )}
@@ -125,7 +125,7 @@ export default function DestinationGuideCard({ data }: Props) {
                       className="rounded-xl bg-slate-800/60 border border-slate-700/40 p-3"
                     >
                       <p className="text-sm font-semibold text-white">{n.name}</p>
-                      <p className="text-xs text-indigo-300/70 mt-0.5">{n.vibe}</p>
+                      <p className="text-xs text-[#d4a017]/70 mt-0.5">{n.vibe}</p>
                       <p className="text-xs text-slate-500 mt-1">Best for: {n.best_for}</p>
                     </div>
                   ))}
@@ -210,7 +210,7 @@ export default function DestinationGuideCard({ data }: Props) {
                 <ul className="space-y-1.5">
                   {data.tips.map((t, i) => (
                     <li key={i} className="flex gap-2 text-xs text-slate-300 leading-relaxed">
-                      <span className="text-indigo-400 shrink-0">•</span>
+                      <span className="text-[#d4a017] shrink-0">•</span>
                       <span>{t}</span>
                     </li>
                   ))}

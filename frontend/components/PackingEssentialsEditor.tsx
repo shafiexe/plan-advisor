@@ -124,12 +124,12 @@ export default function PackingEssentialsEditor({
                 if (e.key === "Enter") { e.preventDefault(); addItem(newItem); }
               }}
               placeholder="Add an item…"
-              className="flex-1 bg-slate-800 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500/60"
+              className="flex-1 bg-slate-800 border border-slate-700/60 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-[#1e3a8a]/60"
             />
             <button
               onClick={() => addItem(newItem)}
               disabled={!newItem.trim()}
-              className="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
+              className="px-3 py-2 bg-[#1e3a8a] hover:bg-[#1e40af] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm rounded-lg transition-colors"
             >
               Add
             </button>
@@ -147,7 +147,7 @@ export default function PackingEssentialsEditor({
                 <button
                   key={s}
                   onClick={() => addItem(s)}
-                  className="text-[11px] px-2 py-1 rounded-full border border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-indigo-500/60 hover:bg-indigo-950/30 transition-all"
+                  className="text-[11px] px-2 py-1 rounded-full border border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-[#1e3a8a]/60 hover:bg-[#172554]/30 transition-all"
                 >
                   + {s}
                 </button>
@@ -171,7 +171,7 @@ export default function PackingEssentialsEditor({
           <button
             onClick={handleSave}
             disabled={saving}
-            className="flex-1 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-60 text-white text-sm font-semibold transition-colors"
+            className="flex-1 py-2 rounded-xl bg-[#1e3a8a] hover:bg-[#1e40af] disabled:opacity-60 text-white text-sm font-semibold transition-colors"
           >
             {saving ? "Saving…" : "Save"}
           </button>

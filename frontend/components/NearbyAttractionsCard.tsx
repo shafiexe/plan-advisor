@@ -90,7 +90,7 @@ export default function NearbyAttractionsCard({ data }: { data: NearbyAttraction
           </div>
         </div>
         {showBadge && (
-          <span className="text-[11px] bg-indigo-900/60 text-indigo-300 border border-indigo-700/40 rounded-full px-2.5 py-0.5">
+          <span className="text-[11px] bg-[#1e3a8a]/60 text-[#d4a017] border border-indigo-700/40 rounded-full px-2.5 py-0.5">
             {data.category}
           </span>
         )}

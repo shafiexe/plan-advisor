@@ -16,7 +16,7 @@ function highlight(text: string, query: string): React.ReactNode {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="bg-indigo-500/30 text-indigo-200 rounded-sm">{text.slice(idx, idx + query.length)}</mark>
+      <mark className="bg-[#1e3a8a]/30 text-[#d4a017] rounded-sm">{text.slice(idx, idx + query.length)}</mark>
       {text.slice(idx + query.length)}
     </>
   );
@@ -141,7 +141,7 @@ export default function ConversationSearchModal({ conversations, onSelect, onClo
                       ${isActive ? "bg-slate-800" : "hover:bg-slate-800/60"}`}
                   >
                     <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5
-                      ${isActive ? "bg-indigo-600/30 text-indigo-300" : "bg-slate-800 text-slate-500"}`}>
+                      ${isActive ? "bg-[#1e3a8a]/30 text-[#d4a017]" : "bg-slate-800 text-slate-500"}`}>
                       <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                       </svg>

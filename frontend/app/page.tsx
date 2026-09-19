@@ -873,10 +873,10 @@ export default function Home() {
 
       {/* ── Drag-over overlay ── */}
       {dragOver && (
-        <div className="absolute inset-0 z-40 bg-indigo-950/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 pointer-events-none border-4 border-dashed border-indigo-400/60 rounded-none">
+        <div className="absolute inset-0 z-40 bg-[#172554]/80 backdrop-blur-sm flex flex-col items-center justify-center gap-4 pointer-events-none border-4 border-dashed border-[#1e40af]/60 rounded-none">
           <div className="text-6xl animate-bounce">📷</div>
-          <p className="text-xl font-bold text-indigo-200">Drop passport photo or PDF to scan</p>
-          <p className="text-sm text-indigo-400">Your details will auto-fill instantly</p>
+          <p className="text-xl font-bold text-[#d4a017]">Drop passport photo or PDF to scan</p>
+          <p className="text-sm text-[#d4a017]">Your details will auto-fill instantly</p>
         </div>
       )}
 

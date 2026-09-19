@@ -52,8 +52,8 @@ function parseTrain(r: TrainResult): ParsedTrain {
 const CLASS_COLORS: Record<string, string> = {
   Sleeper: "bg-emerald-900/40 text-emerald-300",
   "3AC":   "bg-blue-900/40 text-blue-300",
-  "2AC":   "bg-indigo-900/40 text-indigo-300",
-  "1AC":   "bg-purple-900/40 text-purple-300",
+  "2AC":   "bg-[#1e3a8a]/40 text-[#d4a017]",
+  "1AC":   "bg-purple-900/40 text-[#d4a017]",
 };
 function classBadge(cls: string) {
   const key = Object.keys(CLASS_COLORS).find(k => cls.includes(k)) ?? "";
@@ -117,7 +117,7 @@ export default function TrainResultsCard({ data, analysis, streaming }: Props) {
                   <td className="px-3 py-2.5 align-middle">
                     {t.link && (
                       <a href={t.link} target="_blank" rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-indigo-600/20 text-indigo-300 border border-indigo-600/30 hover:bg-indigo-600/40 transition-colors text-[10px] font-medium whitespace-nowrap">
+                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-[#1e3a8a]/20 text-[#d4a017] border border-[#1e3a8a]/30 hover:bg-[#1e3a8a]/40 transition-colors text-[10px] font-medium whitespace-nowrap">
                         Book →
                       </a>
                     )}

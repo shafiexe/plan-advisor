@@ -110,7 +110,7 @@ export default function DocumentCheckCard({ data, onUpdatePassport }: Props) {
             {visa_reminders.map((r, i) => (
               <div
                 key={i}
-                className="flex items-start gap-3 px-3 py-2.5 rounded-lg bg-indigo-900/20 border-l-2 border-l-indigo-500 text-sm text-slate-300"
+                className="flex items-start gap-3 px-3 py-2.5 rounded-lg bg-[#172554]/20 border-l-2 border-l-indigo-500 text-sm text-slate-300"
               >
                 {r}
               </div>

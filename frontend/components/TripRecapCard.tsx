@@ -56,7 +56,7 @@ export default function TripRecapCard({ data }: Props) {
 
       {/* Headline */}
       {headline && (
-        <p className="text-sm italic text-indigo-300 px-4 pt-3 pb-1">✨ {headline}</p>
+        <p className="text-sm italic text-[#d4a017] px-4 pt-3 pb-1">✨ {headline}</p>
       )}
 
       {/* Stats pills */}
@@ -111,7 +111,7 @@ export default function TripRecapCard({ data }: Props) {
           <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-2">🔮 Next visit</p>
           <ul className="flex flex-col gap-1.5">
             {next_time.map((item, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-indigo-300">
+              <li key={i} className="flex items-start gap-2 text-sm text-[#d4a017]">
                 <span className="shrink-0">•</span>
                 <span>{item}</span>
               </li>

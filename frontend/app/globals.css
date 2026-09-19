@@ -73,8 +73,8 @@ html[data-theme="light"] {
 .markdown-body > *:last-child  { margin-bottom: 0; }
 
 /* ── Light mode: sidebar active chat item ────────────────────────────────── */
-html[data-theme="light"] .conv-sidebar .text-indigo-300 {
-  color: oklch(0.457 0.24 264);  /* indigo-700 — visible on light purple bg */
+html[data-theme="light"] .conv-sidebar .text-[#d4a017] {
+  color: #b8860f;  /* darker gold — readable on light bg */
 }
 html[data-theme="light"] .conv-sidebar .text-slate-600 {
   color: oklch(0.446 0.043 257); /* darker so subtitle is readable */
@@ -83,21 +83,18 @@ html[data-theme="light"] .conv-sidebar .text-slate-700 {
   color: oklch(0.5 0.04 257);    /* keep timestamp readable */
 }
 
-/* ── Light mode: flight card — indigo/emerald colors ─────────────────────── */
-html[data-theme="light"] .flight-card .text-indigo-300 {
-  color: oklch(0.457 0.24 264);  /* indigo-700 */
-}
-html[data-theme="light"] .flight-card .text-indigo-400 {
-  color: oklch(0.511 0.262 276); /* indigo-600 */
+/* ── Light mode: flight card — navy/gold colors ──────────────────────────── */
+html[data-theme="light"] .flight-card .text-[#d4a017] {
+  color: #b8860f;  /* darker gold — readable on light bg */
 }
 html[data-theme="light"] .flight-card .text-emerald-400 {
   color: oklch(0.261 0.12 145);  /* emerald-800 — dark green, readable on light bg */
 }
 /* Selected flight row bg: dark indigo stays, add slight opacity adjustment */
-html[data-theme="light"] .flight-card .bg-indigo-950\/50 {
+html[data-theme="light"] .flight-card .bg-[#172554]\/50 {
   background-color: oklch(0.9 0.01 264 / 0.6);  /* near-white indigo tint */
 }
-html[data-theme="light"] .flight-card .bg-indigo-950\/30 {
+html[data-theme="light"] .flight-card .bg-[#172554]\/30 {
   background-color: oklch(0.92 0.01 264 / 0.5);
 }
 html[data-theme="light"] .flight-card .bg-emerald-900\/40 {
@@ -109,16 +106,16 @@ html[data-theme="light"] .flight-card .bg-emerald-900\/40 {
    don't accidentally affect other components.
    ─────────────────────────────────────────────────────────────────────────── */
 html[data-theme="light"] .md-body .md-inline-code {
-  background: #DDE3F5;          /* light blue-gray tint */
-  color: #3730A3;               /* indigo-800 — visible on light bg */
+  background: #dbeafe;          /* light navy tint */
+  color: #1e3a8a;               /* navy — visible on light bg */
 }
 
 html[data-theme="light"] .md-body .md-link {
-  color: #4F46E5;               /* indigo-600 — readable on light bg */
+  color: #1e3a8a;               /* navy — readable on light bg */
 }
 
 html[data-theme="light"] .md-body .md-link:hover {
-  color: #3730A3;               /* indigo-800 on hover */
+  color: #d4a017;               /* gold on hover */
 }
 
 /* Code blocks: bg-slate-800 inverts to light gray; text inherits dark from body */
@@ -126,9 +123,9 @@ html[data-theme="light"] .md-body .md-code-block {
   border-color: #CBD5E1;        /* slate-300 equivalent */
 }
 
-/* Blockquote border — keep indigo visible in both modes */
+/* Blockquote border — keep navy visible in both modes */
 html[data-theme="light"] .md-body blockquote {
-  border-color: #6366F1;        /* indigo-500 — same in both modes */
+  border-color: #1e3a8a;        /* navy — same in both modes */
   color: #475569;               /* slate-600 — mid-tone for light bg */
 }
 

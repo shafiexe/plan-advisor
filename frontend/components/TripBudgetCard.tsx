@@ -23,8 +23,8 @@ function fmt(amount: number, symbol: string): string {
 }
 
 const ITEM_COLORS: Record<string, string> = {
-  Flights: "bg-indigo-500",
-  Hotel: "bg-purple-500",
+  Flights: "bg-[#1e40af]",
+  Hotel: "bg-[#1e40af]",
   Meals: "bg-emerald-500",
   Activities: "bg-amber-500",
   Misc: "bg-slate-400",

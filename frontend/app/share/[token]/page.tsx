@@ -46,7 +46,7 @@ export default function SharePage() {
 
   if (!conv) return (
     <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-      <div className="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
+      <div className="w-8 h-8 rounded-full border-2 border-[#1e3a8a] border-t-transparent animate-spin" />
     </div>
   );
 
@@ -86,7 +86,7 @@ export default function SharePage() {
               )}
               <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm
                 ${m.role === "user"
-                  ? "bg-indigo-600 text-white rounded-br-sm"
+                  ? "bg-[#1e3a8a] text-white rounded-br-sm"
                   : "bg-slate-800/80 text-slate-200 rounded-bl-sm border border-slate-700/40"}`}
               >
                 {m.role === "user"

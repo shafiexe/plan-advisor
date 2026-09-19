@@ -97,7 +97,7 @@ export default function PredepartureChecklistCard({ data }: { data: Predeparture
             </div>
           </div>
           {data.days_until_travel !== undefined && (
-            <span className="text-[11px] bg-indigo-900/60 text-indigo-300 border border-indigo-700/40 rounded-full px-2.5 py-0.5 shrink-0">
+            <span className="text-[11px] bg-[#1e3a8a]/60 text-[#d4a017] border border-indigo-700/40 rounded-full px-2.5 py-0.5 shrink-0">
               {data.days_until_travel}d to go
             </span>
           )}
@@ -111,7 +111,7 @@ export default function PredepartureChecklistCard({ data }: { data: Predeparture
           </div>
           <div className="h-1.5 bg-slate-700 rounded-full overflow-hidden">
             <div
-              className="h-full bg-indigo-500 rounded-full transition-all"
+              className="h-full bg-[#1e40af] rounded-full transition-all"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -127,7 +127,7 @@ export default function PredepartureChecklistCard({ data }: { data: Predeparture
               onClick={() => setActiveTab(tab.key)}
               className={`shrink-0 flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full transition-colors
                 ${activeTab === tab.key
-                  ? "bg-indigo-600 text-white"
+                  ? "bg-[#1e3a8a] text-white"
                   : "bg-slate-800 text-slate-400 hover:text-slate-200 hover:bg-slate-700"
                 }`}
             >
@@ -151,7 +151,7 @@ export default function PredepartureChecklistCard({ data }: { data: Predeparture
                 className={`shrink-0 w-5 h-5 mt-0.5 rounded-full border transition-colors flex items-center justify-center text-[10px]
                   ${isDone
                     ? "bg-emerald-600 border-emerald-500 text-white"
-                    : "border-slate-600 hover:border-indigo-400"
+                    : "border-slate-600 hover:border-[#1e40af]"
                   }`}
               >
                 {isDone ? "✓" : ""}

@@ -85,7 +85,7 @@ export default function ItinerarySidebar({ messages, isOpen, onClose }: Props) {
 
   const budgetLabel = grandTotal < 30000 ? { text: "Budget trip", color: "text-emerald-400" }
     : grandTotal < 80000 ? { text: "Mid-range trip", color: "text-amber-400" }
-    : { text: "Premium trip", color: "text-purple-400" };
+    : { text: "Premium trip", color: "text-[#d4a017]" };
 
   return (
     <>
@@ -146,7 +146,7 @@ export default function ItinerarySidebar({ messages, isOpen, onClose }: Props) {
                             <div className="text-xs text-slate-400 mt-0.5">{formatDate(depRaw)}</div>
                           )}
                           {first && (
-                            <div className="text-xs text-indigo-300 mt-1 font-medium">
+                            <div className="text-xs text-[#d4a017] mt-1 font-medium">
                               from {first.price} · {first.airline}
                             </div>
                           )}
@@ -171,7 +171,7 @@ export default function ItinerarySidebar({ messages, isOpen, onClose }: Props) {
                           <div className="text-sm font-medium text-slate-100">{h.location}</div>
                           <div className="text-xs text-slate-400 mt-0.5">{h.check_in} – {h.check_out}</div>
                           {top && (
-                            <div className="text-xs text-indigo-300 mt-1 font-medium">
+                            <div className="text-xs text-[#d4a017] mt-1 font-medium">
                               {top.name} from {top.price}/{top.currency}/night
                             </div>
                           )}
@@ -266,7 +266,7 @@ export default function ItinerarySidebar({ messages, isOpen, onClose }: Props) {
                   </div>
 
                   {/* Total */}
-                  <div className="rounded-xl bg-indigo-950/40 border border-indigo-500/30 px-3 py-2.5">
+                  <div className="rounded-xl bg-[#172554]/40 border border-[#1e3a8a]/30 px-3 py-2.5">
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-[10px] text-slate-500 uppercase tracking-wider">Estimated total</p>

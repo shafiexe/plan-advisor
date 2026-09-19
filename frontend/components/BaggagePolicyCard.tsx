@@ -25,9 +25,9 @@ function AllowanceBlock({
   data: BaggageAllowance;
   accent: "indigo" | "purple";
 }) {
-  const borderCls = accent === "indigo" ? "border-indigo-500/30" : "border-purple-500/30";
-  const bgCls     = accent === "indigo" ? "bg-indigo-950/40"     : "bg-purple-950/40";
-  const textCls   = accent === "indigo" ? "text-indigo-300"       : "text-purple-300";
+  const borderCls = accent === "indigo" ? "border-[#1e3a8a]/30" : "border-[#1e3a8a]/30";
+  const bgCls     = accent === "indigo" ? "bg-[#172554]/40"     : "bg-purple-950/40";
+  const textCls   = accent === "indigo" ? "text-[#d4a017]"       : "text-[#d4a017]";
 
   return (
     <div className={`rounded-xl p-3 border ${borderCls} ${bgCls} flex flex-col gap-1.5`}>

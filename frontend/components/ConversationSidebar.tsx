@@ -176,7 +176,7 @@ function PassengerListCard({
             onClick={onEdit}
             className="flex-1 py-1.5 rounded-lg text-[11px] font-semibold
               border border-slate-600/60 text-slate-400 hover:text-white
-              hover:border-indigo-500/60 hover:bg-indigo-600/10 transition-all"
+              hover:border-[#1e3a8a]/60 hover:bg-[#1e3a8a]/10 transition-all"
           >
             ✏ Edit
           </button>
@@ -197,7 +197,7 @@ function PassengerListCard({
 function PassengerInitials({ p }: { p: PassengerRecord }) {
   const initials = `${p.first_name?.[0] ?? ""}${p.last_name?.[0] ?? ""}`.toUpperCase() || "?";
   return (
-    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600
+    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1e3a8a] to-[#d4a017]
       flex items-center justify-center text-xs font-bold text-white shrink-0">
       {initials}
     </div>
@@ -242,7 +242,7 @@ function AlertRow({
             <button
               onClick={onEdit}
               title="Edit alert"
-              className="w-5 h-5 rounded flex items-center justify-center text-slate-500 hover:text-indigo-400 hover:bg-indigo-950/40 text-[10px] transition-all"
+              className="w-5 h-5 rounded flex items-center justify-center text-slate-500 hover:text-[#d4a017] hover:bg-[#172554]/40 text-[10px] transition-all"
             >✎</button>
             <button
               onClick={() => setConfirming(true)}
@@ -414,7 +414,7 @@ function SavedTripRow({
               onClick={e => { e.stopPropagation(); setShowCollabForm(v => !v); setShowEmailForm(false); }}
               title="Invite collaborator"
               className="w-5 h-5 rounded-md flex items-center justify-center
-                text-slate-500 hover:text-purple-400 hover:bg-purple-950/40 transition-all text-[10px]"
+                text-slate-500 hover:text-[#d4a017] hover:bg-purple-950/40 transition-all text-[10px]"
             >
               👥
             </button>
@@ -491,8 +491,8 @@ function SavedTripRow({
 
       {/* Collaborator inline form */}
       {showCollabForm && (
-        <div className="mx-2 mb-2 p-2.5 rounded-xl border border-purple-500/30 bg-purple-950/20" onClick={e => e.stopPropagation()}>
-          <p className="text-[10px] font-bold text-purple-400 mb-1.5">👥 Invite collaborator</p>
+        <div className="mx-2 mb-2 p-2.5 rounded-xl border border-[#1e3a8a]/30 bg-purple-950/20" onClick={e => e.stopPropagation()}>
+          <p className="text-[10px] font-bold text-[#d4a017] mb-1.5">👥 Invite collaborator</p>
           <div className="flex gap-1 mb-1.5">
             <input
               type="email"
@@ -501,12 +501,12 @@ function SavedTripRow({
               placeholder="Invite email..."
               onKeyDown={e => { if (e.key === "Enter") handleAddCollab(e as unknown as React.MouseEvent); }}
               className="flex-1 text-[11px] bg-slate-800 border border-slate-600 rounded-lg px-2 py-1.5
-                text-slate-200 placeholder-slate-600 outline-none focus:border-purple-500/60"
+                text-slate-200 placeholder-slate-600 outline-none focus:border-[#1e3a8a]/60"
             />
             <button
               onClick={handleAddCollab}
               disabled={addingCollab || !collabEmail.trim()}
-              className="px-2.5 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:opacity-50
+              className="px-2.5 py-1.5 rounded-lg bg-[#1e3a8a] hover:bg-[#1e40af] disabled:opacity-50
                 text-white text-[11px] font-bold transition-all"
             >
               Add
@@ -695,7 +695,7 @@ export default function ConversationSidebar({
           >
             👤 {t("sidebar.passengers")}
             {passengers.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-indigo-500 text-[9px] font-bold text-white flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#1e40af] text-[9px] font-bold text-white flex items-center justify-center">
                 {passengers.length}
               </span>
             )}
@@ -709,8 +709,8 @@ export default function ConversationSidebar({
               <button
                 onClick={() => { onNew(); onClose(); }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl
-                  bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium
-                  transition-colors shadow-lg shadow-indigo-900/30"
+                  bg-[#1e3a8a] hover:bg-[#1e40af] text-white text-sm font-medium
+                  transition-colors shadow-lg shadow-[#0f172a]/30"
               >
                 <span className="text-base">＋</span>
                 {t("chat.newChat")}
@@ -796,7 +796,7 @@ export default function ConversationSidebar({
                     <div
                       className={`group relative rounded-xl transition-all mb-0.5
                         ${isActive
-                          ? "bg-indigo-600/20 border border-indigo-500/30"
+                          ? "bg-[#1e3a8a]/20 border border-[#1e3a8a]/30"
                           : conv.pinned
                             ? "border border-amber-500/20 bg-amber-950/10 hover:bg-amber-950/20"
                             : "hover:bg-slate-800/60 border border-transparent"}`}
@@ -813,13 +813,13 @@ export default function ConversationSidebar({
                               if (e.key === "Escape") setEditingId(null);
                             }}
                             onBlur={() => commitRename(conv.id)}
-                            className="flex-1 min-w-0 text-sm bg-slate-800 border border-indigo-500/60
+                            className="flex-1 min-w-0 text-sm bg-slate-800 border border-[#1e3a8a]/60
                               rounded-lg px-2 py-1 text-slate-100 outline-none
-                              focus:ring-1 focus:ring-indigo-500"
+                              focus:ring-1 focus:ring-[#1e3a8a]"
                           />
                           <button
                             onClick={() => commitRename(conv.id)}
-                            className="shrink-0 w-6 h-6 rounded-md bg-indigo-600 hover:bg-indigo-500
+                            className="shrink-0 w-6 h-6 rounded-md bg-[#1e3a8a] hover:bg-[#1e40af]
                               flex items-center justify-center text-white text-xs transition-all"
                             title="Save"
                           >✓</button>
@@ -837,7 +837,7 @@ export default function ConversationSidebar({
                           onClick={() => { onSelect(conv.id); onClose(); }}
                         >
                           <p className={`text-sm font-medium truncate pr-14
-                            ${isActive ? "text-indigo-300" : "text-slate-300"}`}>
+                            ${isActive ? "text-[#d4a017]" : "text-slate-300"}`}>
                             {conv.title}
                           </p>
                           <p className="text-xs text-slate-600 truncate mt-0.5">
@@ -870,7 +870,7 @@ export default function ConversationSidebar({
                           <button
                             onClick={e => startRename(conv, e)}
                             className="w-5 h-5 rounded-md flex items-center justify-center
-                              text-slate-500 hover:text-indigo-400 hover:bg-indigo-950/60 transition-all text-xs"
+                              text-slate-500 hover:text-[#d4a017] hover:bg-[#172554]/60 transition-all text-xs"
                             title="Rename"
                           >✎</button>
                           <button
@@ -955,7 +955,7 @@ export default function ConversationSidebar({
                           }}
                           className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${
                             pushLoading ? "opacity-50 cursor-not-allowed" :
-                            pushSubscribed ? "bg-indigo-600" : "bg-slate-700"
+                            pushSubscribed ? "bg-[#1e3a8a]" : "bg-slate-700"
                           }`}
                           title={pushSubscribed ? "Disable push notifications" : "Enable push notifications"}
                         >
@@ -986,7 +986,7 @@ export default function ConversationSidebar({
                           onClick={() => setLocale(l)}
                           className={`px-2 py-0.5 rounded text-xs transition-all ${
                             locale === l
-                              ? "bg-indigo-600 text-white"
+                              ? "bg-[#1e3a8a] text-white"
                               : "text-slate-400 hover:text-white"
                           }`}
                         >
@@ -1047,7 +1047,7 @@ export default function ConversationSidebar({
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img src={sessionUser.image} alt="avatar" className="w-7 h-7 rounded-full border border-slate-700 shrink-0 object-cover" />
                     ) : (
-                      <div className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-semibold text-white shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-[#1e3a8a] flex items-center justify-center text-xs font-semibold text-white shrink-0">
                         {(sessionUser.name ?? sessionUser.email ?? "U")[0].toUpperCase()}
                       </div>
                     )}
@@ -1144,8 +1144,8 @@ export default function ConversationSidebar({
               <button
                 onClick={() => { onAddPassenger?.(); onClose(); }}
                 className="w-full flex items-center gap-2 px-3 py-2.5 rounded-xl
-                  bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium
-                  transition-colors shadow-lg shadow-indigo-900/30"
+                  bg-[#1e3a8a] hover:bg-[#1e40af] text-white text-sm font-medium
+                  transition-colors shadow-lg shadow-[#0f172a]/30"
               >
                 <span className="text-base">＋</span>
                 Add Passenger

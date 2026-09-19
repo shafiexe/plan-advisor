@@ -107,7 +107,7 @@ export default function InputBar({
         <div className={`flex items-center gap-2 rounded-2xl border px-4 py-3.5 transition-all
           ${recording
             ? "border-red-500/60 bg-red-950/30 shadow-lg shadow-red-900/20"
-            : "border-slate-700/60 bg-slate-800/80 focus-within:border-indigo-500/60 focus-within:ring-1 focus-within:ring-indigo-500/10"
+            : "border-slate-700/60 bg-slate-800/80 focus-within:border-[#1e3a8a]/60 focus-within:ring-1 focus-within:ring-[#1e3a8a]/10"
           }`}
         >
 
@@ -119,7 +119,7 @@ export default function InputBar({
               title="Add attachment"
               className={`w-6 h-6 rounded-lg flex items-center justify-center text-lg shrink-0 transition-all
                 ${menuOpen
-                  ? "bg-indigo-600/30 text-indigo-300 rotate-45"
+                  ? "bg-[#1e3a8a]/30 text-[#d4a017] rotate-45"
                   : "text-slate-500 hover:text-slate-200 hover:bg-slate-700/60"
                 } disabled:opacity-30 disabled:cursor-not-allowed`}
             >
@@ -137,7 +137,7 @@ export default function InputBar({
                     onClick={() => fileRef.current?.click()}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-700/60 transition-all text-left group"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-indigo-600/25 flex items-center justify-center text-base group-hover:bg-indigo-600/40 transition-all">
+                    <div className="w-8 h-8 rounded-lg bg-[#1e3a8a]/25 flex items-center justify-center text-base group-hover:bg-[#1e3a8a]/40 transition-all">
                       📷
                     </div>
                     <div className="min-w-0">
@@ -236,9 +236,9 @@ export default function InputBar({
                 <button
                   onClick={onStop}
                   title="Stop generating"
-                  className="w-9 h-9 rounded-full bg-indigo-600 text-white
-                    flex items-center justify-center hover:bg-indigo-500
-                    active:scale-95 transition-all shadow shadow-indigo-900/40"
+                  className="w-9 h-9 rounded-full bg-[#1e3a8a] text-white
+                    flex items-center justify-center hover:bg-[#1e40af]
+                    active:scale-95 transition-all shadow shadow-[#0f172a]/40"
                 >
                   <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                     <rect x="6" y="6" width="12" height="12" rx="2" />
@@ -249,9 +249,9 @@ export default function InputBar({
                   onClick={onSend}
                   disabled={disabled || !value.trim() || atLimit}
                   title="Send (Enter)"
-                  className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center
-                    hover:bg-indigo-500 active:scale-95 transition-all
-                    disabled:opacity-30 disabled:cursor-not-allowed shadow shadow-indigo-900/40"
+                  className="w-9 h-9 rounded-xl bg-[#1e3a8a] text-white flex items-center justify-center
+                    hover:bg-[#1e40af] active:scale-95 transition-all
+                    disabled:opacity-30 disabled:cursor-not-allowed shadow shadow-[#0f172a]/40"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>

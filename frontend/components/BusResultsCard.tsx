@@ -40,7 +40,7 @@ const BUS_BANK_OFFERS: BusBankOfferDef[] = [
   {
     bank: "Axis", cardType: "All Cards",
     rate: 0.05, maxDiscount: 150,
-    color: "border-purple-500/40 bg-purple-950/60 text-purple-200",
+    color: "border-[#1e3a8a]/40 bg-purple-950/60 text-[#d4a017]",
     icon: "✦",
   },
 ];
@@ -96,8 +96,8 @@ function durationMins(dur: string): number {
 
 function BusTypeBadge({ b }: { b: BusResult }) {
   const cfg = b.ac
-    ? (b.sleeper ? { bg: "bg-indigo-900/60 border-indigo-500/40 text-indigo-300", icon: "❄️" }
-      : b.semi_sleeper ? { bg: "bg-purple-900/60 border-purple-500/40 text-purple-300", icon: "❄️" }
+    ? (b.sleeper ? { bg: "bg-[#1e3a8a]/60 border-[#1e3a8a]/40 text-[#d4a017]", icon: "❄️" }
+      : b.semi_sleeper ? { bg: "bg-purple-900/60 border-[#1e3a8a]/40 text-[#d4a017]", icon: "❄️" }
       : { bg: "bg-blue-900/60 border-blue-500/40 text-blue-300", icon: "❄️" })
     : (b.sleeper ? { bg: "bg-amber-900/50 border-amber-500/40 text-amber-300", icon: "🌬️" }
       : { bg: "bg-slate-700/60 border-slate-600/40 text-slate-400", icon: "🌬️" });
@@ -166,7 +166,7 @@ function BusRow({ bus, best, isSelected, onSelect }: {
       onClick={() => bus.available_seats > 0 && onSelect()}
       className={`rounded-xl border transition-all cursor-pointer
         ${isSelected
-          ? "border-indigo-500/60 bg-indigo-950/20 ring-1 ring-indigo-500/30"
+          ? "border-[#1e3a8a]/60 bg-[#172554]/20 ring-1 ring-[#1e3a8a]/30"
           : best
             ? "border-emerald-500/40 bg-emerald-950/10 hover:border-emerald-400/60"
             : "border-slate-700/50 bg-slate-800/40 hover:border-slate-600/60"}
@@ -208,9 +208,9 @@ function BusRow({ bus, best, isSelected, onSelect }: {
           <div className="flex-1 flex flex-col items-center gap-0.5">
             <p className="text-[10px] text-slate-500">{bus.duration}</p>
             <div className="w-full flex items-center gap-1">
-              <div className="h-0.5 flex-1 bg-gradient-to-r from-indigo-500/60 via-slate-500/40 to-amber-500/60 rounded-full" />
+              <div className="h-0.5 flex-1 bg-gradient-to-r from-[#1e3a8a]/60 via-slate-500/40 to-amber-500/60 rounded-full" />
               <span className="text-lg">🚌</span>
-              <div className="h-0.5 flex-1 bg-gradient-to-r from-amber-500/60 to-indigo-500/60 rounded-full" />
+              <div className="h-0.5 flex-1 bg-gradient-to-r from-amber-500/60 to-[#1e40af]/60 rounded-full" />
             </div>
             <SeatBadge available={bus.available_seats} total={bus.total_seats} />
           </div>
@@ -245,8 +245,8 @@ function BusRow({ bus, best, isSelected, onSelect }: {
               onClick={e => { e.stopPropagation(); onSelect(); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all
                 ${isSelected
-                  ? "bg-indigo-700 text-white ring-1 ring-indigo-400/50"
-                  : "bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/30"}`}
+                  ? "bg-[#1d4ed8] text-white ring-1 ring-indigo-400/50"
+                  : "bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow-lg shadow-[#0f172a]/30"}`}
             >
               {isSelected ? "✓ Selected" : "Select"}
             </button>
@@ -442,7 +442,7 @@ export default function BusResultsCard({ data, analysis, streaming }: Props) {
               onClick={() => setFilter(f.key)}
               className={`text-[10px] font-semibold px-2 py-1 rounded-full border transition-all
                 ${filter === f.key
-                  ? "bg-indigo-600 border-indigo-500 text-white"
+                  ? "bg-[#1e3a8a] border-[#1e3a8a] text-white"
                   : "bg-slate-800/80 border-slate-700/60 text-slate-400 hover:text-slate-200 hover:border-slate-500"}`}
             >
               {f.label}
@@ -507,7 +507,7 @@ export default function BusResultsCard({ data, analysis, streaming }: Props) {
         const finalFare = selectedBus.fare - savings;
         return (
           <div className="px-4 pb-4 pt-1">
-            <div className="rounded-xl border border-indigo-500/40 bg-indigo-950/60 p-4">
+            <div className="rounded-xl border border-[#1e3a8a]/40 bg-[#172554]/60 p-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="min-w-0">
                   <p className="text-xs text-slate-400 truncate">
@@ -537,7 +537,7 @@ export default function BusResultsCard({ data, analysis, streaming }: Props) {
                 <button
                   onClick={() => setShowPassengerModal(true)}
                   className="shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm
-                    bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/50
+                    bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow-lg shadow-[#0f172a]/50
                     transition-all active:scale-95"
                 >
                   Continue to Book
@@ -575,7 +575,7 @@ export default function BusResultsCard({ data, analysis, streaming }: Props) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-[10px] px-2.5 py-1 rounded-full border border-slate-700
-                  text-slate-400 hover:text-white hover:border-indigo-500/50 transition-all"
+                  text-slate-400 hover:text-white hover:border-[#1e3a8a]/50 transition-all"
               >
                 {b.name} →
               </a>

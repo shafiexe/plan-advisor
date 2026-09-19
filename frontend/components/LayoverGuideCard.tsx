@@ -40,9 +40,9 @@ export default function LayoverGuideCard({ data }: Props) {
 
       {/* Visa note */}
       {data.visa_note && (
-        <div className="flex items-start gap-2 px-4 py-2.5 bg-indigo-950/30 border-b border-slate-700/30">
-          <span className="text-indigo-400 shrink-0 mt-0.5">ℹ️</span>
-          <span className="text-indigo-300 text-xs">{data.visa_note}</span>
+        <div className="flex items-start gap-2 px-4 py-2.5 bg-[#172554]/30 border-b border-slate-700/30">
+          <span className="text-[#d4a017] shrink-0 mt-0.5">ℹ️</span>
+          <span className="text-[#d4a017] text-xs">{data.visa_note}</span>
         </div>
       )}
 
@@ -61,7 +61,7 @@ export default function LayoverGuideCard({ data }: Props) {
             onClick={() => setTab("city")}
             className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${
               tab === "city"
-                ? "border-indigo-500 text-indigo-300"
+                ? "border-[#1e3a8a] text-[#d4a017]"
                 : "border-transparent text-slate-400 hover:text-slate-200"
             }`}
           >
@@ -72,7 +72,7 @@ export default function LayoverGuideCard({ data }: Props) {
           onClick={() => setTab("airside")}
           className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${
             tab === "airside"
-              ? "border-indigo-500 text-indigo-300"
+              ? "border-[#1e3a8a] text-[#d4a017]"
               : "border-transparent text-slate-400 hover:text-slate-200"
           }`}
         >
@@ -82,7 +82,7 @@ export default function LayoverGuideCard({ data }: Props) {
           onClick={() => setTab("timeplan")}
           className={`px-4 py-2.5 text-xs font-medium border-b-2 transition-colors ${
             tab === "timeplan"
-              ? "border-indigo-500 text-indigo-300"
+              ? "border-[#1e3a8a] text-[#d4a017]"
               : "border-transparent text-slate-400 hover:text-slate-200"
           }`}
         >
@@ -159,7 +159,7 @@ export default function LayoverGuideCard({ data }: Props) {
             {data.time_plan.map((item, i) => (
               <div key={i} className="flex gap-3">
                 <div className="flex flex-col items-center">
-                  <span className="font-mono text-indigo-300 text-xs min-w-[40px] pt-1.5">{item.time}</span>
+                  <span className="font-mono text-[#d4a017] text-xs min-w-[40px] pt-1.5">{item.time}</span>
                   {i < data.time_plan.length - 1 && (
                     <div className="w-px flex-1 bg-indigo-800/50 mt-1 mb-0 min-h-[16px]" />
                   )}
@@ -189,7 +189,7 @@ export default function LayoverGuideCard({ data }: Props) {
                     {lounge.access && (
                       <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${
                         lounge.access.includes("Priority Pass")
-                          ? "bg-indigo-900/40 text-indigo-300"
+                          ? "bg-[#1e3a8a]/40 text-[#d4a017]"
                           : lounge.access.includes("Pay")
                           ? "bg-amber-900/30 text-amber-300"
                           : "bg-slate-800 text-slate-400"

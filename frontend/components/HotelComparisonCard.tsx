@@ -16,11 +16,11 @@ function HotelCard({ hotel, isWinner }: { hotel: HotelComparisonItem; isWinner: 
   return (
     <div
       className={`relative flex flex-col gap-3 p-4 rounded-xl bg-slate-800 min-w-[220px] max-w-xs flex-shrink-0
-        ${isWinner ? "border-2 border-indigo-500" : "border border-slate-700"}`}
+        ${isWinner ? "border-2 border-[#1e3a8a]" : "border border-slate-700"}`}
     >
       {/* Winner badge */}
       {isWinner && (
-        <div className="absolute -top-3 right-3 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+        <div className="absolute -top-3 right-3 bg-[#1e3a8a] text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
           🏆 Best Pick
         </div>
       )}
@@ -34,7 +34,7 @@ function HotelCard({ hotel, isWinner }: { hotel: HotelComparisonItem; isWinner: 
       </div>
 
       {/* Best for */}
-      <p className="text-[11px] text-indigo-400 font-medium">Best for: {hotel.best_for}</p>
+      <p className="text-[11px] text-[#d4a017] font-medium">Best for: {hotel.best_for}</p>
 
       {/* Pros */}
       {hotel.pros.length > 0 && (
@@ -80,10 +80,10 @@ export default function HotelComparisonCard({ data }: Props) {
 
       {/* Winner banner */}
       {winner && (
-        <div className="px-5 py-3 bg-gradient-to-r from-indigo-700/60 to-indigo-600/40 border-b border-indigo-500/30">
-          <p className="text-sm font-bold text-indigo-100">🏆 Best Pick: {winner}</p>
+        <div className="px-5 py-3 bg-gradient-to-r from-indigo-700/60 to-[#1e3a8a]/40 border-b border-[#1e3a8a]/30">
+          <p className="text-sm font-bold text-blue-100">🏆 Best Pick: {winner}</p>
           {winner_reason && (
-            <p className="text-xs text-indigo-300/80 mt-0.5">{winner_reason}</p>
+            <p className="text-xs text-[#d4a017]/80 mt-0.5">{winner_reason}</p>
           )}
         </div>
       )}
@@ -100,7 +100,7 @@ export default function HotelComparisonCard({ data }: Props) {
       {/* Budget / Luxury pills */}
       <div className="px-5 pb-4 flex flex-wrap gap-2">
         {isSameAsWinner ? (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-600/20 border border-indigo-500/40 text-indigo-300 text-xs font-medium">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1e3a8a]/20 border border-[#1e3a8a]/40 text-[#d4a017] text-xs font-medium">
             🏆 Best all-round: {winner}
           </span>
         ) : (
@@ -111,7 +111,7 @@ export default function HotelComparisonCard({ data }: Props) {
               </span>
             )}
             {luxury_pick && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-600/20 border border-purple-500/40 text-purple-300 text-xs font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#1e3a8a]/20 border border-[#1e3a8a]/40 text-[#d4a017] text-xs font-medium">
                 ✨ Best quality: {luxury_pick}
               </span>
             )}

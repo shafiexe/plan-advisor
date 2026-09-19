@@ -43,7 +43,7 @@ function HotelRow({ hotel }: { hotel: Hotel }) {
 
   return (
     <div className="flex gap-3 p-3 rounded-xl border border-slate-700/50 bg-slate-800/40
-      hover:border-indigo-500/30 hover:bg-slate-800/70 transition-all group">
+      hover:border-[#1e3a8a]/30 hover:bg-slate-800/70 transition-all group">
 
       {/* Thumbnail or placeholder */}
       <div className="shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-slate-700/60 flex items-center justify-center">
@@ -102,8 +102,8 @@ function HotelRow({ hotel }: { hotel: Hotel }) {
             href={hotel.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[11px] px-2.5 py-1.5 rounded-lg border border-indigo-500/40
-              text-indigo-300 hover:bg-indigo-600/20 hover:text-indigo-200 transition-all"
+            className="text-[11px] px-2.5 py-1.5 rounded-lg border border-[#1e3a8a]/40
+              text-[#d4a017] hover:bg-[#1e3a8a]/20 hover:text-[#d4a017] transition-all"
           >
             Book →
           </a>
@@ -123,7 +123,7 @@ export default function HotelResultsCard({ data, analysis, streaming }: Props) {
       {/* Header */}
       <div className="px-4 py-3 border-b border-slate-800 flex items-center gap-3
         bg-gradient-to-r from-indigo-950/40 to-slate-900/40">
-        <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30
+        <div className="w-9 h-9 rounded-xl bg-[#1e3a8a]/20 border border-[#1e3a8a]/30
           flex items-center justify-center text-lg">
           🏨
         </div>

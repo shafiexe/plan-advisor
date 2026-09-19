@@ -178,7 +178,7 @@ function EmptyState({ onSuggestion, recentMessages = [] }: EmptyProps) {
             key={s}
             onClick={() => onSuggestion(s)}
             className="text-left px-4 py-3 rounded-xl bg-slate-800/60 border border-slate-700/60
-              text-slate-300 text-sm hover:bg-slate-700/60 hover:border-indigo-500/40
+              text-slate-300 text-sm hover:bg-slate-700/60 hover:border-[#1e3a8a]/40
               hover:text-white transition-all"
           >
             {s}
@@ -490,7 +490,7 @@ export default function ChatWindow({
                     key={s}
                     onClick={() => onSuggestion(s)}
                     className="px-3 py-1.5 text-xs rounded-full border border-slate-700/60 text-slate-400
-                      hover:border-indigo-500/60 hover:text-indigo-300 hover:bg-indigo-950/30
+                      hover:border-[#1e3a8a]/60 hover:text-[#d4a017] hover:bg-[#172554]/30
                       transition-all whitespace-nowrap"
                   >
                     {s}
@@ -501,10 +501,10 @@ export default function ChatWindow({
             {typing && <TypingDots />}
             {toolLabel && !typing && (
               <div className="flex items-center gap-2.5 px-1 animate-pulse">
-                <div className="w-8 h-8 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-sm shrink-0">
+                <div className="w-8 h-8 rounded-full bg-[#1e3a8a]/20 border border-[#1e3a8a]/30 flex items-center justify-center text-sm shrink-0">
                   {(toolName && TOOL_ICONS[toolName]) ?? "🔍"}
                 </div>
-                <span className="text-sm text-indigo-300/80">{toolLabel}</span>
+                <span className="text-sm text-[#d4a017]/80">{toolLabel}</span>
               </div>
             )}
             <div ref={bottomRef} />

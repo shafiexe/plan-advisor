@@ -17,13 +17,13 @@ function RateRow({ rate, isHighlighted }: { rate: CurrencyRate; isHighlighted: b
     <div
       className={`flex items-center gap-3 px-4 py-2.5 rounded-xl border transition-all
         ${isHighlighted
-          ? "bg-indigo-950/40 border-indigo-500/30"
+          ? "bg-[#172554]/40 border-[#1e3a8a]/30"
           : "bg-slate-800/40 border-slate-700/30 hover:border-slate-600/60"}`}
     >
       {/* Flag + name */}
       <span className="text-xl leading-none shrink-0">{rate.flag}</span>
       <div className="flex flex-col min-w-0 flex-1">
-        <span className={`text-xs font-medium leading-tight truncate ${isHighlighted ? "text-indigo-200" : "text-slate-300"}`}>
+        <span className={`text-xs font-medium leading-tight truncate ${isHighlighted ? "text-[#d4a017]" : "text-slate-300"}`}>
           {rate.currency}
         </span>
         <span className="text-[10px] text-slate-500 leading-tight">{rate.code}</span>
@@ -31,7 +31,7 @@ function RateRow({ rate, isHighlighted }: { rate: CurrencyRate; isHighlighted: b
 
       {/* Converted amount */}
       <div className="text-right shrink-0">
-        <p className={`text-sm font-bold tabular-nums ${isHighlighted ? "text-indigo-300" : "text-emerald-400"}`}>
+        <p className={`text-sm font-bold tabular-nums ${isHighlighted ? "text-[#d4a017]" : "text-emerald-400"}`}>
           {formatAmount(rate.converted, rate.symbol)}
         </p>
         <p className="text-[10px] text-slate-500 tabular-nums">

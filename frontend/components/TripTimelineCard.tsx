@@ -53,7 +53,7 @@ function FlightRow({ flight, label }: { flight: TimelineFlight; label: string })
     <div className="flex items-start gap-3">
       {/* Spine dot */}
       <div className="flex flex-col items-center shrink-0" style={{ width: 20 }}>
-        <div className="w-3 h-3 rounded-full bg-indigo-500 border-2 border-indigo-400 mt-0.5" />
+        <div className="w-3 h-3 rounded-full bg-[#1e40af] border-2 border-[#1e40af] mt-0.5" />
         <div className="w-px flex-1 bg-slate-700/60 mt-1" style={{ minHeight: 20 }} />
       </div>
 
@@ -62,7 +62,7 @@ function FlightRow({ flight, label }: { flight: TimelineFlight; label: string })
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
             <span className="text-base">✈️</span>
-            <span className="text-xs font-semibold text-indigo-300 uppercase tracking-wide">{label}</span>
+            <span className="text-xs font-semibold text-[#d4a017] uppercase tracking-wide">{label}</span>
           </div>
           {dateLabel && (
             <span className="text-[11px] text-slate-400 shrink-0">{dateLabel}</span>
@@ -92,7 +92,7 @@ function HotelRow({ name, location, date, isCheckout }: { name: string; location
     <div className="flex items-start gap-3">
       {/* Spine dot */}
       <div className="flex flex-col items-center shrink-0" style={{ width: 20 }}>
-        <div className="w-3 h-3 rounded-full bg-purple-500 border-2 border-purple-400 mt-0.5" />
+        <div className="w-3 h-3 rounded-full bg-[#1e40af] border-2 border-purple-400 mt-0.5" />
         <div className="w-px flex-1 bg-slate-700/60 mt-1" style={{ minHeight: 20 }} />
       </div>
 
@@ -101,7 +101,7 @@ function HotelRow({ name, location, date, isCheckout }: { name: string; location
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
             <span className="text-base">🏨</span>
-            <span className="text-xs font-semibold text-purple-300 uppercase tracking-wide">
+            <span className="text-xs font-semibold text-[#d4a017] uppercase tracking-wide">
               {isCheckout ? "Check-out" : "Check-in"}
             </span>
           </div>
@@ -140,7 +140,7 @@ function DayRow({ day, date, theme, highlight }: { day: number; date: string; th
           )}
         </div>
         {highlight && (
-          <div className="mt-0.5 text-xs text-indigo-300/80 italic truncate">{highlight}</div>
+          <div className="mt-0.5 text-xs text-[#d4a017]/80 italic truncate">{highlight}</div>
         )}
       </div>
     </div>

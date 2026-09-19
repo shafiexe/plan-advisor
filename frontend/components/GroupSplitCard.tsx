@@ -59,7 +59,7 @@ export default function GroupSplitCard({ data }: { data: GroupSplit }) {
 
       {/* Per-person share pill */}
       <div className="px-5 pt-4 pb-0">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-900/60 border border-indigo-700/50 text-xs text-indigo-200">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1e3a8a]/60 border border-indigo-700/50 text-xs text-[#d4a017]">
           <span>💡</span>
           <span>Each person&apos;s share: <strong>{fmt(per_person_total, currency)}</strong></span>
         </div>

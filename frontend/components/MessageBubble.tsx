@@ -143,7 +143,7 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
       {/* Avatar */}
       <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 self-end
         ${isUser
-          ? "bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-900/30"
+          ? "bg-gradient-to-br from-[#1e3a8a] to-[#d4a017] text-white shadow-lg shadow-[#0f172a]/30"
           : "bg-gradient-to-br from-slate-600 to-slate-700 text-slate-200 border border-slate-600"}`}>
         {isUser ? "U" : "✦"}
       </div>
@@ -308,7 +308,7 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
         {!hasCard && (
           <div className={`relative px-4 py-3 rounded-2xl text-sm
             ${isUser
-              ? "bg-gradient-to-br from-indigo-600 to-indigo-700 text-white rounded-br-sm shadow-lg shadow-indigo-900/20 whitespace-pre-wrap leading-relaxed"
+              ? "bg-gradient-to-br from-[#1e3a8a] to-indigo-700 text-white rounded-br-sm shadow-lg shadow-[#0f172a]/20 whitespace-pre-wrap leading-relaxed"
               : "bg-slate-800/80 text-slate-200 rounded-bl-sm border border-slate-700/60 shadow-sm"}`}>
 
             {isUser ? content : <MarkdownBody text={content} />}
@@ -323,7 +323,7 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
                   <button
                     onClick={() => speaking ? onStopSpeak?.() : onSpeak(content)}
                     className={`w-6 h-6 rounded-full border flex items-center justify-center text-[11px] transition-colors
-                      ${speaking ? "bg-indigo-600 border-indigo-500 text-white" : "bg-slate-700 border-slate-600 text-slate-300 hover:text-white"}`}
+                      ${speaking ? "bg-[#1e3a8a] border-[#1e3a8a] text-white" : "bg-slate-700 border-slate-600 text-slate-300 hover:text-white"}`}
                     title={speaking ? "Stop speaking" : "Read aloud"}
                   >
                     {speaking ? "⏹" : "🔊"}
@@ -348,7 +348,7 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
               <button
                 onClick={() => speaking ? onStopSpeak?.() : onSpeak(content)}
                 className={`w-6 h-6 rounded-full border flex items-center justify-center text-[11px] transition-colors
-                  ${speaking ? "bg-indigo-600 border-indigo-500 text-white" : "bg-slate-700 border-slate-600 text-slate-300 hover:text-white"}`}
+                  ${speaking ? "bg-[#1e3a8a] border-[#1e3a8a] text-white" : "bg-slate-700 border-slate-600 text-slate-300 hover:text-white"}`}
                 title={speaking ? "Stop speaking" : "Read aloud"}
               >
                 {speaking ? "⏹" : "🔊"}

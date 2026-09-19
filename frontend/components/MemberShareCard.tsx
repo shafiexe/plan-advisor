@@ -76,9 +76,9 @@ function SingleCard({ data, n }: { data: GroupTripPlan; n: number }) {
   return (
     <div className="bg-white text-gray-900 rounded-xl p-4 w-72 shrink-0 flex flex-col gap-3 shadow-lg print:shadow-none">
       {/* Header banner */}
-      <div className="bg-indigo-600 text-white rounded-lg px-3 py-2">
+      <div className="bg-[#1e3a8a] text-white rounded-lg px-3 py-2">
         <div className="font-bold text-sm tracking-wide">MEMBER #{n} | SEAT {n}</div>
-        <div className="text-xs text-indigo-200 mt-0.5">
+        <div className="text-xs text-[#d4a017] mt-0.5">
           {data.origin} → {data.destination}
         </div>
       </div>

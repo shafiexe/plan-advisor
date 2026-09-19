@@ -12,10 +12,10 @@ const TYPE_DOT: Record<TimelineItem["type"], string> = {
   prayer:      "bg-emerald-500",
   food:        "bg-amber-500",
   toilet:      "bg-blue-500",
-  sightseeing: "bg-indigo-500",
-  activity:    "bg-purple-500",
+  sightseeing: "bg-[#1e40af]",
+  activity:    "bg-[#1e40af]",
   rest:        "bg-slate-400",
-  hotel:       "bg-purple-600",
+  hotel:       "bg-[#1e3a8a]",
 };
 
 function PlaceActivityCard({ place, adults, children }: { place: TripPlace; adults: number; children: number }) {
@@ -48,7 +48,7 @@ function PlaceActivityCard({ place, adults, children }: { place: TripPlace; adul
       <p className="text-xs text-slate-400 leading-relaxed">{place.notes}</p>
 
       <div className="flex flex-wrap gap-2 text-xs">
-        <span className="px-2 py-0.5 rounded-full bg-indigo-900/40 border border-indigo-700/30 text-indigo-300 font-medium">
+        <span className="px-2 py-0.5 rounded-full bg-[#1e3a8a]/40 border border-indigo-700/30 text-[#d4a017] font-medium">
           ⏱ {place.duration_recommended}
         </span>
         <span className="px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
@@ -210,7 +210,7 @@ export default function GroupTripCard({ data }: Props) {
               <span className="font-bold text-base text-slate-100">
                 🗺️ {data.origin} → {data.destination}
               </span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-950/60 border border-indigo-700/50 text-indigo-300 capitalize">
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#172554]/60 border border-indigo-700/50 text-[#d4a017] capitalize">
                 {data.group_type.replace(/_/g, " ")}
               </span>
             </div>
@@ -238,7 +238,7 @@ export default function GroupTripCard({ data }: Props) {
             </button>
             <button
               onClick={() => setShowMemberCards(true)}
-              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-900/50 border border-indigo-700/50 text-indigo-300 text-xs font-medium hover:bg-indigo-800/50 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#1e3a8a]/50 border border-indigo-700/50 text-[#d4a017] text-xs font-medium hover:bg-indigo-800/50 transition-colors"
               title="View per-member briefing cards"
             >
               👤 Member Cards
@@ -286,7 +286,7 @@ export default function GroupTripCard({ data }: Props) {
             onClick={() => setActiveTab(tab.id)}
             className={`shrink-0 px-3 py-2 text-xs font-medium rounded-t-lg transition-colors whitespace-nowrap ${
               activeTab === tab.id
-                ? "bg-slate-800 text-indigo-300 border border-b-transparent border-slate-700/50"
+                ? "bg-slate-800 text-[#d4a017] border border-b-transparent border-slate-700/50"
                 : "text-slate-500 hover:text-slate-300"
             }`}
           >
@@ -311,7 +311,7 @@ export default function GroupTripCard({ data }: Props) {
                 <div className={`w-3.5 h-3.5 rounded-full mt-1.5 shrink-0 z-10 ${TYPE_DOT[item.type] ?? "bg-slate-500"}`} />
                 <div className="flex-1 pb-4">
                   <div className="flex items-baseline gap-2 flex-wrap">
-                    <span className="font-mono text-xs text-indigo-300">{item.time}</span>
+                    <span className="font-mono text-xs text-[#d4a017]">{item.time}</span>
                     <span className="font-semibold text-slate-100">{item.activity}</span>
                     {item.cost_per_person > 0 && (
                       <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-950/60 border border-emerald-700/40 text-emerald-300">
@@ -392,7 +392,7 @@ export default function GroupTripCard({ data }: Props) {
                   {(place.entry_fee_adult === 0 && place.entry_fee_child === 0) && (
                     <span className="px-2 py-0.5 rounded-full bg-emerald-950/50 text-emerald-400">Free</span>
                   )}
-                  <span className="px-2 py-0.5 rounded-full bg-indigo-900/40 border border-indigo-700/30 text-indigo-300 font-medium">
+                  <span className="px-2 py-0.5 rounded-full bg-[#1e3a8a]/40 border border-indigo-700/30 text-[#d4a017] font-medium">
                     ⏱ {place.duration_recommended}
                   </span>
                   <span className="px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300">
@@ -657,7 +657,7 @@ export default function GroupTripCard({ data }: Props) {
                 <div className="flex flex-col gap-1.5">
                   {data.group_tips.map((tip, i) => (
                     <div key={i} className="flex items-start gap-2 text-xs text-slate-300">
-                      <span className="text-indigo-400 shrink-0 font-bold">{i + 1}.</span>
+                      <span className="text-[#d4a017] shrink-0 font-bold">{i + 1}.</span>
                       <span>{tip}</span>
                     </div>
                   ))}

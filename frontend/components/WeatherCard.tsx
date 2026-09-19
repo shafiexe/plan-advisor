@@ -22,7 +22,7 @@ function uvLabel(uv: number): { text: string; color: string } {
   if (uv <= 5)  return { text: "Moderate",  color: "text-yellow-400" };
   if (uv <= 7)  return { text: "High",      color: "text-orange-400" };
   if (uv <= 10) return { text: "Very High", color: "text-red-400" };
-  return          { text: "Extreme",   color: "text-purple-400" };
+  return          { text: "Extreme",   color: "text-[#d4a017]" };
 }
 
 function dayName(dateStr: string): string {
@@ -41,9 +41,9 @@ function ForecastDay({ day, isToday }: { day: WeatherForecastDay; isToday: boole
   return (
     <div className={`flex flex-col items-center gap-1 flex-1 rounded-xl p-2.5 border transition-all
       ${isToday
-        ? "bg-indigo-950/50 border-indigo-500/30"
+        ? "bg-[#172554]/50 border-[#1e3a8a]/30"
         : "bg-slate-800/40 border-slate-700/30"}`}>
-      <span className={`text-[11px] font-semibold ${isToday ? "text-indigo-300" : "text-slate-400"}`}>
+      <span className={`text-[11px] font-semibold ${isToday ? "text-[#d4a017]" : "text-slate-400"}`}>
         {isToday ? "Today" : dayName(day.date)}
       </span>
       <span className="text-[10px] text-slate-600">{monthDay(day.date)}</span>

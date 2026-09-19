@@ -105,7 +105,7 @@ export default function OnboardingModal({ onComplete }: Props) {
             <div
               key={i}
               className={`w-2 h-2 rounded-full transition-all ${
-                i === step ? "bg-indigo-500 w-4" : i < step ? "bg-indigo-400" : "bg-slate-700"
+                i === step ? "bg-[#1e40af] w-4" : i < step ? "bg-[#1e40af]" : "bg-slate-700"
               }`}
             />
           ))}
@@ -127,7 +127,7 @@ export default function OnboardingModal({ onComplete }: Props) {
                 value={prefs.nationality}
                 onChange={(e) => update({ nationality: e.target.value })}
                 className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5
-                  text-slate-200 text-sm outline-none focus:border-indigo-500 transition-colors"
+                  text-slate-200 text-sm outline-none focus:border-[#1e3a8a] transition-colors"
               >
                 {COUNTRIES.map((c) => (
                   <option key={c} value={c}>{c}</option>
@@ -143,7 +143,7 @@ export default function OnboardingModal({ onComplete }: Props) {
                   value={prefs.passport_expiry ?? ""}
                   onChange={(e) => update({ passport_expiry: e.target.value })}
                   className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5
-                    text-slate-200 text-sm outline-none focus:border-indigo-500 transition-colors"
+                    text-slate-200 text-sm outline-none focus:border-[#1e3a8a] transition-colors"
                 />
                 <p className="text-xs text-slate-600 mt-1.5">We&apos;ll warn you before it expires</p>
               </div>
@@ -168,7 +168,7 @@ export default function OnboardingModal({ onComplete }: Props) {
                     onChange={(e) => update({ home_city: e.target.value })}
                     placeholder="e.g. Bangalore"
                     className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5
-                      text-slate-200 text-sm outline-none focus:border-indigo-500 transition-colors placeholder-slate-600"
+                      text-slate-200 text-sm outline-none focus:border-[#1e3a8a] transition-colors placeholder-slate-600"
                   />
                 </div>
                 <div className="w-24">
@@ -182,7 +182,7 @@ export default function OnboardingModal({ onComplete }: Props) {
                     placeholder="BLR"
                     maxLength={3}
                     className="w-full bg-slate-800 border border-slate-600 rounded-xl px-3 py-2.5
-                      text-slate-200 text-sm font-mono uppercase outline-none focus:border-indigo-500 transition-colors placeholder-slate-600"
+                      text-slate-200 text-sm font-mono uppercase outline-none focus:border-[#1e3a8a] transition-colors placeholder-slate-600"
                   />
                 </div>
               </div>
@@ -194,8 +194,8 @@ export default function OnboardingModal({ onComplete }: Props) {
                     onClick={() => update({ home_city: ap.city, home_iata: ap.iata })}
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border ${
                       prefs.home_iata === ap.iata
-                        ? "bg-indigo-600/30 border-indigo-500 text-indigo-300"
-                        : "border-slate-700 text-slate-400 hover:border-indigo-500/60 hover:text-slate-200"
+                        ? "bg-[#1e3a8a]/30 border-[#1e3a8a] text-[#d4a017]"
+                        : "border-slate-700 text-slate-400 hover:border-[#1e3a8a]/60 hover:text-slate-200"
                     }`}
                   >
                     {ap.iata}
@@ -219,7 +219,7 @@ export default function OnboardingModal({ onComplete }: Props) {
                     onClick={() => update({ currency: c.code })}
                     className={`flex items-center gap-2.5 px-3 py-3 rounded-xl border text-sm font-semibold transition-all ${
                       prefs.currency === c.code
-                        ? "border-indigo-500 bg-indigo-600/20 text-indigo-200"
+                        ? "border-[#1e3a8a] bg-[#1e3a8a]/20 text-[#d4a017]"
                         : "border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-500"
                     }`}
                   >
@@ -246,14 +246,14 @@ export default function OnboardingModal({ onComplete }: Props) {
                     onClick={() => update({ travel_style: s.value })}
                     className={`w-full flex items-start gap-3 px-4 py-3.5 rounded-xl border text-left transition-all ${
                       prefs.travel_style === s.value
-                        ? "border-indigo-500 bg-indigo-600/20"
+                        ? "border-[#1e3a8a] bg-[#1e3a8a]/20"
                         : "border-slate-700 bg-slate-800/40 hover:border-slate-500"
                     }`}
                   >
                     <span className="text-2xl">{s.emoji}</span>
                     <div>
                       <p className={`text-sm font-bold ${
-                        prefs.travel_style === s.value ? "text-indigo-200" : "text-slate-200"
+                        prefs.travel_style === s.value ? "text-[#d4a017]" : "text-slate-200"
                       }`}>
                         {s.title}
                       </p>
@@ -280,8 +280,8 @@ export default function OnboardingModal({ onComplete }: Props) {
           )}
           <button
             onClick={handleNext}
-            className="flex-1 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500
-              text-white text-sm font-bold transition-all shadow-lg shadow-indigo-900/30"
+            className="flex-1 py-2.5 rounded-xl bg-[#1e3a8a] hover:bg-[#1e40af]
+              text-white text-sm font-bold transition-all shadow-lg shadow-[#0f172a]/30"
           >
             {step === TOTAL_STEPS - 1 ? "Done" : "Next"}
           </button>

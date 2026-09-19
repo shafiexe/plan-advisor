@@ -42,7 +42,7 @@ const BANK_OFFER_DEFS: BankOfferDef[] = [
   {
     bank: "Axis", cardType: "All Cards",
     flatOff: 500, minBooking: 5000,
-    color: "border-purple-500/40 bg-purple-950/60 text-purple-200",
+    color: "border-[#1e3a8a]/40 bg-purple-950/60 text-[#d4a017]",
     icon: "✦",
   },
 ];
@@ -160,7 +160,7 @@ function SegmentDetail({ seg }: { seg: FlightSegment }) {
   return (
     <div className="flex gap-3 py-2">
       <div className="flex flex-col items-center pt-1 shrink-0 w-4">
-        <div className="w-2 h-2 rounded-full bg-indigo-400" />
+        <div className="w-2 h-2 rounded-full bg-[#1e40af]" />
         <div className="w-px flex-1 bg-slate-600 my-1 min-h-[24px]" />
         <div className="w-2 h-2 rounded-full bg-slate-500" />
       </div>
@@ -327,25 +327,25 @@ function FlightCard({
       onClick={onSelect}
       className={`rounded-xl border transition-all duration-200 cursor-pointer
         ${isSelected
-          ? "border-indigo-400/70 bg-indigo-950/50 shadow-lg shadow-indigo-900/30 ring-1 ring-indigo-500/30"
+          ? "border-[#1e40af]/70 bg-[#172554]/50 shadow-lg shadow-[#0f172a]/30 ring-1 ring-[#1e3a8a]/30"
           : offer.is_best
-            ? "border-indigo-500/50 bg-indigo-950/30 shadow-md shadow-indigo-900/20"
+            ? "border-[#1e3a8a]/50 bg-[#172554]/30 shadow-md shadow-[#0f172a]/20"
             : "border-slate-700/60 bg-slate-800/40 hover:border-slate-600/80 hover:bg-slate-800/70"}`}
     >
       {/* Selection indicator + best badge */}
       <div className="px-3 pt-2 pb-0 flex gap-2 items-center md:px-4 md:pt-2.5">
         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all
-          ${isSelected ? "border-indigo-400 bg-indigo-500" : "border-slate-600"}`}
+          ${isSelected ? "border-[#1e40af] bg-[#1e40af]" : "border-slate-600"}`}
         >
           {isSelected && <div className="w-2 h-2 rounded-full bg-white" />}
         </div>
         {offer.is_best && !isSelected && (
-          <span className="text-[11px] font-semibold text-indigo-300 bg-indigo-600/25 border border-indigo-500/40 px-2 py-0.5 rounded-full">
+          <span className="text-[11px] font-semibold text-[#d4a017] bg-[#1e3a8a]/25 border border-[#1e3a8a]/40 px-2 py-0.5 rounded-full">
             ✦ Best deal
           </span>
         )}
         {isSelected && (
-          <span className="text-[11px] font-semibold text-indigo-300 bg-indigo-600/25 border border-indigo-400/50 px-2 py-0.5 rounded-full">
+          <span className="text-[11px] font-semibold text-[#d4a017] bg-[#1e3a8a]/25 border border-[#1e40af]/50 px-2 py-0.5 rounded-full">
             ✓ Selected
           </span>
         )}
@@ -408,8 +408,8 @@ function FlightCard({
             <button
               onClick={() => setExpanded(e => !e)}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all
-                bg-indigo-600/20 border-indigo-500/50 text-indigo-300
-                hover:bg-indigo-600/40 hover:border-indigo-400/70 active:scale-95"
+                bg-[#1e3a8a]/20 border-[#1e3a8a]/50 text-[#d4a017]
+                hover:bg-[#1e3a8a]/40 hover:border-[#1e40af]/70 active:scale-95"
             >
               {expanded ? "Hide" : "Details"}
             </button>
@@ -518,7 +518,7 @@ export default function FlightResultsCard({
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <span className="text-2xl font-bold text-slate-100 tracking-tight">{origin}</span>
-              <svg className="w-5 h-5 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <svg className="w-5 h-5 text-[#d4a017]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
               </svg>
               <span className="text-2xl font-bold text-slate-100 tracking-tight">{destination}</span>
@@ -535,7 +535,7 @@ export default function FlightResultsCard({
             <button
               onClick={() => setShowINR(true)}
               className={`text-xs font-semibold px-2.5 py-1 rounded-md transition-all ${
-                showINR ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"
+                showINR ? "bg-[#1e3a8a] text-white shadow" : "text-slate-400 hover:text-slate-200"
               }`}
             >
               ₹ INR
@@ -543,7 +543,7 @@ export default function FlightResultsCard({
             <button
               onClick={() => setShowINR(false)}
               className={`text-xs font-semibold px-2.5 py-1 rounded-md transition-all ${
-                !showINR ? "bg-indigo-600 text-white shadow" : "text-slate-400 hover:text-slate-200"
+                !showINR ? "bg-[#1e3a8a] text-white shadow" : "text-slate-400 hover:text-slate-200"
               }`}
             >
               $ USD
@@ -617,7 +617,7 @@ export default function FlightResultsCard({
               <button
                 key={String(v)}
                 onClick={() => { setFilterStops(v); setSelectedIdx(null); setSelectedBank(null); }}
-                className={`px-2.5 py-1 transition-all ${filterStops === v ? "bg-indigo-600 text-white" : "bg-slate-800/50 text-slate-400 hover:text-white"}`}
+                className={`px-2.5 py-1 transition-all ${filterStops === v ? "bg-[#1e3a8a] text-white" : "bg-slate-800/50 text-slate-400 hover:text-white"}`}
               >
                 {v === "all" ? "All" : v === 0 ? "Nonstop" : "1 stop"}
               </button>
@@ -655,7 +655,7 @@ export default function FlightResultsCard({
               <button
                 key={v}
                 onClick={() => setSortBy(v)}
-                className={`px-2.5 py-1 transition-all ${sortBy === v ? "bg-indigo-600 text-white" : "bg-slate-800/50 text-slate-400 hover:text-white"}`}
+                className={`px-2.5 py-1 transition-all ${sortBy === v ? "bg-[#1e3a8a] text-white" : "bg-slate-800/50 text-slate-400 hover:text-white"}`}
               >
                 {v === "price" ? "Price" : v === "duration" ? "Duration" : "Depart"}
               </button>
@@ -749,7 +749,7 @@ export default function FlightResultsCard({
 
         return (
           <div className="px-4 pb-4 pt-1">
-            <div className="rounded-xl border border-indigo-500/40 bg-indigo-950/60 p-4">
+            <div className="rounded-xl border border-[#1e3a8a]/40 bg-[#172554]/60 p-4">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <div className="min-w-0">
                   <p className="text-xs text-slate-400 truncate">
@@ -775,7 +775,7 @@ export default function FlightResultsCard({
                 <button
                   onClick={() => setShowPassengerModal(true)}
                   className="shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm
-                    bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-900/50
+                    bg-[#1e3a8a] hover:bg-[#1e40af] text-white shadow-lg shadow-[#0f172a]/50
                     transition-all active:scale-95"
                 >
                   Continue to Book
@@ -806,10 +806,10 @@ export default function FlightResultsCard({
 
       {/* ── AI Analysis ── */}
       {(analysis || streaming) && (
-        <div className="mx-4 mb-4 p-4 rounded-xl bg-slate-800/50 border border-indigo-500/20">
+        <div className="mx-4 mb-4 p-4 rounded-xl bg-slate-800/50 border border-[#1e3a8a]/20">
           <div className="flex items-center gap-2 mb-2">
-            <span className="text-indigo-400 text-sm">✦</span>
-            <span className="text-[11px] font-semibold text-indigo-300 uppercase tracking-wider">
+            <span className="text-[#d4a017] text-sm">✦</span>
+            <span className="text-[11px] font-semibold text-[#d4a017] uppercase tracking-wider">
               AI Analysis
             </span>
           </div>

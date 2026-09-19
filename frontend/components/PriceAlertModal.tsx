@@ -153,7 +153,7 @@ export default function PriceAlertModal({
                 placeholder="BLR"
                 className="w-full rounded-lg px-3 py-2.5 text-sm bg-slate-800/80 border border-slate-700/60
                   text-slate-100 placeholder-slate-600 outline-none font-mono uppercase
-                  focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  focus:ring-1 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-all
                   hover:border-slate-600"
               />
             </div>
@@ -170,7 +170,7 @@ export default function PriceAlertModal({
                 placeholder="DXB"
                 className="w-full rounded-lg px-3 py-2.5 text-sm bg-slate-800/80 border border-slate-700/60
                   text-slate-100 placeholder-slate-600 outline-none font-mono uppercase
-                  focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  focus:ring-1 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-all
                   hover:border-slate-600"
               />
             </div>
@@ -187,7 +187,7 @@ export default function PriceAlertModal({
               onChange={e => setDepartureDate(e.target.value)}
               className="w-full rounded-lg px-3 py-2.5 text-sm bg-slate-800/80 border border-slate-700/60
                 text-slate-100 outline-none
-                focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                focus:ring-1 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-all
                 hover:border-slate-600"
             />
           </div>
@@ -208,7 +208,7 @@ export default function PriceAlertModal({
                 placeholder="e.g. 8000"
                 className="w-full rounded-lg pl-7 pr-3 py-2.5 text-sm bg-slate-800/80 border border-slate-700/60
                   text-slate-100 placeholder-slate-600 outline-none tabular-nums
-                  focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 transition-all
+                  focus:ring-1 focus:ring-[#1e3a8a] focus:border-[#1e3a8a] transition-all
                   hover:border-slate-600"
               />
             </div>
@@ -239,8 +239,8 @@ export default function PriceAlertModal({
             <button
               type="submit"
               disabled={submitting || !!success}
-              className="flex-1 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold
-                shadow-lg shadow-indigo-900/40 transition-all active:scale-95 disabled:opacity-40
+              className="flex-1 py-3 rounded-xl bg-[#1e3a8a] hover:bg-[#1e40af] text-white text-sm font-bold
+                shadow-lg shadow-[#0f172a]/40 transition-all active:scale-95 disabled:opacity-40
                 flex items-center justify-center gap-1.5"
             >
               {submitting

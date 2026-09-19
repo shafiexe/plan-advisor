@@ -46,7 +46,7 @@ interface Stats {
 function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
   return (
     <div className="bg-slate-900/80 border border-slate-800/60 rounded-2xl p-6 flex items-center gap-4">
-      <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-2xl shrink-0">
+      <div className="w-12 h-12 rounded-xl bg-[#1e3a8a]/10 flex items-center justify-center text-2xl shrink-0">
         {icon}
       </div>
       <div>
@@ -143,7 +143,7 @@ export default function AdminPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-[#1e3a8a] border-t-transparent rounded-full animate-spin" />
           <p className="text-slate-500 text-sm">Loading admin dashboard…</p>
         </div>
       </div>
@@ -156,7 +156,7 @@ export default function AdminPage() {
         <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-8 max-w-md text-center">
           <p className="text-red-400 font-medium">Failed to load stats</p>
           <p className="text-slate-500 text-sm mt-1">{error}</p>
-          <button onClick={() => fetchStats()} className="mt-4 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg transition-colors">
+          <button onClick={() => fetchStats()} className="mt-4 px-4 py-2 bg-[#1e3a8a] hover:bg-[#1e40af] text-white text-sm rounded-lg transition-colors">
             Retry
           </button>
         </div>
@@ -190,7 +190,7 @@ export default function AdminPage() {
               {exporting === "conversations" ? "Exporting…" : "Export Convs CSV"}
             </button>
             <button onClick={() => router.push("/")}
-              className="px-3 py-1.5 text-sm bg-indigo-600 hover:bg-indigo-500 rounded-lg transition-colors">
+              className="px-3 py-1.5 text-sm bg-[#1e3a8a] hover:bg-[#1e40af] rounded-lg transition-colors">
               ← Back to app
             </button>
           </div>
@@ -201,15 +201,15 @@ export default function AdminPage() {
           <div className="flex flex-col gap-1">
             <label className="text-xs text-slate-500 font-medium">From</label>
             <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)}
-              className="bg-slate-800 border border-slate-700/60 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500" />
+              className="bg-slate-800 border border-slate-700/60 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-[#1e3a8a]" />
           </div>
           <div className="flex flex-col gap-1">
             <label className="text-xs text-slate-500 font-medium">To</label>
             <input type="date" value={toDate} onChange={e => setToDate(e.target.value)}
-              className="bg-slate-800 border border-slate-700/60 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500" />
+              className="bg-slate-800 border border-slate-700/60 rounded-lg px-3 py-1.5 text-sm text-slate-200 focus:outline-none focus:border-[#1e3a8a]" />
           </div>
           <button onClick={handleFilter}
-            className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-sm rounded-lg transition-colors">
+            className="px-4 py-1.5 bg-[#1e3a8a] hover:bg-[#1e40af] text-sm rounded-lg transition-colors">
             Apply
           </button>
           {(fromDate || toDate) && (
@@ -218,7 +218,7 @@ export default function AdminPage() {
             </button>
           )}
           {(fromDate || toDate) && (
-            <span className="text-xs text-indigo-400 self-center">
+            <span className="text-xs text-[#d4a017] self-center">
               Filtered: {fromDate || "start"} → {toDate || "today"}
             </span>
           )}

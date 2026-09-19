@@ -90,7 +90,7 @@ export default function RoundTripCard({ data, streaming, onSetAlert }: Props) {
         {totalMin > 0 && (
           <div className="text-right">
             <p className="text-[10px] text-slate-500">Total from</p>
-            <p className="text-sm font-bold text-indigo-300 tabular-nums">{fmt(totalMin, currency)}</p>
+            <p className="text-sm font-bold text-[#d4a017] tabular-nums">{fmt(totalMin, currency)}</p>
           </div>
         )}
       </div>
