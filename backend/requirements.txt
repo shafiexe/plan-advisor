@@ -17,3 +17,5 @@ greenlet>=3.0.0        # required by SQLAlchemy async engine
 # Observability — Arize Phoenix tracing for LLM/tool calls
 arize-phoenix-otel>=0.6.0
 openinference-instrumentation-anthropic>=0.1.0
+# Error tracking
+sentry-sdk[fastapi]>=2.0.0

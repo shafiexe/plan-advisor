@@ -5,6 +5,24 @@ import logging
 import traceback
 logging.basicConfig(level=logging.INFO)
 
+# ── Sentry error tracking ──────────────────────────────────────────────────────
+_sentry_dsn = _os.getenv("SENTRY_DSN", "")
+if _sentry_dsn:
+    try:
+        import sentry_sdk
+        from sentry_sdk.integrations.fastapi import FastApiIntegration
+        from sentry_sdk.integrations.starlette import StarletteIntegration
+        sentry_sdk.init(
+            dsn=_sentry_dsn,
+            integrations=[StarletteIntegration(), FastApiIntegration()],
+            traces_sample_rate=0.2,
+            send_default_pii=False,
+        )
+        logging.getLogger(__name__).info("Sentry error tracking enabled")
+    except Exception as _e:
+        logging.getLogger(__name__).warning("Sentry init failed (non-fatal): %s", _e)
+# ───────────────────────────────────────────────────────────────────────────────
+
 # ── Arize Phoenix tracing (must init before anthropic client is created) ───────
 import os as _os
 _phoenix_key = _os.getenv("PHOENIX_API_KEY", "")
