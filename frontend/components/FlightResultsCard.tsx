@@ -92,6 +92,22 @@ function bookingUrl(offer: FlightOffer, origin: string, destination: string): st
   return `https://www.google.com/travel/flights?q=flights+from+${origin}+to+${destination}+on+${date}`;
 }
 
+function googleFlightsUrl(origin: string, destination: string, date: string) {
+  return `https://www.google.com/travel/flights?q=flights+from+${origin}+to+${destination}+on+${date}`;
+}
+
+function makemytripFlightUrl(origin: string, destination: string, date: string) {
+  const parts = date.split("-");
+  const d = parts.length === 3 ? `${parts[2]}${parts[1]}${parts[0].slice(2)}` : date;
+  return `https://www.makemytrip.com/flight/search?itinerary=${origin}-${destination}-${d}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E`;
+}
+
+function skyscannerFlightUrl(origin: string, destination: string, date: string) {
+  const parts = date.split("-");
+  const d = parts.length === 3 ? `${parts[0].slice(2)}${parts[1]}${parts[2]}` : date;
+  return `https://www.skyscanner.co.in/transport/flights/${origin.toLowerCase()}/${destination.toLowerCase()}/${d}/`;
+}
+
 /* ── AirlineLogo ─────────────────────────────────────────────── */
 function AirlineLogo({ src, name, size = 48 }: { src: string; name: string; size?: number }) {
   const [errored, setErrored] = useState(false);
@@ -673,6 +689,40 @@ export default function FlightResultsCard({
           />
         ))}
       </div>
+
+      {/* ── Quick Book strip ── */}
+      {(() => {
+        const date = firstSeg?.departs?.split(" ")[0] ?? "";
+        const platforms = [
+          { name: "Google Flights", icon: "✈️", url: googleFlightsUrl(origin, destination, date), color: "hover:bg-blue-900/30 hover:border-blue-500/50 hover:text-blue-300" },
+          { name: "MakeMyTrip",    icon: "🛫", url: makemytripFlightUrl(origin, destination, date), color: "hover:bg-red-900/20 hover:border-red-500/40 hover:text-red-300" },
+          { name: "Skyscanner",   icon: "🔍", url: skyscannerFlightUrl(origin, destination, date), color: "hover:bg-cyan-900/20 hover:border-cyan-500/40 hover:text-cyan-300" },
+        ];
+        return (
+          <div className="mx-4 mb-3 rounded-xl border border-slate-700/40 bg-slate-900/50 overflow-hidden">
+            <div className="px-3 py-2 border-b border-slate-700/30">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                Compare &amp; Book on
+              </span>
+            </div>
+            <div className="flex divide-x divide-slate-700/40">
+              {platforms.map(p => (
+                <a
+                  key={p.name}
+                  href={p.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex-1 flex flex-col items-center gap-1 py-3 text-slate-500
+                    transition-all ${p.color}`}
+                >
+                  <span className="text-base">{p.icon}</span>
+                  <span className="text-[11px] font-semibold">{p.name}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── Bank offers (shown when a flight is selected) ── */}
       {selectedOffer && (

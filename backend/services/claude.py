@@ -62,6 +62,9 @@ Accommodation:
 Food:
 • `find_restaurants` — Restaurants, food courts, and eateries near any location.
 
+Weather:
+• `get_weather`  — Current weather and 3-day forecast for any city. Call when user asks about weather, or proactively after a destination is chosen to give context.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IATA CITY CODES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -254,6 +257,23 @@ TOOLS = [
             "required": ["location"],
         },
     },
+    {
+        "name": "get_weather",
+        "description": (
+            "Get current weather conditions and 3-day forecast for a destination. "
+            "Call when user asks about weather at any location, or proactively when a destination is chosen."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "location": {
+                    "type": "string",
+                    "description": "City name e.g. 'Dubai', 'Goa', 'Paris'",
+                }
+            },
+            "required": ["location"],
+        },
+    },
 ]
 
 
@@ -407,6 +427,15 @@ async def _run_tool(name: str, tool_input: dict) -> str:
         except Exception as e:
             return json.dumps({"error": str(e), "restaurants_found": 0, "results": []})
 
+    # ── Weather ──
+    if name == "get_weather":
+        try:
+            from services.serpapi_weather import get_weather
+            result = await get_weather(location=tool_input.get("location", ""))
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({"error": str(e), "location": tool_input.get("location", ""), "temp_c": 0, "forecast": []})
+
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
@@ -436,6 +465,8 @@ def _tool_label(name: str, tool_input: dict) -> str:
         return f"Finding hotels in {loc}…"
     if name == "find_restaurants":
         return f"Finding restaurants in {loc}…"
+    if name == "get_weather":
+        return f"Checking weather in {loc}…"
     return f"Running {name}…"
 
 
@@ -548,6 +579,13 @@ async def stream_response(messages: list, extra_system: str | None = None) -> As
                         rd = json.loads(result_str)
                         if rd.get("outbound") or rd.get("return_flight"):
                             yield {"type": "round_trip_results", "data": rd}
+                    except Exception:
+                        pass
+                elif block.name == "get_weather":
+                    try:
+                        wd = json.loads(result_str)
+                        if not wd.get("error") and wd.get("temp_c") is not None:
+                            yield {"type": "weather_results", "data": wd}
                     except Exception:
                         pass
 

@@ -5,13 +5,15 @@ import MessageBubble, { Message } from "./MessageBubble";
 import TypingDots from "./TypingDots";
 
 const TOOL_ICONS: Record<string, string> = {
-  search_flights:   "✈️",
-  compare_flights:  "✈️",
-  get_price_calendar: "📅",
-  search_trains:    "🚆",
-  search_buses:     "🚌",
-  search_hotels:    "🏨",
-  find_restaurants: "🍽️",
+  search_flights:    "✈️",
+  search_round_trip: "✈️",
+  compare_flights:   "✈️",
+  get_price_calendar:"📅",
+  search_trains:     "🚆",
+  search_buses:      "🚌",
+  search_hotels:     "🏨",
+  find_restaurants:  "🍽️",
+  get_weather:       "🌤️",
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -69,37 +71,55 @@ function EmptyState({ onSuggestion }: EmptyProps) {
 }
 
 function getSuggestions(msg: Message): string[] {
-  if (msg.flightData) {
-    const dest = (msg.flightData as Record<string, unknown>)?.destination as string | undefined;
+  if (msg.roundTripData) {
+    const dest = msg.roundTripData.outbound?.destination ?? "";
     return [
       dest ? `Find hotels in ${dest}` : "Find hotels at destination",
-      "Show cheaper dates",
-      "Visa & entry requirements",
+      dest ? `What's the weather in ${dest}?` : "Check the weather",
+      "What are the top things to do?",
+    ];
+  }
+  if (msg.flightData) {
+    const dest = msg.flightData.destination ?? "";
+    const origin = msg.flightData.origin ?? "";
+    return [
+      dest ? `Find hotels in ${dest}` : "Find hotels at destination",
+      dest ? `What's the weather in ${dest}?` : "Check the weather",
+      origin && dest ? `Show cheapest dates for ${origin} → ${dest}` : "Show cheaper dates",
+    ];
+  }
+  if (msg.weatherData) {
+    const loc = msg.weatherData.location?.split(",")[0] ?? "";
+    return [
+      loc ? `Find hotels in ${loc}` : "Find hotels nearby",
+      loc ? `Find restaurants in ${loc}` : "Find restaurants",
+      "What's the best time to visit?",
     ];
   }
   if (msg.hotelData) {
+    const loc = msg.hotelData.location ?? "";
     return [
-      "Find restaurants nearby",
-      "What to see and do there",
-      "Check different dates",
+      loc ? `Find restaurants in ${loc}` : "Find restaurants nearby",
+      loc ? `What's the weather in ${loc}?` : "Check the weather",
+      "What to see and do there?",
     ];
   }
   if (msg.restaurantData) {
     return [
       "Plan a full day itinerary",
-      "What to pack",
-      "Best time to visit",
+      "What to pack for this trip?",
+      "Best time to visit?",
     ];
   }
   if (msg.busData || msg.trainData) {
     return [
       "Compare with flights",
       "Find hotels at destination",
-      "What to do there",
+      "What to do there?",
     ];
   }
   return [
-    "Plan a complete trip",
+    "Plan a complete trip for me",
     "What's the best time to visit?",
     "Help me pack for this trip",
   ];

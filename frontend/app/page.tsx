@@ -19,6 +19,7 @@ import type { FlightSearchResult, PriceCalendarResult, RoundTripResult } from "@
 import type { HotelSearchResult, RestaurantSearchResult } from "@/types/places";
 import type { BusSearchResult } from "@/types/buses";
 import type { TrainSearchResult } from "@/types/transport";
+import type { WeatherResult } from "@/types/weather";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
 
@@ -109,6 +110,7 @@ export default function Home() {
   const pendingRestaurantRef  = useRef<RestaurantSearchResult | null>(null);
   const pendingBusRef         = useRef<BusSearchResult | null>(null);
   const pendingTrainRef       = useRef<TrainSearchResult | null>(null);
+  const pendingWeatherRef     = useRef<WeatherResult | null>(null);
 
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
@@ -192,11 +194,13 @@ export default function Home() {
     const calendarData   = pendingCalendarRef.current ?? undefined;
     const hotelData      = pendingHotelRef.current ?? undefined;
     const restaurantData = pendingRestaurantRef.current ?? undefined;
+    const weatherData    = pendingWeatherRef.current ?? undefined;
     if (calendarData)   pendingCalendarRef.current   = null;
     if (hotelData)      pendingHotelRef.current      = null;
     if (restaurantData) pendingRestaurantRef.current = null;
+    if (weatherData)    pendingWeatherRef.current    = null;
 
-    const hasCard = !!(calendarData || hotelData || restaurantData);
+    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData);
     updateActive((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!hasCard && last?.role === "assistant" && last.streaming) {
@@ -204,7 +208,7 @@ export default function Home() {
       }
       return [
         ...msgs,
-        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData },
+        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData },
       ];
     });
   }, [updateActive]);
@@ -288,6 +292,10 @@ export default function Home() {
     },
     onRoundTripResults: (data) => {
       pendingRoundTripRef.current = data as RoundTripResult;
+      setToolLabel(null);
+    },
+    onWeatherResults: (data) => {
+      pendingWeatherRef.current = data as WeatherResult;
       setToolLabel(null);
     },
   });

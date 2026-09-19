@@ -10,10 +10,12 @@ import BusResultsCard from "./BusResultsCard";
 import TrainResultsCard from "./TrainResultsCard";
 import TransportComparisonCard from "./TransportComparisonCard";
 import RoundTripCard from "./RoundTripCard";
+import WeatherCard from "./WeatherCard";
 import type { FlightSearchResult, PriceCalendarResult, RoundTripResult } from "@/types/flights";
 import type { HotelSearchResult, RestaurantSearchResult } from "@/types/places";
 import type { BusSearchResult } from "@/types/buses";
 import type { TrainSearchResult } from "@/types/transport";
+import type { WeatherResult } from "@/types/weather";
 
 export type Message = {
   id: string;
@@ -28,6 +30,7 @@ export type Message = {
   busData?: BusSearchResult;
   trainData?: TrainSearchResult;
   roundTripData?: RoundTripResult;
+  weatherData?: WeatherResult;
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -46,10 +49,10 @@ function formatTime(ts: number) {
 }
 
 export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert }: Props) {
-  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData } = message;
+  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData } = message;
   const isUser = role === "user";
   const isTransportComparison = !isUser && ((!!flightData && (!!busData || !!trainData)) || (!!busData && !!trainData));
-  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData);
+  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -107,6 +110,10 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
 
         {!isUser && roundTripData && (
           <RoundTripCard data={roundTripData} streaming={streaming} onSetAlert={onSetAlert} />
+        )}
+
+        {!isUser && weatherData && (
+          <WeatherCard data={weatherData} />
         )}
 
         {/* When a card is shown, render analysis text below it using MarkdownBody */}

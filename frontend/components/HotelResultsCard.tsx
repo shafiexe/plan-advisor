@@ -3,6 +3,20 @@
 import type { HotelSearchResult, Hotel } from "@/types/places";
 import MarkdownBody from "./MarkdownBody";
 
+function toMMT(date: string) {
+  const p = date.split("-");
+  return p.length === 3 ? `${p[2]}${p[1]}${p[0]}` : date;
+}
+function googleHotelsUrl(loc: string) {
+  return `https://www.google.com/travel/hotels?q=hotels+in+${encodeURIComponent(loc)}`;
+}
+function bookingComUrl(loc: string, checkIn: string, checkOut: string) {
+  return `https://www.booking.com/search.html?ss=${encodeURIComponent(loc)}&checkin=${checkIn}&checkout=${checkOut}`;
+}
+function makemytripHotelUrl(loc: string, checkIn: string, checkOut: string) {
+  return `https://www.makemytrip.com/hotels/hotel-listing/?topHtlCt=${encodeURIComponent(loc)}&chkIn=${toMMT(checkIn)}&chkOut=${toMMT(checkOut)}&roomStayQualifier=2e0e`;
+}
+
 type Props = {
   data: HotelSearchResult;
   analysis?: string;
@@ -131,6 +145,35 @@ export default function HotelResultsCard({ data, analysis, streaming }: Props) {
           <p className="text-slate-500 text-sm text-center py-4">No hotels found for this search.</p>
         )}
       </div>
+
+      {/* ── Book on strip ── */}
+      {results.length > 0 && (
+        <div className="mx-3 mb-3 rounded-xl border border-slate-700/40 bg-slate-900/50 overflow-hidden">
+          <div className="px-3 py-2 border-b border-slate-700/30">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+              Book on
+            </span>
+          </div>
+          <div className="flex divide-x divide-slate-700/40">
+            {[
+              { name: "Google Hotels", icon: "🏨", url: googleHotelsUrl(location), color: "hover:bg-blue-900/30 hover:text-blue-300" },
+              { name: "Booking.com",   icon: "🛏️",  url: bookingComUrl(location, check_in, check_out), color: "hover:bg-blue-900/20 hover:text-blue-200" },
+              { name: "MakeMyTrip",   icon: "🏷️",  url: makemytripHotelUrl(location, check_in, check_out), color: "hover:bg-red-900/20 hover:text-red-300" },
+            ].map(p => (
+              <a
+                key={p.name}
+                href={p.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex-1 flex flex-col items-center gap-1 py-3 text-slate-500 transition-all ${p.color}`}
+              >
+                <span className="text-base">{p.icon}</span>
+                <span className="text-[11px] font-semibold">{p.name}</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Claude's analysis */}
       {(analysis || streaming) && (
