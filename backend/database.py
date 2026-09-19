@@ -43,6 +43,9 @@ async def init_db():
                 "ALTER TABLE conversations ADD COLUMN pinned BOOLEAN DEFAULT 0",
                 "ALTER TABLE conversations ADD COLUMN share_token TEXT",
                 "ALTER TABLE trips ADD COLUMN collaborators JSON",
+                "ALTER TABLE agent_profiles ADD COLUMN languages JSON",
+                "ALTER TABLE agent_profiles ADD COLUMN experience_years INTEGER DEFAULT 0",
+                "ALTER TABLE agent_profiles ADD COLUMN agency_code TEXT DEFAULT ''",
             ):
                 try:
                     await conn.execute(text(col_def))
@@ -53,6 +56,9 @@ async def init_db():
                 "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS pinned BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS share_token TEXT UNIQUE",
                 "ALTER TABLE trips ADD COLUMN IF NOT EXISTS collaborators JSON",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS languages JSON",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS experience_years INTEGER DEFAULT 0",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS agency_code TEXT DEFAULT ''",
             ):
                 try:
                     await conn.execute(text(col_def))
