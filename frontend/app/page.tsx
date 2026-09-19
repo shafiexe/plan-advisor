@@ -42,6 +42,26 @@ function saveConversations(key: string, convs: Conversation[]) {
 
 function makeId() { return `chat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
 
+/* ── Stopped-conversation registry (localStorage) ─── */
+const STOPPED_CONVS_KEY = "pa_stopped_convs_v1";
+function markConvStopped(convId: string) {
+  try {
+    const arr: string[] = JSON.parse(localStorage.getItem(STOPPED_CONVS_KEY) ?? "[]");
+    if (!arr.includes(convId)) localStorage.setItem(STOPPED_CONVS_KEY, JSON.stringify([...arr, convId]));
+  } catch {}
+}
+function clearConvStopped(convId: string) {
+  try {
+    const arr: string[] = JSON.parse(localStorage.getItem(STOPPED_CONVS_KEY) ?? "[]");
+    localStorage.setItem(STOPPED_CONVS_KEY, JSON.stringify(arr.filter(id => id !== convId)));
+  } catch {}
+}
+function isConvStopped(convId: string): boolean {
+  try {
+    return (JSON.parse(localStorage.getItem(STOPPED_CONVS_KEY) ?? "[]") as string[]).includes(convId);
+  } catch { return false; }
+}
+
 /* ── Component ───────────────────────────────────────────── */
 export default function Home() {
   const { data: session } = useSession();
@@ -72,6 +92,9 @@ export default function Home() {
   const [editingAlertId, setEditingAlertId] = useState<number | null>(null);
   const [savedAlerts, setSavedAlerts] = useState<AlertRecord[]>([]);
   const serverLoadedRef = useRef(false);
+  // Set during page-load only; cleared once fired; prevents duplicate auto-sends
+  type AutoSendPending = { convId: string; text: string; history: { role: string; content: string }[] };
+  const needsAutoSendRef = useRef<AutoSendPending | null>(null);
 
   const { speak, stop, speaking, autoSpeak, toggleAutoSpeak } = useSpeech();
 
@@ -95,11 +118,26 @@ export default function Home() {
     serverLoadedRef.current = false;
     const savedActiveId = (() => { try { return localStorage.getItem(ACTIVE_KEY); } catch { return null; } })();
 
+    function detectAutoSend(convs: Conversation[], targetId: string | null) {
+      const conv = convs.find(c => c.id === targetId) ?? convs[0] ?? null;
+      if (!conv) return;
+      const msgs = conv.messages.filter(m => !m.streaming);
+      const last  = msgs[msgs.length - 1];
+      if (last?.role === "user" && !isConvStopped(conv.id)) {
+        needsAutoSendRef.current = {
+          convId:  conv.id,
+          text:    last.content,
+          history: msgs.slice(0, -1).map(m => ({ role: m.role, content: m.content })),
+        };
+      }
+    }
+
     if (!sync.enabled) {
       // Guest (not logged in): localStorage only
       const local = loadConversations(STORAGE_KEY);
       setConversations(local);
       if (savedActiveId && local.find(c => c.id === savedActiveId)) setActiveId(savedActiveId);
+      detectAutoSend(local, savedActiveId);
       return;
     }
 
@@ -110,10 +148,12 @@ export default function Home() {
     sync.loadConversations().then((serverConvs) => {
       serverLoadedRef.current = true;
       setConversations(serverConvs);
+      const resolvedId = serverConvs.find(c => c.id === savedActiveId) ? savedActiveId : (serverConvs[0]?.id ?? null);
       setActiveId(prev => {
         if (serverConvs.find(c => c.id === prev)) return prev;
-        return serverConvs.find(c => c.id === savedActiveId) ? savedActiveId : null;
+        return resolvedId;
       });
+      detectAutoSend(serverConvs, resolvedId);
     }).catch(() => { serverLoadedRef.current = true; });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [STORAGE_KEY, sync.enabled]);
@@ -253,9 +293,23 @@ export default function Home() {
   });
 
   const handleStop = useCallback(() => {
+    const convId = activeIdRef.current;
+    if (convId) markConvStopped(convId);
     stopWs();
     markDone();
   }, [stopWs, markDone]);
+
+  /* ── Auto-resend on page reload (interrupted conversation) ─── */
+  useEffect(() => {
+    const pending = needsAutoSendRef.current;
+    if (!pending || !connected || streaming || typing) return;
+    if (activeId !== pending.convId) return;
+    needsAutoSendRef.current = null;
+    send(pending.text, pending.history as { role: "user" | "assistant"; content: string }[], {
+      ...(userEmail ? { user_email: userEmail } : {}),
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected, activeId, streaming, typing]);
 
   /* ── New conversation ─── */
   // Just clears the view. A real conversation is only created when
@@ -368,6 +422,8 @@ export default function Home() {
     // Ensure there's an active conversation
     let convId = activeIdRef.current;
     const isNewConv = !convId;
+    // User is sending — clear any "stopped" marker so future reloads can auto-resend if needed
+    if (convId) clearConvStopped(convId);
     if (!convId) {
       const conv: Conversation = {
         id: makeId(),
