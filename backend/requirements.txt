@@ -14,3 +14,6 @@ sqlalchemy>=2.0.0
 aiosqlite>=0.20.0      # SQLite async driver (local dev)
 asyncpg>=0.29.0        # PostgreSQL async driver (Azure / production)
 greenlet>=3.0.0        # required by SQLAlchemy async engine
+# Observability — Arize Phoenix tracing for LLM/tool calls
+arize-phoenix-otel>=0.6.0
+openinference-instrumentation-anthropic>=0.1.0

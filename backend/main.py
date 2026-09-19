@@ -5,6 +5,24 @@ import logging
 import traceback
 logging.basicConfig(level=logging.INFO)
 
+# ── Arize Phoenix tracing (must init before anthropic client is created) ───────
+import os as _os
+_phoenix_key = _os.getenv("PHOENIX_API_KEY", "")
+if _phoenix_key:
+    try:
+        from phoenix.otel import register as _phoenix_register
+        _tp = _phoenix_register(
+            project_name=_os.getenv("PHOENIX_PROJECT_NAME", "plan-advisor"),
+            endpoint="https://app.phoenix.arize.com/v1/traces",
+            headers={"api_key": _phoenix_key},
+        )
+        from openinference.instrumentation.anthropic import AnthropicInstrumentor
+        AnthropicInstrumentor().instrument(tracer_provider=_tp)
+        logging.getLogger(__name__).info("Arize Phoenix tracing enabled")
+    except Exception as _e:
+        logging.getLogger(__name__).warning("Phoenix init failed (non-fatal): %s", _e)
+# ───────────────────────────────────────────────────────────────────────────────
+
 log = logging.getLogger(__name__)
 # Set OTA scraper to DEBUG so we can see HTML snippets during development
 logging.getLogger("services.ota_scraper").setLevel(logging.DEBUG)

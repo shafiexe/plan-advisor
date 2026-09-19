@@ -99,7 +99,9 @@ stages:
                           "SCRAPE_DO_TOKEN=$(SCRAPE_DO_TOKEN)" \
                           "TRAVELPAYOUTS_TOKEN=$(TRAVELPAYOUTS_TOKEN)" \
                           "DATABASE_URL=$(DATABASE_URL)" \
-                          "ALLOWED_ORIGINS=https://$(FRONTEND_FQDN)"
+                          "ALLOWED_ORIGINS=https://$(FRONTEND_FQDN)" \
+                          "PHOENIX_API_KEY=$(PHOENIX_API_KEY)" \
+                          "PHOENIX_PROJECT_NAME=plan-advisor"
 
                       FQDN=$(az containerapp show \
                         --name "$(BACKEND_APP_NAME)" \
