@@ -3,6 +3,7 @@
 import { useState } from "react";
 import MarkdownBody from "./MarkdownBody";
 import FlightResultsCard from "./FlightResultsCard";
+import MultiCityFlightCard from "./MultiCityFlightCard";
 import PriceCalendarCard from "./PriceCalendarCard";
 import HotelResultsCard from "./HotelResultsCard";
 import RestaurantCard from "./RestaurantCard";
@@ -11,11 +12,13 @@ import TrainResultsCard from "./TrainResultsCard";
 import TransportComparisonCard from "./TransportComparisonCard";
 import RoundTripCard from "./RoundTripCard";
 import WeatherCard from "./WeatherCard";
+import VisaCard from "./VisaCard";
 import type { FlightSearchResult, PriceCalendarResult, RoundTripResult } from "@/types/flights";
 import type { HotelSearchResult, RestaurantSearchResult } from "@/types/places";
 import type { BusSearchResult } from "@/types/buses";
 import type { TrainSearchResult } from "@/types/transport";
 import type { WeatherResult } from "@/types/weather";
+import type { VisaResult } from "@/types/visa";
 
 export type Message = {
   id: string;
@@ -31,6 +34,7 @@ export type Message = {
   trainData?: TrainSearchResult;
   roundTripData?: RoundTripResult;
   weatherData?: WeatherResult;
+  visaData?: VisaResult;
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -49,10 +53,10 @@ function formatTime(ts: number) {
 }
 
 export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert }: Props) {
-  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData } = message;
+  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData } = message;
   const isUser = role === "user";
   const isTransportComparison = !isUser && ((!!flightData && (!!busData || !!trainData)) || (!!busData && !!trainData));
-  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData);
+  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -79,7 +83,9 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
         )}
 
         {!isUser && flightData && !isTransportComparison && (
-          <FlightResultsCard data={flightData} streaming={streaming} onSetAlert={onSetAlert} />
+          flightData.is_multi_city
+            ? <MultiCityFlightCard data={flightData} streaming={streaming} />
+            : <FlightResultsCard data={flightData} streaming={streaming} onSetAlert={onSetAlert} />
         )}
 
         {!isUser && calendarData && (
@@ -114,6 +120,10 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
 
         {!isUser && weatherData && (
           <WeatherCard data={weatherData} />
+        )}
+
+        {!isUser && visaData && (
+          <VisaCard data={visaData} />
         )}
 
         {/* When a card is shown, render analysis text below it using MarkdownBody */}

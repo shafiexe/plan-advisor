@@ -14,6 +14,7 @@ export type WsMessage =
   | { type: "bus_results"; data: unknown }
   | { type: "round_trip_results"; data: unknown }
   | { type: "weather_results"; data: unknown }
+  | { type: "visa_results"; data: unknown }
   | { type: "done" }
   | { type: "error"; content: string };
 
@@ -33,6 +34,7 @@ type Options = {
   onBusResults?: (data: unknown) => void;
   onRoundTripResults?: (data: unknown) => void;
   onWeatherResults?: (data: unknown) => void;
+  onVisaResults?: (data: unknown) => void;
 };
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000/ws/chat";
@@ -63,6 +65,7 @@ export function useWebSocket(opts: Options) {
       else if (msg.type === "bus_results")        optsRef.current.onBusResults?.(msg.data);
       else if (msg.type === "round_trip_results") optsRef.current.onRoundTripResults?.(msg.data);
       else if (msg.type === "weather_results")    optsRef.current.onWeatherResults?.(msg.data);
+      else if (msg.type === "visa_results")       optsRef.current.onVisaResults?.(msg.data);
     };
 
     ws.onclose = () => {

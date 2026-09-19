@@ -35,6 +35,7 @@ function cleanMessages(messages: Message[]): Message[] {
       if (m.trainData)       Object.assign(base, { trainData: m.trainData });
       if (m.roundTripData)   Object.assign(base, { roundTripData: m.roundTripData });
       if (m.weatherData)     Object.assign(base, { weatherData: m.weatherData });
+      if (m.visaData)        Object.assign(base, { visaData: m.visaData });
       return base;
     });
 }

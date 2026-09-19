@@ -65,6 +65,9 @@ Food:
 Weather:
 • `get_weather`  — Current weather and 3-day forecast for any city. Call when user asks about weather, or proactively after a destination is chosen to give context.
 
+Visa & Entry:
+• `get_visa_requirements` — Check visa type (visa-free / on-arrival / eVisa / required), days allowed, and entry notes for any passport → destination pair. Call whenever the user asks about visas, entry requirements, or documents needed for international travel. Default passport to "India" if the user's nationality is not stated.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IATA CITY CODES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -274,6 +277,28 @@ TOOLS = [
             "required": ["location"],
         },
     },
+    {
+        "name": "get_visa_requirements",
+        "description": (
+            "Check visa and entry requirements for a specific passport travelling to a destination country. "
+            "Call when the user asks about visas, entry requirements, whether they need a visa, or what documents are needed. "
+            "Also call proactively for international trips when the user's nationality is known."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "passport_country": {
+                    "type": "string",
+                    "description": "The traveller's passport / nationality country, e.g. 'India', 'United States'",
+                },
+                "destination_country": {
+                    "type": "string",
+                    "description": "The destination country, e.g. 'Thailand', 'United Arab Emirates', 'France'",
+                },
+            },
+            "required": ["passport_country", "destination_country"],
+        },
+    },
 ]
 
 
@@ -436,6 +461,18 @@ async def _run_tool(name: str, tool_input: dict) -> str:
         except Exception as e:
             return json.dumps({"error": str(e), "location": tool_input.get("location", ""), "temp_c": 0, "forecast": []})
 
+    # ── Visa requirements ──
+    if name == "get_visa_requirements":
+        try:
+            from services.visa import get_visa_requirements
+            result = await get_visa_requirements(
+                passport_country=tool_input.get("passport_country", ""),
+                destination_country=tool_input.get("destination_country", ""),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({"error": str(e), "visa_type": "unknown", "label": "Unknown", "notes": []})
+
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
@@ -467,6 +504,10 @@ def _tool_label(name: str, tool_input: dict) -> str:
         return f"Finding restaurants in {loc}…"
     if name == "get_weather":
         return f"Checking weather in {loc}…"
+    if name == "get_visa_requirements":
+        p = tool_input.get("passport_country", "")
+        d = tool_input.get("destination_country", "")
+        return f"Checking visa requirements for {p} → {d}…"
     return f"Running {name}…"
 
 
@@ -586,6 +627,13 @@ async def stream_response(messages: list, extra_system: str | None = None) -> As
                         wd = json.loads(result_str)
                         if not wd.get("error") and wd.get("temp_c") is not None:
                             yield {"type": "weather_results", "data": wd}
+                    except Exception:
+                        pass
+                elif block.name == "get_visa_requirements":
+                    try:
+                        vd = json.loads(result_str)
+                        if not vd.get("error"):
+                            yield {"type": "visa_results", "data": vd}
                     except Exception:
                         pass
 

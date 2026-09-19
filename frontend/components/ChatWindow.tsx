@@ -14,6 +14,7 @@ const TOOL_ICONS: Record<string, string> = {
   search_hotels:     "🏨",
   find_restaurants:  "🍽️",
   get_weather:       "🌤️",
+  get_visa_requirements: "🛂",
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -109,6 +110,14 @@ function getSuggestions(msg: Message): string[] {
       "Plan a full day itinerary",
       "What to pack for this trip?",
       "Best time to visit?",
+    ];
+  }
+  if (msg.visaData) {
+    const dest = msg.visaData.destination_country ?? "";
+    return [
+      dest ? `Search flights to ${dest}` : "Search flights",
+      dest ? `Find hotels in ${dest}` : "Find hotels",
+      dest ? `What's the weather in ${dest}?` : "Check the weather",
     ];
   }
   if (msg.busData || msg.trainData) {

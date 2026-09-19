@@ -21,6 +21,7 @@ import type { HotelSearchResult, RestaurantSearchResult } from "@/types/places";
 import type { BusSearchResult } from "@/types/buses";
 import type { TrainSearchResult } from "@/types/transport";
 import type { WeatherResult } from "@/types/weather";
+import type { VisaResult } from "@/types/visa";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
 
@@ -113,6 +114,7 @@ export default function Home() {
   const pendingBusRef         = useRef<BusSearchResult | null>(null);
   const pendingTrainRef       = useRef<TrainSearchResult | null>(null);
   const pendingWeatherRef     = useRef<WeatherResult | null>(null);
+  const pendingVisaRef        = useRef<VisaResult | null>(null);
 
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
@@ -197,12 +199,14 @@ export default function Home() {
     const hotelData      = pendingHotelRef.current ?? undefined;
     const restaurantData = pendingRestaurantRef.current ?? undefined;
     const weatherData    = pendingWeatherRef.current ?? undefined;
+    const visaData       = pendingVisaRef.current    ?? undefined;
     if (calendarData)   pendingCalendarRef.current   = null;
     if (hotelData)      pendingHotelRef.current      = null;
     if (restaurantData) pendingRestaurantRef.current = null;
     if (weatherData)    pendingWeatherRef.current    = null;
+    if (visaData)       pendingVisaRef.current       = null;
 
-    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData);
+    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData);
     updateActive((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!hasCard && last?.role === "assistant" && last.streaming) {
@@ -210,7 +214,7 @@ export default function Home() {
       }
       return [
         ...msgs,
-        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData },
+        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData },
       ];
     });
   }, [updateActive]);
@@ -300,6 +304,10 @@ export default function Home() {
       pendingWeatherRef.current = data as WeatherResult;
       setToolLabel(null);
     },
+    onVisaResults: (data) => {
+      pendingVisaRef.current = data as VisaResult;
+      setToolLabel(null);
+    },
   });
 
   const handleStop = useCallback(() => {
@@ -368,28 +376,172 @@ export default function Home() {
   /* ── Export conversation as PDF ─── */
   const handleExport = useCallback(() => {
     if (!activeConversation || activeConversation.messages.length === 0) return;
+
+    const esc = (s: unknown) =>
+      String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+    const thStyle = `padding:7px 10px;text-align:left;font-weight:600;color:#475569;font-size:11px;text-transform:uppercase;`;
+    const tdStyle = `padding:6px 10px;border-bottom:1px solid #e2e8f0;`;
+
+    function flightTable(data: FlightSearchResult | undefined, label?: string): string {
+      if (!data || data.results.length === 0) return "";
+      const rows = data.results.slice(0, 5).map((f) => {
+        const seg = f.segments[0];
+        const route = seg
+          ? `${esc(seg.from)} → ${esc(seg.to)}`
+          : `${esc(data.origin)} → ${esc(data.destination)}`;
+        const stops = f.stops === 0 ? "Non-stop" : `${f.stops} stop${f.stops > 1 ? "s" : ""}`;
+        return `<tr>
+          <td style="${tdStyle}">${esc(f.airline)}</td>
+          <td style="${tdStyle}">${route}</td>
+          <td style="${tdStyle}font-weight:600;">${esc(f.price)}</td>
+          <td style="${tdStyle}">${esc(f.total_duration)}</td>
+          <td style="${tdStyle}">${stops}</td>
+        </tr>`;
+      }).join("");
+      return `<div style="margin:10px 0;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+        <div style="padding:10px 14px;background:#f1f5f9;font-size:12px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:0.05em;">
+          &#9992; ${esc(label ?? "Flights")} &mdash; ${esc(data.origin)} &rarr; ${esc(data.destination)}
+          <span style="font-weight:400;color:#64748b;margin-left:8px;">${data.flights_found} results</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:#f8fafc;">
+            <th style="${thStyle}">Airline</th>
+            <th style="${thStyle}">Route</th>
+            <th style="${thStyle}">Price</th>
+            <th style="${thStyle}">Duration</th>
+            <th style="${thStyle}">Stops</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }
+
+    function hotelTable(data: HotelSearchResult | undefined): string {
+      if (!data || data.results.length === 0) return "";
+      const rows = data.results.slice(0, 5).map((h) =>
+        `<tr>
+          <td style="${tdStyle}font-weight:500;">${esc(h.name)}</td>
+          <td style="${tdStyle}color:#b45309;">${h.rating} &#9733; <span style="color:#94a3b8;font-size:11px;">(${h.reviews} reviews)</span></td>
+          <td style="${tdStyle}font-weight:600;">${esc(h.price)}</td>
+          <td style="${tdStyle}color:#64748b;">${esc(h.hotel_class)}</td>
+        </tr>`
+      ).join("");
+      return `<div style="margin:10px 0;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+        <div style="padding:10px 14px;background:#f1f5f9;font-size:12px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:0.05em;">
+          Hotels &mdash; ${esc(data.location)}
+          <span style="font-weight:400;color:#64748b;margin-left:8px;">${data.hotels_found} results &middot; ${esc(data.check_in)} &rarr; ${esc(data.check_out)}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:#f8fafc;">
+            <th style="${thStyle}">Hotel</th>
+            <th style="${thStyle}">Rating</th>
+            <th style="${thStyle}">Price</th>
+            <th style="${thStyle}">Class</th>
+          </tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+    }
+
+    function weatherSection(data: WeatherResult | undefined): string {
+      if (!data || data.error) return "";
+      const forecastRows = data.forecast.slice(0, 3).map((d) =>
+        `<tr>
+          <td style="${tdStyle}">${esc(d.date)}</td>
+          <td style="${tdStyle}">${esc(d.description)}</td>
+          <td style="${tdStyle}">${d.max_temp_c}&deg; / ${d.min_temp_c}&deg;C</td>
+          <td style="${tdStyle}">${d.rain_mm} mm</td>
+          <td style="${tdStyle}">${d.humidity}%</td>
+        </tr>`
+      ).join("");
+      return `<div style="margin:10px 0;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
+        <div style="padding:10px 14px;background:#f1f5f9;font-size:12px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:0.05em;">
+          Weather &mdash; ${esc(data.location)}
+        </div>
+        <div style="padding:10px 14px;font-size:13px;color:#334155;border-bottom:1px solid #e2e8f0;">
+          <strong>${data.temp_c}&deg;C</strong> &middot; ${esc(data.description)} &middot;
+          Feels like ${data.feels_like_c}&deg;C &middot; Humidity ${data.humidity}% &middot; Wind ${data.wind_kmph} km/h
+        </div>
+        ${forecastRows ? `<table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead><tr style="background:#f8fafc;">
+            <th style="${thStyle}">Date</th>
+            <th style="${thStyle}">Conditions</th>
+            <th style="${thStyle}">Temp</th>
+            <th style="${thStyle}">Rain</th>
+            <th style="${thStyle}">Humidity</th>
+          </tr></thead>
+          <tbody>${forecastRows}</tbody>
+        </table>` : ""}
+      </div>`;
+    }
+
+    let cardCount = 0;
     const rows = activeConversation.messages
-      .filter(m => !m.streaming)
-      .map(m => {
-        const who = m.role === "user" ? "You" : "Plan Advisor";
-        const text = m.content.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
-        const bg = m.role === "user" ? "#1e293b" : "#0f172a";
-        const color = m.role === "user" ? "#93c5fd" : "#e2e8f0";
-        return `<div style="margin:12px 0;padding:12px 16px;border-radius:12px;background:${bg};">
-          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;text-transform:uppercase;">${who}</div>
-          <div style="font-size:14px;color:${color};line-height:1.6;">${text}</div>
+      .filter((m) => !m.streaming)
+      .map((m) => {
+        const isUser = m.role === "user";
+        const who = isUser ? "You" : "Plan Advisor";
+        const text = m.content
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+          .replace(/\n/g, "<br>");
+
+        let cards = "";
+        if (m.roundTripData) {
+          cards += flightTable(m.roundTripData.outbound, "Outbound Flight");
+          cards += flightTable(m.roundTripData.return_flight, "Return Flight");
+        } else if (m.flightData) {
+          cards += flightTable(m.flightData);
+        }
+        if (m.hotelData) cards += hotelTable(m.hotelData);
+        if (m.weatherData) cards += weatherSection(m.weatherData);
+
+        const hasCards = cards.length > 0;
+        // Page break before every card-bearing message except the first
+        const breakStyle = hasCards && cardCount++ > 0 ? "page-break-before:always;" : "";
+
+        return `<div style="${breakStyle}margin:16px 0;padding:14px 18px;border-radius:10px;background:${isUser ? "#eef2ff" : "#ffffff"};border:1px solid ${isUser ? "#c7d2fe" : "#e2e8f0"};">
+          <div style="font-size:11px;font-weight:700;color:${isUser ? "#4f46e5" : "#64748b"};margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">${who}</div>
+          ${text ? `<div style="font-size:14px;color:#1e293b;line-height:1.7;margin-bottom:${hasCards ? "12px" : "0"};">${text}</div>` : ""}
+          ${cards}
         </div>`;
       }).join("");
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
-      <title>${activeConversation.title} — Plan Advisor</title>
-      <style>body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#020617;color:#e2e8f0;}
-      h1{font-size:20px;font-weight:700;margin-bottom:4px;color:#f1f5f9;}
-      .sub{font-size:12px;color:#475569;margin-bottom:24px;}
-      @media print{body{background:#fff;color:#111;}}</style></head>
-      <body><h1>${activeConversation.title}</h1>
-      <div class="sub">Exported from Plan Advisor · ${new Date().toLocaleDateString()}</div>
-      ${rows}
-      <script>window.onload=()=>window.print();<\/script></body></html>`;
+
+    const exportDate = new Date().toLocaleDateString("en-US", {
+      weekday: "long", year: "numeric", month: "long", day: "numeric",
+    });
+
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>${esc(activeConversation.title)} &mdash; Plan Advisor Trip Report</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px 44px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.5;
+    }
+    @media print {
+      body { background: #ffffff; padding: 20px 28px; }
+    }
+  </style>
+</head>
+<body>
+  <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #e2e8f0;">
+    <div style="font-size:11px;font-weight:700;color:#6366f1;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Plan Advisor &middot; Trip Report</div>
+    <h1 style="margin:0 0 6px 0;font-size:22px;font-weight:700;color:#0f172a;">${esc(activeConversation.title)}</h1>
+    <div style="font-size:12px;color:#94a3b8;">Exported on ${exportDate}</div>
+  </div>
+  ${rows}
+  <script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
     const win = window.open("", "_blank");
     if (win) { win.document.write(html); win.document.close(); }
   }, [activeConversation]);
