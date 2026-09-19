@@ -35,6 +35,9 @@ const TOOL_ICONS: Record<string, string> = {
   get_trip_recap:         "📖",
   get_layover_guide:      "🛋️",
   plan_group_trip:        "🗺️",
+  find_nearby_attractions: "📍",
+  check_baggage_policy:    "🧳",
+  get_predeparture_checklist: "✅",
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -385,6 +388,30 @@ function getSuggestions(msg: Message): string[] {
       "Share this plan with the group",
       dest ? `Build packing checklist for ${dest}` : "Build packing checklist",
       dest ? `Find halal restaurants on route to ${dest}` : "Find halal restaurants on route",
+    ];
+  }
+  if (msg.attractionsData) {
+    const loc = msg.attractionsData.location ?? "";
+    return [
+      loc ? `Find restaurants near these attractions in ${loc}` : "Find restaurants near these attractions",
+      loc ? `Build a packing list for this trip to ${loc}` : "Build a packing list for this trip",
+      loc ? `Get weather forecast for ${loc}` : "Get weather forecast",
+    ];
+  }
+  if (msg.baggageData) {
+    const airline = msg.baggageData.airline ?? "";
+    return [
+      "Pack a list for this trip",
+      "Check visa requirements",
+      airline ? `Search flights with ${airline}` : "Find hotels at destination",
+    ];
+  }
+  if (msg.checklistData) {
+    const dest = msg.checklistData.destination ?? "";
+    return [
+      dest ? `Check baggage policy for my flight to ${dest}` : "Check baggage policy for my flight",
+      dest ? `Build packing list for ${dest}` : "Build packing list",
+      "Check travel documents",
     ];
   }
   if (msg.busData || msg.trainData) {

@@ -43,8 +43,12 @@ import type { TripRecap } from "@/types/tripRecap";
 import type { LayoverGuide } from "@/types/layoverGuide";
 import type { WeatherForecast } from "@/types/weatherForecast";
 import type { GroupTripPlan } from "@/types/groupTrip";
+import type { NearbyAttractions } from "@/types/attractions";
+import type { BaggagePolicy } from "@/types/baggagePolicy";
+import type { PredepartureChecklist } from "@/types/predepartureChecklist";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
+import { exportCleanText, exportFilename, buildPrintHTML } from "@/utils/exportUtils";
 
 /* ── Persistence helpers ─────────────────────────────────── */
 function loadConversations(key: string): Conversation[] {
@@ -120,6 +124,7 @@ export default function Home() {
   const [userPrefs, setUserPrefs] = useState<UserPreferences | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showEssentialsEditor, setShowEssentialsEditor] = useState(false);
+  const [isOnline, setIsOnline] = useState(true);
   const serverLoadedRef = useRef(false);
   // Set during page-load only; cleared once fired; prevents duplicate auto-sends
   type AutoSendPending = { convId: string; text: string; history: { role: string; content: string }[] };
@@ -159,6 +164,9 @@ export default function Home() {
   const pendingLayoverRef         = useRef<LayoverGuide | null>(null);
   const pendingForecastRef        = useRef<WeatherForecast | null>(null);
   const pendingGroupTripRef       = useRef<GroupTripPlan | null>(null);
+  const pendingAttractionsRef     = useRef<NearbyAttractions | null>(null);
+  const pendingBaggageRef         = useRef<BaggagePolicy | null>(null);
+  const pendingChecklistRef       = useRef<PredepartureChecklist | null>(null);
 
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
@@ -221,6 +229,14 @@ export default function Home() {
   useEffect(() => {
     if (!sync.enabled && conversations.length > 0) {
       saveConversations(STORAGE_KEY, conversations);
+      // Mirror to service worker cache so conversations survive offline reloads
+      if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: "CACHE_CONVERSATIONS",
+          key: STORAGE_KEY,
+          data: conversations,
+        });
+      }
     }
     // Always remember which chat was active (UX only — not conversation data)
     try { if (activeId) localStorage.setItem(ACTIVE_KEY, activeId); } catch {}
@@ -275,6 +291,9 @@ export default function Home() {
     const layoverData            = pendingLayoverRef.current            ?? undefined;
     const forecastData           = pendingForecastRef.current           ?? undefined;
     const groupTripData          = pendingGroupTripRef.current          ?? undefined;
+    const attractionsData        = pendingAttractionsRef.current        ?? undefined;
+    const baggageData            = pendingBaggageRef.current            ?? undefined;
+    const checklistData          = pendingChecklistRef.current          ?? undefined;
     if (calendarData)      pendingCalendarRef.current      = null;
     if (hotelData)         pendingHotelRef.current         = null;
     if (restaurantData)    pendingRestaurantRef.current    = null;
@@ -297,8 +316,11 @@ export default function Home() {
     if (layoverData)            pendingLayoverRef.current            = null;
     if (forecastData)           pendingForecastRef.current           = null;
     if (groupTripData)          pendingGroupTripRef.current          = null;
+    if (attractionsData)        pendingAttractionsRef.current        = null;
+    if (baggageData)            pendingBaggageRef.current            = null;
+    if (checklistData)          pendingChecklistRef.current          = null;
 
-    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData || timelineData || splitData || hotelComparisonData || eventsData || documentCheckData || recapData || layoverData || forecastData || groupTripData);
+    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData || timelineData || splitData || hotelComparisonData || eventsData || documentCheckData || recapData || layoverData || forecastData || groupTripData || attractionsData || baggageData || checklistData);
     updateActive((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!hasCard && last?.role === "assistant" && last.streaming) {
@@ -306,7 +328,7 @@ export default function Home() {
       }
       return [
         ...msgs,
-        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData, groupTripData },
+        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData, groupTripData, attractionsData, baggageData, checklistData },
       ];
     });
   }, [updateActive]);
@@ -429,6 +451,7 @@ export default function Home() {
     onPackingResults: (data) => {
       pendingPackingRef.current = data as PackingList;
       setToolLabel(null);
+      try { localStorage.setItem("plan-advisor-last-packing", JSON.stringify(data)); } catch {}
     },
     onFlightStatusResults: (data) => {
       pendingFlightStatusRef.current = data as FlightStatus;
@@ -481,6 +504,19 @@ export default function Home() {
     onGroupTripResults: (data) => {
       pendingGroupTripRef.current = data as GroupTripPlan;
       setToolLabel(null);
+      try { localStorage.setItem("plan-advisor-last-group-trip", JSON.stringify(data)); } catch {}
+    },
+    onAttractionsResults: (data) => {
+      pendingAttractionsRef.current = data as NearbyAttractions;
+      setToolLabel(null);
+    },
+    onBaggageResults: (data) => {
+      pendingBaggageRef.current = data as BaggagePolicy;
+      setToolLabel(null);
+    },
+    onChecklistResults: (data) => {
+      pendingChecklistRef.current = data as PredepartureChecklist;
+      setToolLabel(null);
     },
   });
 
@@ -515,6 +551,26 @@ export default function Home() {
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  /* ── Online/offline detection ─── */
+  useEffect(() => {
+    const handleOnline  = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    setIsOnline(navigator.onLine);
+    window.addEventListener("online",  handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online",  handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  /* ── Service worker registration ─── */
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch(console.error);
+    }
+  }, []);
+
   /* ── New conversation ─── */
   // Just clears the view. A real conversation is only created when
   // the user sends their first message (same behaviour as ChatGPT).
@@ -547,177 +603,30 @@ export default function Home() {
     }
   }, [sync]);
 
-  /* ── Export conversation as PDF ─── */
+  /* ── Export conversation as clean plain text ─── */
   const handleExport = useCallback(() => {
     if (!activeConversation || activeConversation.messages.length === 0) return;
+    const text = exportCleanText(activeConversation.messages);
+    const filename = exportFilename(activeConversation.messages);
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [activeConversation]);
 
-    const esc = (s: unknown) =>
-      String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-    const thStyle = `padding:7px 10px;text-align:left;font-weight:600;color:#475569;font-size:11px;text-transform:uppercase;`;
-    const tdStyle = `padding:6px 10px;border-bottom:1px solid #e2e8f0;`;
-
-    function flightTable(data: FlightSearchResult | undefined, label?: string): string {
-      if (!data || data.results.length === 0) return "";
-      const rows = data.results.slice(0, 5).map((f) => {
-        const seg = f.segments[0];
-        const route = seg
-          ? `${esc(seg.from)} → ${esc(seg.to)}`
-          : `${esc(data.origin)} → ${esc(data.destination)}`;
-        const stops = f.stops === 0 ? "Non-stop" : `${f.stops} stop${f.stops > 1 ? "s" : ""}`;
-        return `<tr>
-          <td style="${tdStyle}">${esc(f.airline)}</td>
-          <td style="${tdStyle}">${route}</td>
-          <td style="${tdStyle}font-weight:600;">${esc(f.price)}</td>
-          <td style="${tdStyle}">${esc(f.total_duration)}</td>
-          <td style="${tdStyle}">${stops}</td>
-        </tr>`;
-      }).join("");
-      return `<div style="margin:10px 0;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-        <div style="padding:10px 14px;background:#f1f5f9;font-size:12px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:0.05em;">
-          &#9992; ${esc(label ?? "Flights")} &mdash; ${esc(data.origin)} &rarr; ${esc(data.destination)}
-          <span style="font-weight:400;color:#64748b;margin-left:8px;">${data.flights_found} results</span>
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead><tr style="background:#f8fafc;">
-            <th style="${thStyle}">Airline</th>
-            <th style="${thStyle}">Route</th>
-            <th style="${thStyle}">Price</th>
-            <th style="${thStyle}">Duration</th>
-            <th style="${thStyle}">Stops</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-    }
-
-    function hotelTable(data: HotelSearchResult | undefined): string {
-      if (!data || data.results.length === 0) return "";
-      const rows = data.results.slice(0, 5).map((h) =>
-        `<tr>
-          <td style="${tdStyle}font-weight:500;">${esc(h.name)}</td>
-          <td style="${tdStyle}color:#b45309;">${h.rating} &#9733; <span style="color:#94a3b8;font-size:11px;">(${h.reviews} reviews)</span></td>
-          <td style="${tdStyle}font-weight:600;">${esc(h.price)}</td>
-          <td style="${tdStyle}color:#64748b;">${esc(h.hotel_class)}</td>
-        </tr>`
-      ).join("");
-      return `<div style="margin:10px 0;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-        <div style="padding:10px 14px;background:#f1f5f9;font-size:12px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:0.05em;">
-          Hotels &mdash; ${esc(data.location)}
-          <span style="font-weight:400;color:#64748b;margin-left:8px;">${data.hotels_found} results &middot; ${esc(data.check_in)} &rarr; ${esc(data.check_out)}</span>
-        </div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead><tr style="background:#f8fafc;">
-            <th style="${thStyle}">Hotel</th>
-            <th style="${thStyle}">Rating</th>
-            <th style="${thStyle}">Price</th>
-            <th style="${thStyle}">Class</th>
-          </tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </div>`;
-    }
-
-    function weatherSection(data: WeatherResult | undefined): string {
-      if (!data || data.error) return "";
-      const forecastRows = data.forecast.slice(0, 3).map((d) =>
-        `<tr>
-          <td style="${tdStyle}">${esc(d.date)}</td>
-          <td style="${tdStyle}">${esc(d.description)}</td>
-          <td style="${tdStyle}">${d.max_temp_c}&deg; / ${d.min_temp_c}&deg;C</td>
-          <td style="${tdStyle}">${d.rain_mm} mm</td>
-          <td style="${tdStyle}">${d.humidity}%</td>
-        </tr>`
-      ).join("");
-      return `<div style="margin:10px 0;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-        <div style="padding:10px 14px;background:#f1f5f9;font-size:12px;font-weight:700;color:#4f46e5;text-transform:uppercase;letter-spacing:0.05em;">
-          Weather &mdash; ${esc(data.location)}
-        </div>
-        <div style="padding:10px 14px;font-size:13px;color:#334155;border-bottom:1px solid #e2e8f0;">
-          <strong>${data.temp_c}&deg;C</strong> &middot; ${esc(data.description)} &middot;
-          Feels like ${data.feels_like_c}&deg;C &middot; Humidity ${data.humidity}% &middot; Wind ${data.wind_kmph} km/h
-        </div>
-        ${forecastRows ? `<table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead><tr style="background:#f8fafc;">
-            <th style="${thStyle}">Date</th>
-            <th style="${thStyle}">Conditions</th>
-            <th style="${thStyle}">Temp</th>
-            <th style="${thStyle}">Rain</th>
-            <th style="${thStyle}">Humidity</th>
-          </tr></thead>
-          <tbody>${forecastRows}</tbody>
-        </table>` : ""}
-      </div>`;
-    }
-
-    let cardCount = 0;
-    const rows = activeConversation.messages
-      .filter((m) => !m.streaming)
-      .map((m) => {
-        const isUser = m.role === "user";
-        const who = isUser ? "You" : "Plan Advisor";
-        const text = m.content
-          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-          .replace(/\n/g, "<br>");
-
-        let cards = "";
-        if (m.roundTripData) {
-          cards += flightTable(m.roundTripData.outbound, "Outbound Flight");
-          cards += flightTable(m.roundTripData.return_flight, "Return Flight");
-        } else if (m.flightData) {
-          cards += flightTable(m.flightData);
-        }
-        if (m.hotelData) cards += hotelTable(m.hotelData);
-        if (m.weatherData) cards += weatherSection(m.weatherData);
-
-        const hasCards = cards.length > 0;
-        // Page break before every card-bearing message except the first
-        const breakStyle = hasCards && cardCount++ > 0 ? "page-break-before:always;" : "";
-
-        return `<div style="${breakStyle}margin:16px 0;padding:14px 18px;border-radius:10px;background:${isUser ? "#eef2ff" : "#ffffff"};border:1px solid ${isUser ? "#c7d2fe" : "#e2e8f0"};">
-          <div style="font-size:11px;font-weight:700;color:${isUser ? "#4f46e5" : "#64748b"};margin-bottom:8px;text-transform:uppercase;letter-spacing:0.06em;">${who}</div>
-          ${text ? `<div style="font-size:14px;color:#1e293b;line-height:1.7;margin-bottom:${hasCards ? "12px" : "0"};">${text}</div>` : ""}
-          ${cards}
-        </div>`;
-      }).join("");
-
-    const exportDate = new Date().toLocaleDateString("en-US", {
-      weekday: "long", year: "numeric", month: "long", day: "numeric",
-    });
-
-    const html = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>${esc(activeConversation.title)} &mdash; Plan Advisor Trip Report</title>
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      padding: 32px 44px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: #f8fafc;
-      color: #1e293b;
-      line-height: 1.5;
-    }
-    @media print {
-      body { background: #ffffff; padding: 20px 28px; }
-    }
-  </style>
-</head>
-<body>
-  <div style="margin-bottom:28px;padding-bottom:20px;border-bottom:2px solid #e2e8f0;">
-    <div style="font-size:11px;font-weight:700;color:#6366f1;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Plan Advisor &middot; Trip Report</div>
-    <h1 style="margin:0 0 6px 0;font-size:22px;font-weight:700;color:#0f172a;">${esc(activeConversation.title)}</h1>
-    <div style="font-size:12px;color:#94a3b8;">Exported on ${exportDate}</div>
-  </div>
-  ${rows}
-  <script>window.onload = () => window.print();<\/script>
-</body>
-</html>`;
-
+  /* ── Export conversation as print-ready PDF ─── */
+  const handlePrintExport = useCallback(() => {
+    if (!activeConversation || activeConversation.messages.length === 0) return;
+    const html = buildPrintHTML(activeConversation.messages);
     const win = window.open("", "_blank");
-    if (win) { win.document.write(html); win.document.close(); }
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+      win.onload = () => win.print();
+    }
   }, [activeConversation]);
 
   /* ── Pin / unpin a conversation ─── */
@@ -1118,7 +1027,7 @@ export default function Home() {
             )}
             <button
               onClick={handleExport}
-              title="Export as PDF"
+              title="Export conversation as plain text"
               className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 rounded-lg text-xs font-medium
                 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition-colors backdrop-blur-sm border border-transparent hover:border-slate-700/60"
             >
@@ -1130,6 +1039,22 @@ export default function Home() {
               </svg>
               <span className="hidden sm:inline">Export</span>
             </button>
+            <button
+              onClick={handlePrintExport}
+              title="Export as printable PDF"
+              className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 rounded-lg text-xs font-medium
+                text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition-colors backdrop-blur-sm border border-transparent hover:border-slate-700/60"
+            >
+              🖨️ <span className="hidden sm:inline">PDF</span>
+            </button>
+          </div>
+        )}
+
+        {/* Offline banner — shown below the toolbar when there's no connection */}
+        {!isOnline && (
+          <div className="bg-amber-900/40 border-b border-amber-700/40 px-4 py-2 text-sm text-amber-300 flex items-center gap-2">
+            <span>📵</span>
+            <span>You&rsquo;re offline — saved trips and conversations are still available. New searches will resume when connected.</span>
           </div>
         )}
 
@@ -1159,7 +1084,7 @@ export default function Home() {
           onStop={handleStop}
           onToggleMic={toggleRecording}
           recording={recording}
-          disabled={!connected || streaming || typing}
+          disabled={!connected || streaming || typing || !isOnline}
           onPassportUpload={(file) => setPassportFile(file)}
         />
       </div>

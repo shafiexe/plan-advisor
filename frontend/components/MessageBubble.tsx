@@ -60,6 +60,12 @@ import LayoverGuideCard from "./LayoverGuideCard";
 import type { LayoverGuide } from "@/types/layoverGuide";
 import GroupTripCard from "./GroupTripCard";
 import type { GroupTripPlan } from "@/types/groupTrip";
+import NearbyAttractionsCard from "./NearbyAttractionsCard";
+import type { NearbyAttractions } from "@/types/attractions";
+import BaggagePolicyCard from "./BaggagePolicyCard";
+import type { BaggagePolicy } from "@/types/baggagePolicy";
+import PredepartureChecklistCard from "./PredepartureChecklistCard";
+import type { PredepartureChecklist } from "@/types/predepartureChecklist";
 
 export type Message = {
   id: string;
@@ -95,6 +101,9 @@ export type Message = {
   layoverData?: LayoverGuide;
   forecastData?: WeatherForecast;
   groupTripData?: GroupTripPlan;
+  attractionsData?: NearbyAttractions;
+  baggageData?: BaggagePolicy;
+  checklistData?: PredepartureChecklist;
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -115,10 +124,10 @@ function formatTime(ts: number) {
 }
 
 export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip, userEssentials }: Props) {
-  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData, itineraryData, predictionData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData, groupTripData } = message;
+  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData, itineraryData, predictionData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData, groupTripData, attractionsData, baggageData, checklistData } = message;
   const isUser = role === "user";
   const isTransportComparison = !isUser && ((!!flightData && (!!busData || !!trainData)) || (!!busData && !!trainData));
-  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData || !!itineraryData || !!predictionData || !!packingData || !!flightStatusData || !!transitData || !!phrasebookData || !!insuranceData || !!timelineData || !!splitData || !!hotelComparisonData || !!eventsData || !!documentCheckData || !!recapData || !!layoverData || !!forecastData || !!groupTripData);
+  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData || !!itineraryData || !!predictionData || !!packingData || !!flightStatusData || !!transitData || !!phrasebookData || !!insuranceData || !!timelineData || !!splitData || !!hotelComparisonData || !!eventsData || !!documentCheckData || !!recapData || !!layoverData || !!forecastData || !!groupTripData || !!attractionsData || !!baggageData || !!checklistData);
   const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
@@ -271,6 +280,18 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
 
         {!isUser && groupTripData && (
           <GroupTripCard data={groupTripData} />
+        )}
+
+        {!isUser && attractionsData && (
+          <NearbyAttractionsCard data={attractionsData} />
+        )}
+
+        {!isUser && baggageData && (
+          <BaggagePolicyCard data={baggageData} />
+        )}
+
+        {!isUser && checklistData && (
+          <PredepartureChecklistCard data={checklistData} />
         )}
 
         {/* When a card is shown, render analysis text below it using MarkdownBody */}

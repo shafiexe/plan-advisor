@@ -55,6 +55,9 @@ function cleanMessages(messages: Message[]): Message[] {
       if (m.layoverData)            Object.assign(base, { layoverData: m.layoverData });
       if (m.forecastData)           Object.assign(base, { forecastData: m.forecastData });
       if (m.groupTripData)          Object.assign(base, { groupTripData: m.groupTripData });
+      if (m.attractionsData)        Object.assign(base, { attractionsData: m.attractionsData });
+      if (m.baggageData)            Object.assign(base, { baggageData: m.baggageData });
+      if (m.checklistData)          Object.assign(base, { checklistData: m.checklistData });
       return base;
     });
 }

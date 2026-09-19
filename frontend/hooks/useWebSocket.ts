@@ -34,6 +34,9 @@ export type WsMessage =
   | { type: "layover_results"; data: unknown }
   | { type: "forecast_results"; data: unknown }
   | { type: "group_trip_results"; data: unknown }
+  | { type: "attractions_results"; data: unknown }
+  | { type: "baggage_results"; data: unknown }
+  | { type: "checklist_results"; data: unknown }
   | { type: "done" }
   | { type: "error"; content: string };
 
@@ -73,6 +76,9 @@ type Options = {
   onLayoverResults?: (data: unknown) => void;
   onForecastResults?: (data: unknown) => void;
   onGroupTripResults?: (data: unknown) => void;
+  onAttractionsResults?: (data: unknown) => void;
+  onBaggageResults?: (data: unknown) => void;
+  onChecklistResults?: (data: unknown) => void;
 };
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000/ws/chat";
@@ -123,6 +129,9 @@ export function useWebSocket(opts: Options) {
       else if (msg.type === "layover_results")           optsRef.current.onLayoverResults?.(msg.data);
       else if (msg.type === "forecast_results")          optsRef.current.onForecastResults?.(msg.data);
       else if (msg.type === "group_trip_results")        optsRef.current.onGroupTripResults?.(msg.data);
+      else if (msg.type === "attractions_results")       optsRef.current.onAttractionsResults?.(msg.data);
+      else if (msg.type === "baggage_results")           optsRef.current.onBaggageResults?.(msg.data);
+      else if (msg.type === "checklist_results")         optsRef.current.onChecklistResults?.(msg.data);
     };
 
     ws.onclose = () => {

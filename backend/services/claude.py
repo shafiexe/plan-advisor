@@ -120,6 +120,15 @@ Trip recap:
 7-Day Forecast:
 • `get_weather_forecast` — 7-day weather forecast with daily conditions, temperatures, and packing tips. Call when user asks about weather at the destination, what to expect weather-wise, or what to pack for weather.
 
+Nearby attractions:
+• `find_nearby_attractions` — Top things to do and tourist spots near a location via SerpAPI. Call when user asks what to do or visit near their destination or hotel.
+
+Baggage policy:
+• `check_baggage_policy` — Airline baggage allowances, cabin limits, prohibited items, fees. Call when user asks about luggage or what they can carry.
+
+Pre-departure checklist:
+• `get_predeparture_checklist` — Pre-departure to-do list with deadlines: visa, booking, health, packing, finance. Call when user asks what to do before travel.
+
 Group Trip Planner:
 • `plan_group_trip` — Full trip plan: timeline, prayer stops, food/catering, toilet breaks, entry fees, cost per person, packing list, alerts. Use for any group size — solo, family, or 50-person tour.
 
@@ -785,6 +794,53 @@ TOOLS = [
         },
     },
     {
+        "name": "find_nearby_attractions",
+        "description": (
+            "Find top things to do, tourist attractions, and points of interest near a location. "
+            "Call when user asks 'what to do near my hotel', 'things to do in X', 'tourist spots near X', "
+            "'places to visit in X', or similar."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "location":    {"type": "string", "description": "City or area name e.g. 'Ooty' or 'near Taj Hotel Mumbai'"},
+                "category":    {"type": "string", "description": "Optional filter e.g. 'temples', 'beaches', 'museums', 'parks'"},
+                "max_results": {"type": "integer", "description": "Max results (default 8)"},
+            },
+            "required": ["location"],
+        },
+    },
+    {
+        "name": "check_baggage_policy",
+        "description": "Check airline baggage policy — cabin bag limits, checked baggage, prohibited items, fees. Call when user asks about luggage, baggage allowance, what they can carry, or airline baggage rules.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "airline":       {"type": "string", "description": "Airline name e.g. 'IndiGo', 'Air India', 'Emirates'"},
+                "travel_class":  {"type": "string", "enum": ["economy", "premium_economy", "business", "first"]},
+                "route_type":    {"type": "string", "enum": ["domestic", "international"]},
+            },
+            "required": ["airline"],
+        },
+    },
+    {
+        "name": "get_predeparture_checklist",
+        "description": "Generate a pre-departure checklist with deadlines for each task — visa, booking, health, packing, finance. Call when user asks 'what do I need to do before my trip', 'pre-trip checklist', or 'am I ready for my trip'.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination":    {"type": "string"},
+                "travel_date":    {"type": "string", "description": "YYYY-MM-DD"},
+                "nationality":    {"type": "string"},
+                "trip_type":      {"type": "string", "enum": ["leisure", "business", "family", "group_tour", "pilgrimage"]},
+                "visa_required":  {"type": "boolean"},
+                "has_insurance":  {"type": "boolean"},
+                "group_size":     {"type": "integer"},
+            },
+            "required": ["destination", "travel_date"],
+        },
+    },
+    {
         "name": "plan_group_trip",
         "description": (
             "Generate a comprehensive trip plan for any group size — covering timeline, prayer stops, "
@@ -1427,6 +1483,51 @@ async def _run_tool(name: str, tool_input: dict, ctx: dict | None = None) -> str
         )
         return json.dumps(result)
 
+    # ── Nearby attractions ──
+    if name == "find_nearby_attractions":
+        try:
+            from services.places import find_restaurants as _find_local
+            category = tool_input.get("category", "tourist attractions")
+            query_loc = tool_input.get("location", "")
+            max_r = int(tool_input.get("max_results", 8))
+            result = await _find_local(location=query_loc, cuisine=category, max_results=max_r)
+            result["attractions_found"] = result.pop("restaurants_found", 0)
+            result["attractions"] = result.pop("results", [])
+            result["category"] = category
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({"error": str(e), "attractions_found": 0, "attractions": []})
+
+    # ── Baggage policy ──
+    if name == "check_baggage_policy":
+        try:
+            from services.baggage_policy import get_baggage_policy
+            result = await get_baggage_policy(
+                airline=tool_input.get("airline", ""),
+                travel_class=tool_input.get("travel_class", "economy"),
+                route_type=tool_input.get("route_type", "international"),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({"error": str(e), "airline": tool_input.get("airline", "")})
+
+    # ── Pre-departure checklist ──
+    if name == "get_predeparture_checklist":
+        try:
+            from services.predeparture_checklist import get_predeparture_checklist
+            result = await get_predeparture_checklist(
+                destination=tool_input.get("destination", ""),
+                travel_date=tool_input.get("travel_date", ""),
+                nationality=tool_input.get("nationality", "India"),
+                trip_type=tool_input.get("trip_type", "leisure"),
+                visa_required=bool(tool_input.get("visa_required", False)),
+                has_insurance=bool(tool_input.get("has_insurance", False)),
+                group_size=int(tool_input.get("group_size", 1)),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({"error": str(e), "destination": tool_input.get("destination", ""), "tasks": []})
+
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
@@ -1505,6 +1606,12 @@ def _tool_label(name: str, tool_input: dict) -> str:
         return f"Fetching weather forecast for {tool_input.get('destination', '')}…"
     if name == "plan_group_trip":
         return f"Planning {tool_input.get('group_type', 'group')} trip from {tool_input.get('origin', '')} to {tool_input.get('destination', '')}…"
+    if name == "find_nearby_attractions":
+        return f"Searching attractions near {tool_input.get('location', '')}…"
+    if name == "check_baggage_policy":
+        return f"Checking baggage policy for {tool_input.get('airline', '')}…"
+    if name == "get_predeparture_checklist":
+        return f"Building pre-departure checklist for {tool_input.get('destination', '')}…"
     return f"Running {name}…"
 
 
@@ -1762,6 +1869,27 @@ async def stream_response(messages: list, extra_system: str | None = None, user_
                         gtp = json.loads(result_str)
                         if gtp.get("destination"):
                             yield {"type": "group_trip_results", "data": gtp}
+                    except Exception:
+                        pass
+                elif block.name == "find_nearby_attractions":
+                    try:
+                        att = json.loads(result_str)
+                        if att.get("location"):
+                            yield {"type": "attractions_results", "data": att}
+                    except Exception:
+                        pass
+                elif block.name == "check_baggage_policy":
+                    try:
+                        bp = json.loads(result_str)
+                        if not bp.get("error") or bp.get("cabin_baggage"):
+                            yield {"type": "baggage_results", "data": bp}
+                    except Exception:
+                        pass
+                elif block.name == "get_predeparture_checklist":
+                    try:
+                        cl = json.loads(result_str)
+                        if cl.get("destination"):
+                            yield {"type": "checklist_results", "data": cl}
                     except Exception:
                         pass
 

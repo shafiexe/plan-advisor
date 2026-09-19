@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import type { GroupTripPlan, TimelineItem, TripPlace, PackingList, TrafficForecast } from "@/types/groupTrip";
+import { generateWhatsAppText, generateICS, downloadICS } from "@/utils/exportUtils";
+import MemberShareCard from "./MemberShareCard";
 
 type Props = { data: GroupTripPlan };
 
@@ -166,11 +168,38 @@ export default function GroupTripCard({ data }: Props) {
   ];
 
   const [activeTab, setActiveTab] = useState("timeline");
+  const [whatsappCopied, setWhatsappCopied] = useState(false);
+  const [showMemberCards, setShowMemberCards] = useState(false);
 
   const adults   = (data as GroupTripPlan & { adults?: number }).adults   ?? data.group_size;
   const children = (data as GroupTripPlan & { children?: number }).children ?? 0;
 
+  const handleWhatsApp = async () => {
+    const text = generateWhatsAppText(data);
+    try {
+      await navigator.clipboard.writeText(text);
+      setWhatsappCopied(true);
+      setTimeout(() => setWhatsappCopied(false), 2500);
+    } catch {
+      // fallback: open WhatsApp directly
+    }
+    // Also try to open WhatsApp on mobile
+    try {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    } catch {}
+  };
+
+  const handleCalendar = () => {
+    const ics = generateICS(data);
+    const slug = data.destination.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    downloadICS(ics, `trip-${slug}-${data.travel_date}.ics`);
+  };
+
   return (
+    <>
+    {showMemberCards && (
+      <MemberShareCard data={data} onClose={() => setShowMemberCards(false)} />
+    )}
     <div className="w-full rounded-2xl border border-slate-700/50 bg-slate-900/60 overflow-hidden text-sm">
 
       {/* Header */}
@@ -190,6 +219,30 @@ export default function GroupTripCard({ data }: Props) {
               <span>👥 {data.group_size} people</span>
               <span className="capitalize">🕐 {data.duration}</span>
             </div>
+          </div>
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <button
+              onClick={handleWhatsApp}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-900/50 border border-emerald-700/50 text-emerald-300 text-xs font-medium hover:bg-emerald-800/50 transition-colors"
+              title="Copy WhatsApp-ready summary"
+            >
+              📲 {whatsappCopied ? "Copied!" : "WhatsApp"}
+            </button>
+            <button
+              onClick={handleCalendar}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-900/50 border border-blue-700/50 text-blue-300 text-xs font-medium hover:bg-blue-800/50 transition-colors"
+              title="Download .ics for Google Calendar / Apple Calendar"
+            >
+              📅 Calendar
+            </button>
+            <button
+              onClick={() => setShowMemberCards(true)}
+              className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-indigo-900/50 border border-indigo-700/50 text-indigo-300 text-xs font-medium hover:bg-indigo-800/50 transition-colors"
+              title="View per-member briefing cards"
+            >
+              👤 Member Cards
+            </button>
           </div>
         </div>
         {data.summary && (
@@ -616,5 +669,6 @@ export default function GroupTripCard({ data }: Props) {
 
       </div>
     </div>
+    </>
   );
 }
