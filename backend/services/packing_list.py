@@ -12,12 +12,21 @@ async def get_packing_list(
     trip_type: str = "leisure",     # leisure | business | adventure | beach
     weather: str = "warm",          # warm | cold | rainy | mixed
     activities: list[str] | None = None,
+    personal_essentials: list[str] | None = None,
 ) -> dict:
     client = anthropic.AsyncAnthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
     activities_str = ", ".join(activities) if activities else "general sightseeing"
 
+    essentials_note = ""
+    if personal_essentials:
+        essentials_note = (
+            f"\nUser's personal always-carry items "
+            f"(MUST include these in the appropriate category): "
+            f"{', '.join(personal_essentials)}\n"
+        )
+
     prompt = f"""Create a packing list for a {duration_days}-day {trip_type} trip to {destination}.
-Weather: {weather}. Activities: {activities_str}.
+Weather: {weather}. Activities: {activities_str}.{essentials_note}
 
 Return ONLY valid JSON (no markdown) matching this EXACT schema:
 {{

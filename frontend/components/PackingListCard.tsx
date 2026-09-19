@@ -3,14 +3,32 @@
 import { useState } from "react";
 import type { PackingList, PackingItem } from "@/types/packingList";
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  "Clothing": "👕",
+  "Electronics": "🔌",
+  "Toiletries": "🪥",
+  "Documents": "📄",
+  "Medicines": "💊",
+  "Medications": "💊",
+  "Accessories": "💍",
+  "Food & Snacks": "🍱",
+  "Others": "🎒",
+};
+
+function normStr(s: string) {
+  return s.toLowerCase().trim();
+}
+
 function ItemRow({
   item,
   checked,
   onToggle,
+  isYours,
 }: {
   item: PackingItem;
   checked: boolean;
   onToggle: () => void;
+  isYours?: boolean;
 }) {
   return (
     <label className="flex items-start gap-3 py-2 cursor-pointer group select-none">
@@ -55,7 +73,12 @@ function ItemRow({
           >
             {item.item}
           </span>
-          {!item.essential && !checked && (
+          {isYours && !checked && (
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-900/40 border border-amber-600/40 text-amber-400">
+              ⭐ Yours
+            </span>
+          )}
+          {!item.essential && !isYours && !checked && (
             <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-700/60 border border-slate-600/60 text-slate-500">
               optional
             </span>
@@ -69,7 +92,13 @@ function ItemRow({
   );
 }
 
-export default function PackingListCard({ data }: { data: PackingList }) {
+export default function PackingListCard({
+  data,
+  userEssentials,
+}: {
+  data: PackingList;
+  userEssentials?: string[];
+}) {
   const [activeTab, setActiveTab] = useState(0);
   const [checked, setChecked] = useState<Set<string>>(new Set());
 
@@ -80,6 +109,8 @@ export default function PackingListCard({ data }: { data: PackingList }) {
       </div>
     );
   }
+
+  const essentialsSet = new Set((userEssentials ?? []).map(normStr));
 
   const totalItems = data.categories.reduce((sum, cat) => sum + cat.items.length, 0);
   const checkedCount = checked.size;
@@ -95,7 +126,19 @@ export default function PackingListCard({ data }: { data: PackingList }) {
     });
   };
 
+  const packAll = () => {
+    const all = new Set<string>();
+    data.categories.forEach((cat, ci) =>
+      cat.items.forEach((_, ii) => all.add(`${ci}:${ii}`))
+    );
+    setChecked(all);
+  };
+
+  const resetAll = () => setChecked(new Set());
+
   const activeCategory = data.categories[activeTab] ?? data.categories[0];
+  const catEmoji = (cat: { emoji?: string; name?: string }) =>
+    cat.emoji || CATEGORY_EMOJI[cat.name ?? ""] || "🎒";
 
   return (
     <div className="w-full rounded-2xl bg-slate-900 border border-slate-700/60 overflow-hidden shadow-lg">
@@ -120,9 +163,26 @@ export default function PackingListCard({ data }: { data: PackingList }) {
             </p>
           </div>
         </div>
-        <span className="shrink-0 text-xs text-slate-500 whitespace-nowrap">
-          {checkedCount}/{totalItems} packed
-        </span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-xs text-slate-500 whitespace-nowrap">
+            {checkedCount}/{totalItems} packed
+          </span>
+          {checkedCount < totalItems ? (
+            <button
+              onClick={packAll}
+              className="text-[11px] px-2 py-0.5 rounded-full bg-indigo-700/40 border border-indigo-600/40 text-indigo-300 hover:bg-indigo-700/60 transition-colors"
+            >
+              Pack all
+            </button>
+          ) : (
+            <button
+              onClick={resetAll}
+              className="text-[11px] px-2 py-0.5 rounded-full bg-slate-700/60 border border-slate-600/40 text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              Reset
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Category tab strip */}
@@ -137,7 +197,7 @@ export default function PackingListCard({ data }: { data: PackingList }) {
                 : "border-transparent text-slate-500 hover:text-slate-300 hover:border-slate-600"
             }`}
           >
-            {cat.emoji} {cat.name}
+            {catEmoji(cat)} {cat.name}
           </button>
         ))}
       </div>
@@ -146,12 +206,14 @@ export default function PackingListCard({ data }: { data: PackingList }) {
       <div className="px-4 py-2 max-h-[360px] overflow-y-auto divide-y divide-slate-800/60">
         {activeCategory.items.map((item, itemIdx) => {
           const key = `${activeTab}:${itemIdx}`;
+          const isYours = essentialsSet.size > 0 && essentialsSet.has(normStr(item.item));
           return (
             <ItemRow
               key={key}
               item={item}
               checked={checked.has(key)}
               onToggle={() => toggleItem(activeTab, itemIdx)}
+              isYours={isYours}
             />
           );
         })}

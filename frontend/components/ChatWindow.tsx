@@ -34,6 +34,7 @@ const TOOL_ICONS: Record<string, string> = {
   check_travel_documents: "📋",
   get_trip_recap:         "📖",
   get_layover_guide:      "🛋️",
+  plan_group_trip:        "🗺️",
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -50,6 +51,7 @@ type Props = {
   onAction?: (text: string) => void;
   onSetAlert?: (data: AlertData) => void;
   onSaveTrip?: (tripData: Record<string, unknown>, name: string, destination: string, dateRange: string) => Promise<void>;
+  userEssentials?: string[];
 };
 
 type EmptyProps = { onSuggestion: (text: string) => void };
@@ -276,6 +278,14 @@ function getSuggestions(msg: Message): string[] {
       dest ? `What should I wear in ${dest}?` : "What should I wear?",
     ];
   }
+  if (msg.groupTripData) {
+    const dest = msg.groupTripData.destination ?? "";
+    return [
+      "Share this plan with the group",
+      dest ? `Build packing checklist for ${dest}` : "Build packing checklist",
+      dest ? `Find halal restaurants on route to ${dest}` : "Find halal restaurants on route",
+    ];
+  }
   if (msg.busData || msg.trainData) {
     return [
       "Compare with flights",
@@ -294,7 +304,7 @@ type ChatWindowProps = Props & { onSuggestion: (text: string) => void; toolName?
 
 export default function ChatWindow({
   messages, typing, streaming, toolLabel, toolName, onSuggestion,
-  onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip,
+  onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip, userEssentials,
 }: ChatWindowProps) {
   const bottomRef    = useRef<HTMLDivElement>(null);
   const scrollRef    = useRef<HTMLDivElement>(null);
@@ -346,6 +356,7 @@ export default function ChatWindow({
                 onAction={onAction}
                 onSetAlert={onSetAlert}
                 onSaveTrip={onSaveTrip}
+                userEssentials={userEssentials}
               />
             ))}
             {lastAssistantMsg && (

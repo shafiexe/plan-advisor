@@ -355,13 +355,14 @@ async def update_passenger(
 # ── User preferences ──────────────────────────────────────────────────────────
 
 class PreferencesBody(BaseModel):
-    nationality:     str = "India"
-    home_city:       str = ""
-    home_iata:       str = ""
-    currency:        str = "INR"
-    travel_style:    str = ""
-    passport_expiry: str = ""
-    onboarding_done: bool = False
+    nationality:        str = "India"
+    home_city:          str = ""
+    home_iata:          str = ""
+    currency:           str = "INR"
+    travel_style:       str = ""
+    passport_expiry:    str = ""
+    onboarding_done:    bool = False
+    packing_essentials: list[str] = []
 
 
 @router.get("/preferences")
@@ -376,16 +377,31 @@ async def get_preferences(
         return {
             "nationality": "India", "home_city": "", "home_iata": "",
             "currency": "INR", "travel_style": "", "passport_expiry": "",
-            "onboarding_done": False,
+            "onboarding_done": False, "packing_essentials": [],
         }
+
+    # packing_essentials is stored as JSON (list) in the DB column.
+    # Handle legacy string storage gracefully.
+    raw_ess = prefs.packing_essentials
+    if isinstance(raw_ess, str):
+        try:
+            packing_essentials = json.loads(raw_ess)
+        except Exception:
+            packing_essentials = []
+    elif isinstance(raw_ess, list):
+        packing_essentials = raw_ess
+    else:
+        packing_essentials = []
+
     return {
-        "nationality":     prefs.nationality,
-        "home_city":       prefs.home_city,
-        "home_iata":       prefs.home_iata,
-        "currency":        prefs.currency,
-        "travel_style":    prefs.travel_style,
-        "passport_expiry": prefs.passport_expiry or "",
-        "onboarding_done": prefs.onboarding_done,
+        "nationality":        prefs.nationality,
+        "home_city":          prefs.home_city,
+        "home_iata":          prefs.home_iata,
+        "currency":           prefs.currency,
+        "travel_style":       prefs.travel_style,
+        "passport_expiry":    prefs.passport_expiry or "",
+        "onboarding_done":    prefs.onboarding_done,
+        "packing_essentials": packing_essentials,
     }
 
 
@@ -400,13 +416,14 @@ async def save_preferences(
     )).scalar_one_or_none()
 
     if prefs:
-        prefs.nationality     = body.nationality
-        prefs.home_city       = body.home_city
-        prefs.home_iata       = body.home_iata
-        prefs.currency        = body.currency
-        prefs.travel_style    = body.travel_style
-        prefs.passport_expiry = body.passport_expiry
-        prefs.onboarding_done = body.onboarding_done
+        prefs.nationality        = body.nationality
+        prefs.home_city          = body.home_city
+        prefs.home_iata          = body.home_iata
+        prefs.currency           = body.currency
+        prefs.travel_style       = body.travel_style
+        prefs.passport_expiry    = body.passport_expiry
+        prefs.onboarding_done    = body.onboarding_done
+        prefs.packing_essentials = body.packing_essentials
     else:
         db.add(UserPreferences(
             user_email=email,
@@ -417,6 +434,7 @@ async def save_preferences(
             travel_style=body.travel_style,
             passport_expiry=body.passport_expiry,
             onboarding_done=body.onboarding_done,
+            packing_essentials=body.packing_essentials,
         ))
 
     await db.commit()

@@ -15,6 +15,7 @@ import { useSpeech } from "@/hooks/useSpeech";
 import { useServerSync } from "@/hooks/useServerSync";
 import type { AlertRecord, SavedTrip, UserPreferences } from "@/hooks/useServerSync";
 import OnboardingModal from "@/components/OnboardingModal";
+import PackingEssentialsEditor from "@/components/PackingEssentialsEditor";
 import { useTheme } from "@/hooks/useTheme";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import type { FlightSearchResult, PriceCalendarResult, RoundTripResult } from "@/types/flights";
@@ -41,6 +42,7 @@ import type { DocumentCheck } from "@/types/documentCheck";
 import type { TripRecap } from "@/types/tripRecap";
 import type { LayoverGuide } from "@/types/layoverGuide";
 import type { WeatherForecast } from "@/types/weatherForecast";
+import type { GroupTripPlan } from "@/types/groupTrip";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
 
@@ -117,6 +119,7 @@ export default function Home() {
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
   const [userPrefs, setUserPrefs] = useState<UserPreferences | null>(null);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showEssentialsEditor, setShowEssentialsEditor] = useState(false);
   const serverLoadedRef = useRef(false);
   // Set during page-load only; cleared once fired; prevents duplicate auto-sends
   type AutoSendPending = { convId: string; text: string; history: { role: string; content: string }[] };
@@ -155,6 +158,7 @@ export default function Home() {
   const pendingRecapRef           = useRef<TripRecap | null>(null);
   const pendingLayoverRef         = useRef<LayoverGuide | null>(null);
   const pendingForecastRef        = useRef<WeatherForecast | null>(null);
+  const pendingGroupTripRef       = useRef<GroupTripPlan | null>(null);
 
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
@@ -265,6 +269,7 @@ export default function Home() {
     const recapData              = pendingRecapRef.current              ?? undefined;
     const layoverData            = pendingLayoverRef.current            ?? undefined;
     const forecastData           = pendingForecastRef.current           ?? undefined;
+    const groupTripData          = pendingGroupTripRef.current          ?? undefined;
     if (calendarData)      pendingCalendarRef.current      = null;
     if (hotelData)         pendingHotelRef.current         = null;
     if (restaurantData)    pendingRestaurantRef.current    = null;
@@ -286,8 +291,9 @@ export default function Home() {
     if (recapData)              pendingRecapRef.current              = null;
     if (layoverData)            pendingLayoverRef.current            = null;
     if (forecastData)           pendingForecastRef.current           = null;
+    if (groupTripData)          pendingGroupTripRef.current          = null;
 
-    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData || timelineData || splitData || hotelComparisonData || eventsData || documentCheckData || recapData || layoverData || forecastData);
+    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData || timelineData || splitData || hotelComparisonData || eventsData || documentCheckData || recapData || layoverData || forecastData || groupTripData);
     updateActive((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!hasCard && last?.role === "assistant" && last.streaming) {
@@ -295,7 +301,7 @@ export default function Home() {
       }
       return [
         ...msgs,
-        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData },
+        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData, groupTripData },
       ];
     });
   }, [updateActive]);
@@ -465,6 +471,10 @@ export default function Home() {
     },
     onForecastResults: (data) => {
       pendingForecastRef.current = data as WeatherForecast;
+      setToolLabel(null);
+    },
+    onGroupTripResults: (data) => {
+      pendingGroupTripRef.current = data as GroupTripPlan;
       setToolLabel(null);
     },
   });
@@ -890,12 +900,13 @@ export default function Home() {
       ...(userLocation ? { user_location: userLocation.label } : {}),
       ...(userPrefs ? {
         user_preferences: {
-          nationality:    userPrefs.nationality,
-          home_city:      userPrefs.home_city,
-          home_iata:      userPrefs.home_iata,
-          currency:       userPrefs.currency,
-          travel_style:   userPrefs.travel_style,
-          passport_expiry: userPrefs.passport_expiry ?? "",
+          nationality:        userPrefs.nationality,
+          home_city:          userPrefs.home_city,
+          home_iata:          userPrefs.home_iata,
+          currency:           userPrefs.currency,
+          travel_style:       userPrefs.travel_style,
+          passport_expiry:    userPrefs.passport_expiry ?? "",
+          packing_essentials: userPrefs.packing_essentials ?? [],
         },
       } : {}),
     });
@@ -970,6 +981,27 @@ export default function Home() {
         <OnboardingModal onComplete={handleOnboardingComplete} />
       )}
 
+      {/* ── Packing essentials editor ── */}
+      {showEssentialsEditor && userEmail && (
+        <PackingEssentialsEditor
+          userEmail={userEmail}
+          initialEssentials={userPrefs?.packing_essentials ?? []}
+          currentPrefs={{
+            nationality:    userPrefs?.nationality ?? "India",
+            home_city:      userPrefs?.home_city ?? "",
+            home_iata:      userPrefs?.home_iata ?? "",
+            currency:       userPrefs?.currency ?? "INR",
+            travel_style:   userPrefs?.travel_style ?? "",
+            passport_expiry: userPrefs?.passport_expiry ?? "",
+            onboarding_done: userPrefs?.onboarding_done ?? false,
+          }}
+          onClose={() => setShowEssentialsEditor(false)}
+          onSave={(items) => {
+            setUserPrefs((prev) => prev ? { ...prev, packing_essentials: items } : prev);
+          }}
+        />
+      )}
+
       {/* ── Price alert modal ── */}
       {alertData && (
         <PriceAlertModal
@@ -1037,6 +1069,7 @@ export default function Home() {
         connected={connected}
         onSignOut={() => signOut({ callbackUrl: "/login" })}
         onEditPreferences={() => setShowOnboarding(true)}
+        onEditEssentials={userEmail ? () => setShowEssentialsEditor(true) : undefined}
       />
 
       {/* ── Itinerary sidebar ── */}
@@ -1109,6 +1142,7 @@ export default function Home() {
           speaking={speaking}
           onSetAlert={setAlertData}
           onSaveTrip={handleSaveTrip}
+          userEssentials={userPrefs?.packing_essentials ?? []}
         />
 
         {/* Input */}

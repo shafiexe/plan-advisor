@@ -120,6 +120,9 @@ Trip recap:
 7-Day Forecast:
 • `get_weather_forecast` — 7-day weather forecast with daily conditions, temperatures, and packing tips. Call when user asks about weather at the destination, what to expect weather-wise, or what to pack for weather.
 
+Group Trip Planner:
+• `plan_group_trip` — Full trip plan: timeline, prayer stops, food/catering, toilet breaks, entry fees, cost per person, packing list, alerts. Use for any group size — solo, family, or 50-person tour.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IATA CITY CODES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -781,6 +784,41 @@ TOOLS = [
             "required": ["airport", "layover_duration_hours"],
         },
     },
+    {
+        "name": "plan_group_trip",
+        "description": (
+            "Generate a comprehensive trip plan for any group size — covering timeline, prayer stops, "
+            "food/catering plan, toilet breaks, entry fees, cost per person, packing list, alerts, "
+            "and emergency info. Works for solo, couple, nuclear family, or large group tours. "
+            "Call when user asks to plan a trip in detail, especially for groups, family tours, "
+            "or when they want a complete plan with schedule and costs."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "origin":                  {"type": "string", "description": "Departure city/town"},
+                "destination":             {"type": "string", "description": "Main destination"},
+                "travel_date":             {"type": "string", "description": "YYYY-MM-DD"},
+                "return_date":             {"type": "string", "description": "YYYY-MM-DD — blank for day trip"},
+                "group_type":              {"type": "string", "enum": ["solo", "couple", "nuclear_family", "family", "group_tour", "friends"], "description": "Type of travel group"},
+                "group_size":              {"type": "integer", "description": "Total number of travellers"},
+                "adults":                  {"type": "integer"},
+                "children":                {"type": "integer"},
+                "elderly":                 {"type": "integer"},
+                "departure_time":          {"type": "string", "description": "HH:MM — planned departure time"},
+                "return_time":             {"type": "string", "description": "HH:MM — expected return time (day trips)"},
+                "transport_mode":          {"type": "string", "enum": ["bus", "own_car", "train", "flight", "mix"], "description": "Primary transport mode"},
+                "religion":                {"type": "string", "description": "muslim | hindu | christian | '' — for prayer stop planning"},
+                "food_plan":               {"type": "string", "enum": ["carry", "catering", "restaurant", "mix"], "description": "How food will be arranged"},
+                "budget_per_person":       {"type": "string", "description": "e.g. '₹1500' per person total budget"},
+                "pre_booked_activities":   {"type": "array", "items": {"type": "string"}, "description": "Pre-booked activities with times e.g. 'Toy train Coonoor→Ooty 12:30-13:45 on 28 Sep'"},
+                "special_needs":           {"type": "array", "items": {"type": "string"}, "description": "e.g. ['motion sickness', 'wheelchair', 'toddlers']"},
+                "nationality":             {"type": "string", "default": "India"},
+                "currency":                {"type": "string", "default": "INR"},
+            },
+            "required": ["origin", "destination", "travel_date"],
+        },
+    },
 ]
 
 
@@ -809,7 +847,7 @@ def _common_flight_args(ti: dict) -> dict:
     }
 
 
-async def _run_tool(name: str, tool_input: dict) -> str:
+async def _run_tool(name: str, tool_input: dict, ctx: dict | None = None) -> str:
     # ── Flights ──
     if name == "search_flights":
         try:
@@ -997,12 +1035,18 @@ async def _run_tool(name: str, tool_input: dict) -> str:
     # ── Packing list ──
     if name == "get_packing_list":
         from services.packing_list import get_packing_list
+        personal_essentials = None
+        if ctx:
+            raw_ess = ctx.get("packing_essentials")
+            if isinstance(raw_ess, list) and raw_ess:
+                personal_essentials = raw_ess
         result = await get_packing_list(
             destination=tool_input.get("destination", ""),
             duration_days=tool_input.get("duration_days", 7),
             trip_type=tool_input.get("trip_type", "leisure"),
             weather=tool_input.get("weather", "warm"),
             activities=tool_input.get("activities"),
+            personal_essentials=personal_essentials,
         )
         return json.dumps(result)
 
@@ -1357,6 +1401,32 @@ async def _run_tool(name: str, tool_input: dict) -> str:
         )
         return json.dumps(result)
 
+    # ── Group trip planner ──
+    if name == "plan_group_trip":
+        from services.group_trip_planner import plan_group_trip as _plan
+        result = await _plan(
+            origin=tool_input.get("origin", ""),
+            destination=tool_input.get("destination", ""),
+            travel_date=tool_input.get("travel_date", ""),
+            return_date=tool_input.get("return_date", ""),
+            group_type=tool_input.get("group_type", "family"),
+            group_size=int(tool_input.get("group_size", 1)),
+            adults=int(tool_input.get("adults", 1)),
+            children=int(tool_input.get("children", 0)),
+            elderly=int(tool_input.get("elderly", 0)),
+            departure_time=tool_input.get("departure_time", "06:00"),
+            return_time=tool_input.get("return_time", "22:00"),
+            transport_mode=tool_input.get("transport_mode", "bus"),
+            religion=tool_input.get("religion", ""),
+            food_plan=tool_input.get("food_plan", "restaurant"),
+            budget_per_person=tool_input.get("budget_per_person", ""),
+            pre_booked_activities=tool_input.get("pre_booked_activities"),
+            special_needs=tool_input.get("special_needs"),
+            nationality=tool_input.get("nationality", "India"),
+            currency=tool_input.get("currency", "INR"),
+        )
+        return json.dumps(result)
+
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
@@ -1433,6 +1503,8 @@ def _tool_label(name: str, tool_input: dict) -> str:
         return f"Building layover guide for {tool_input.get('airport', '')}…"
     if name == "get_weather_forecast":
         return f"Fetching weather forecast for {tool_input.get('destination', '')}…"
+    if name == "plan_group_trip":
+        return f"Planning {tool_input.get('group_type', 'group')} trip from {tool_input.get('origin', '')} to {tool_input.get('destination', '')}…"
     return f"Running {name}…"
 
 
@@ -1452,7 +1524,7 @@ def _trim_history(messages: list) -> list:
     return trimmed
 
 
-async def stream_response(messages: list, extra_system: str | None = None) -> AsyncGenerator[dict, None]:
+async def stream_response(messages: list, extra_system: str | None = None, user_context: dict | None = None) -> AsyncGenerator[dict, None]:
     client = _get_client()
     model  = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5")
     system = SYSTEM_PROMPT.format(today=datetime.date.today().isoformat())
@@ -1495,7 +1567,7 @@ async def stream_response(messages: list, extra_system: str | None = None) -> As
                     continue
 
                 yield {"type": "tool_start", "name": block.name, "label": _tool_label(block.name, block.input)}
-                result_str = await _run_tool(block.name, block.input)
+                result_str = await _run_tool(block.name, block.input, ctx=user_context)
 
                 # Emit structured data for frontend cards
                 if block.name in ("search_flights", "compare_flights"):
@@ -1683,6 +1755,13 @@ async def stream_response(messages: list, extra_system: str | None = None) -> As
                         lg = json.loads(result_str)
                         if lg.get("airport"):
                             yield {"type": "layover_results", "data": lg}
+                    except Exception:
+                        pass
+                elif block.name == "plan_group_trip":
+                    try:
+                        gtp = json.loads(result_str)
+                        if gtp.get("destination"):
+                            yield {"type": "group_trip_results", "data": gtp}
                     except Exception:
                         pass
 

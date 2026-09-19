@@ -33,6 +33,7 @@ export type WsMessage =
   | { type: "recap_results"; data: unknown }
   | { type: "layover_results"; data: unknown }
   | { type: "forecast_results"; data: unknown }
+  | { type: "group_trip_results"; data: unknown }
   | { type: "done" }
   | { type: "error"; content: string };
 
@@ -71,6 +72,7 @@ type Options = {
   onRecapResults?: (data: unknown) => void;
   onLayoverResults?: (data: unknown) => void;
   onForecastResults?: (data: unknown) => void;
+  onGroupTripResults?: (data: unknown) => void;
 };
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000/ws/chat";
@@ -120,6 +122,7 @@ export function useWebSocket(opts: Options) {
       else if (msg.type === "recap_results")             optsRef.current.onRecapResults?.(msg.data);
       else if (msg.type === "layover_results")           optsRef.current.onLayoverResults?.(msg.data);
       else if (msg.type === "forecast_results")          optsRef.current.onForecastResults?.(msg.data);
+      else if (msg.type === "group_trip_results")        optsRef.current.onGroupTripResults?.(msg.data);
     };
 
     ws.onclose = () => {

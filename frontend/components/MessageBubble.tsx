@@ -58,6 +58,8 @@ import TripRecapCard from "./TripRecapCard";
 import type { TripRecap } from "@/types/tripRecap";
 import LayoverGuideCard from "./LayoverGuideCard";
 import type { LayoverGuide } from "@/types/layoverGuide";
+import GroupTripCard from "./GroupTripCard";
+import type { GroupTripPlan } from "@/types/groupTrip";
 
 export type Message = {
   id: string;
@@ -92,6 +94,7 @@ export type Message = {
   recapData?: TripRecap;
   layoverData?: LayoverGuide;
   forecastData?: WeatherForecast;
+  groupTripData?: GroupTripPlan;
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -104,17 +107,18 @@ type Props = {
   onAction?: (text: string) => void;
   onSetAlert?: (data: AlertData) => void;
   onSaveTrip?: (tripData: Record<string, unknown>, name: string, destination: string, dateRange: string) => Promise<void>;
+  userEssentials?: string[];
 };
 
 function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip }: Props) {
-  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData, itineraryData, predictionData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData } = message;
+export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip, userEssentials }: Props) {
+  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData, itineraryData, predictionData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData, eventsData, documentCheckData, recapData, layoverData, forecastData, groupTripData } = message;
   const isUser = role === "user";
   const isTransportComparison = !isUser && ((!!flightData && (!!busData || !!trainData)) || (!!busData && !!trainData));
-  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData || !!itineraryData || !!predictionData || !!packingData || !!flightStatusData || !!transitData || !!phrasebookData || !!insuranceData || !!timelineData || !!splitData || !!hotelComparisonData || !!eventsData || !!documentCheckData || !!recapData || !!layoverData || !!forecastData);
+  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData || !!itineraryData || !!predictionData || !!packingData || !!flightStatusData || !!transitData || !!phrasebookData || !!insuranceData || !!timelineData || !!splitData || !!hotelComparisonData || !!eventsData || !!documentCheckData || !!recapData || !!layoverData || !!forecastData || !!groupTripData);
   const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
@@ -214,7 +218,7 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
         )}
 
         {!isUser && packingData && (
-          <PackingListCard data={packingData} />
+          <PackingListCard data={packingData} userEssentials={userEssentials} />
         )}
 
         {!isUser && flightStatusData && (
@@ -263,6 +267,10 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
 
         {!isUser && forecastData && (
           <WeatherForecastCard data={forecastData} />
+        )}
+
+        {!isUser && groupTripData && (
+          <GroupTripCard data={groupTripData} />
         )}
 
         {/* When a card is shown, render analysis text below it using MarkdownBody */}

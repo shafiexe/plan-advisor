@@ -54,6 +54,7 @@ function cleanMessages(messages: Message[]): Message[] {
       if (m.recapData)              Object.assign(base, { recapData: m.recapData });
       if (m.layoverData)            Object.assign(base, { layoverData: m.layoverData });
       if (m.forecastData)           Object.assign(base, { forecastData: m.forecastData });
+      if (m.groupTripData)          Object.assign(base, { groupTripData: m.groupTripData });
       return base;
     });
 }
@@ -392,6 +393,7 @@ export type UserPreferences = {
   travel_style: string;
   passport_expiry?: string;
   onboarding_done: boolean;
+  packing_essentials?: string[];
 };
 
 export type SavedTrip = {

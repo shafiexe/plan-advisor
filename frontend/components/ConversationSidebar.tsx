@@ -56,6 +56,7 @@ type Props = {
   connected?: boolean;
   onSignOut?: () => void;
   onEditPreferences?: () => void;
+  onEditEssentials?: () => void;
 };
 
 function relativeTime(ts: number) {
@@ -574,6 +575,7 @@ export default function ConversationSidebar({
   connected = true,
   onSignOut,
   onEditPreferences,
+  onEditEssentials,
 }: Props) {
   const { locale, setLocale, t } = useLanguage();
   const [tab, setTab] = useState<"chats" | "passengers">("chats");
@@ -1010,6 +1012,17 @@ export default function ConversationSidebar({
                         <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                       </svg>
                       Travel preferences
+                    </button>
+                  )}
+
+                  {/* Packing essentials */}
+                  {onEditEssentials && (
+                    <button
+                      onClick={() => { setShowUserMenu(false); onEditEssentials(); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors"
+                    >
+                      <span className="text-base shrink-0">🎒</span>
+                      My packing essentials
                     </button>
                   )}
 

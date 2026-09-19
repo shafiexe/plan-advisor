@@ -85,17 +85,18 @@ class Trip(Base):
 
 class UserPreferences(Base):
     __tablename__ = "user_preferences"
-    id              = Column(Integer, primary_key=True)
-    user_email      = Column(String, nullable=False, unique=True, index=True)
-    nationality     = Column(String, nullable=True, default="India")
-    home_city       = Column(String, nullable=True, default="")   # city name
-    home_iata       = Column(String, nullable=True, default="")   # IATA code e.g. BLR
-    currency        = Column(String, nullable=True, default="INR")
-    travel_style    = Column(String, nullable=True, default="")   # budget | mid-range | luxury
-    passport_expiry = Column(String, nullable=True, default="")   # YYYY-MM-DD
-    onboarding_done = Column(Boolean, nullable=False, default=False)
-    created_at      = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at      = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    id                 = Column(Integer, primary_key=True)
+    user_email         = Column(String, nullable=False, unique=True, index=True)
+    nationality        = Column(String, nullable=True, default="India")
+    home_city          = Column(String, nullable=True, default="")   # city name
+    home_iata          = Column(String, nullable=True, default="")   # IATA code e.g. BLR
+    currency           = Column(String, nullable=True, default="INR")
+    travel_style       = Column(String, nullable=True, default="")   # budget | mid-range | luxury
+    passport_expiry    = Column(String, nullable=True, default="")   # YYYY-MM-DD
+    onboarding_done    = Column(Boolean, nullable=False, default=False)
+    packing_essentials = Column(JSON, nullable=True, default=list)   # list of always-carry item strings
+    created_at         = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at         = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class PriceAlert(Base):

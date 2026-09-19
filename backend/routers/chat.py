@@ -95,6 +95,7 @@ async def websocket_chat(websocket: WebSocket):
                 curr            = user_preferences.get("currency", "INR")
                 style           = user_preferences.get("travel_style", "")
                 passport_expiry = user_preferences.get("passport_expiry", "")
+                packing_ess     = user_preferences.get("packing_essentials") or []
                 pref_block = (
                     "User preferences (use these as defaults unless overridden by the conversation):\n"
                     f"- Nationality: {nat} (use for visa checks)\n"
@@ -102,13 +103,14 @@ async def websocket_chat(websocket: WebSocket):
                     f"- Currency: {curr} — show all prices in this currency\n"
                     f"- Travel style: {style or 'not specified'}\n"
                     + (f"- Passport expiry: {passport_expiry} — pass this as passport_expiry when calling check_travel_documents" if passport_expiry else "- Passport expiry: not provided")
+                    + (f"\n- Personal packing essentials (MUST include these in packing lists, in the most appropriate category): {', '.join(packing_ess)}" if packing_ess else "")
                 )
                 extra_parts.append(pref_block)
             extra_system = "\n\n".join(extra_parts) or None
 
             await websocket.send_json({"type": "typing"})
 
-            async for event in stream_response(messages, extra_system=extra_system):
+            async for event in stream_response(messages, extra_system=extra_system, user_context=user_preferences):
                 await websocket.send_json(event)
 
             await websocket.send_json({"type": "done"})
