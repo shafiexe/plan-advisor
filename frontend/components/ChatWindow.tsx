@@ -14,15 +14,19 @@ const TOOL_ICONS: Record<string, string> = {
   find_restaurants: "🍽️",
 };
 
+type AlertData = { origin: string; destination: string; departureDate: string; price: number };
+
 type Props = {
   messages: Message[];
   typing: boolean;
+  streaming?: boolean;
   toolLabel: string | null;
   toolName?: string | null;
   onSpeak: (text: string) => void;
   onStopSpeak: () => void;
   speaking: boolean;
   onAction?: (text: string) => void;
+  onSetAlert?: (data: AlertData) => void;
 };
 
 const SUGGESTIONS = [
@@ -64,17 +68,58 @@ function EmptyState({ onSuggestion }: EmptyProps) {
   );
 }
 
+function getSuggestions(msg: Message): string[] {
+  if (msg.flightData) {
+    const dest = (msg.flightData as Record<string, unknown>)?.destination as string | undefined;
+    return [
+      dest ? `Find hotels in ${dest}` : "Find hotels at destination",
+      "Show cheaper dates",
+      "Visa & entry requirements",
+    ];
+  }
+  if (msg.hotelData) {
+    return [
+      "Find restaurants nearby",
+      "What to see and do there",
+      "Check different dates",
+    ];
+  }
+  if (msg.restaurantData) {
+    return [
+      "Plan a full day itinerary",
+      "What to pack",
+      "Best time to visit",
+    ];
+  }
+  if (msg.busData || msg.trainData) {
+    return [
+      "Compare with flights",
+      "Find hotels at destination",
+      "What to do there",
+    ];
+  }
+  return [
+    "Plan a complete trip",
+    "What's the best time to visit?",
+    "Help me pack for this trip",
+  ];
+}
+
 type ChatWindowProps = Props & { onSuggestion: (text: string) => void; toolName?: string | null };
 
 export default function ChatWindow({
-  messages, typing, toolLabel, toolName, onSuggestion,
-  onSpeak, onStopSpeak, speaking, onAction,
+  messages, typing, streaming, toolLabel, toolName, onSuggestion,
+  onSpeak, onStopSpeak, speaking, onAction, onSetAlert,
 }: ChatWindowProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, typing]);
+
+  const lastAssistantMsg = !typing && !streaming
+    ? [...messages].reverse().find((m) => m.role === "assistant" && !m.streaming) ?? null
+    : null;
 
   return (
     <div className="flex-1 overflow-y-auto chat-scroll flex flex-col">
@@ -91,8 +136,24 @@ export default function ChatWindow({
                 onStopSpeak={onStopSpeak}
                 speaking={speaking}
                 onAction={onAction}
+                onSetAlert={onSetAlert}
               />
             ))}
+            {lastAssistantMsg && (
+              <div className="flex flex-wrap gap-2 mt-2 pl-11">
+                {getSuggestions(lastAssistantMsg).map((s) => (
+                  <button
+                    key={s}
+                    onClick={() => onSuggestion(s)}
+                    className="px-3 py-1.5 text-xs rounded-full border border-slate-700/60 text-slate-400
+                      hover:border-indigo-500/60 hover:text-indigo-300 hover:bg-indigo-950/30
+                      transition-all whitespace-nowrap"
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
             {typing && <TypingDots />}
             {toolLabel && !typing && (
               <div className="flex items-center gap-2.5 px-1 animate-pulse">

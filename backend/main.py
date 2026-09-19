@@ -54,7 +54,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from routers import chat, transcribe, tts, passport, user_data, admin
+from routers import chat, transcribe, tts, passport, user_data, admin, alerts
 from database import init_db
 
 # Allow-list: local dev + any Azure App Service / custom domain
@@ -66,7 +66,34 @@ ALLOWED_ORIGINS = [o.strip() for o in os.getenv(
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()   # create tables on startup (safe to re-run)
+
+    # ── APScheduler: check price alerts every 6 hours ─────────────────────────
+    scheduler = None
+    try:
+        from apscheduler.schedulers.asyncio import AsyncIOScheduler
+        from routers.alerts import run_check_with_new_session
+
+        async def _check_alerts_job():
+            try:
+                result = await run_check_with_new_session()
+                log.info("Scheduled alert check result: %s", result)
+            except Exception as _exc:
+                log.warning("Scheduled alert check failed (non-fatal): %s", _exc)
+
+        scheduler = AsyncIOScheduler()
+        scheduler.add_job(_check_alerts_job, "interval", hours=6, id="price_alerts")
+        scheduler.start()
+        log.info("Price alert scheduler started (interval: 6 hours)")
+    except Exception as _e:
+        log.warning("Failed to start price alert scheduler (non-fatal): %s", _e)
+
     yield
+
+    if scheduler is not None:
+        try:
+            scheduler.shutdown(wait=False)
+        except Exception:
+            pass
 
 app = FastAPI(
     title="Plan Advisor API",
@@ -89,6 +116,7 @@ app.include_router(tts.router,        tags=["tts"])
 app.include_router(passport.router,   tags=["passport"])
 app.include_router(user_data.router,  tags=["user"])
 app.include_router(admin.router,      tags=["admin"])
+app.include_router(alerts.router,     tags=["alerts"])
 
 
 @app.exception_handler(Exception)

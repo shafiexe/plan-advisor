@@ -28,19 +28,22 @@ export type Message = {
   trainData?: TrainSearchResult;
 };
 
+type AlertData = { origin: string; destination: string; departureDate: string; price: number };
+
 type Props = {
   message: Message;
   onSpeak?: (text: string) => void;
   onStopSpeak?: () => void;
   speaking?: boolean;
   onAction?: (text: string) => void;
+  onSetAlert?: (data: AlertData) => void;
 };
 
 function formatTime(ts: number) {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction }: Props) {
+export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert }: Props) {
   const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData } = message;
   const isUser = role === "user";
   const isTransportComparison = !isUser && ((!!flightData && (!!busData || !!trainData)) || (!!busData && !!trainData));
@@ -71,7 +74,7 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
         )}
 
         {!isUser && flightData && !isTransportComparison && (
-          <FlightResultsCard data={flightData} streaming={streaming} />
+          <FlightResultsCard data={flightData} streaming={streaming} onSetAlert={onSetAlert} />
         )}
 
         {!isUser && calendarData && (

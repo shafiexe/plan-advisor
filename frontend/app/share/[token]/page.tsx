@@ -94,7 +94,7 @@ export default function SharePage() {
               >
                 {m.role === "user"
                   ? <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
-                  : <MarkdownBody content={m.content} />
+                  : <MarkdownBody text={m.content} />
                 }
               </div>
             </div>

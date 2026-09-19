@@ -180,6 +180,24 @@ export function useServerSync(userEmail: string | null | undefined) {
     } catch {}
   }, [enabled, userEmail]);
 
+  /* ── Price alerts ───────────────────────────────────────── */
+  const addAlert = useCallback(async (alert: {
+    origin: string;
+    destination: string;
+    departure_date: string;
+    threshold_inr: number;
+  }): Promise<boolean> => {
+    if (!enabled) return false;
+    try {
+      const resp = await fetch(`${API}/api/alerts`, {
+        method:  "POST",
+        headers: authHeaders(userEmail!),
+        body:    JSON.stringify(alert),
+      });
+      return resp.ok;
+    } catch { return false; }
+  }, [enabled, userEmail]);
+
   return {
     enabled,
     loadConversations,
@@ -192,5 +210,6 @@ export function useServerSync(userEmail: string | null | undefined) {
     createPassenger,
     updatePassenger,
     deletePassenger,
+    addAlert,
   };
 }

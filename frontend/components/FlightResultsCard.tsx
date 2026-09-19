@@ -291,12 +291,14 @@ function FlightCard({
   isSelected,
   onSelect,
   showINR,
+  onSetAlert,
 }: {
   offer: FlightOffer;
   isLowest: boolean;
   isSelected: boolean;
   onSelect: () => void;
   showINR: boolean;
+  onSetAlert?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const first    = offer.segments[0];
@@ -379,6 +381,14 @@ function FlightCard({
                 Direct
               </span>
             )}
+            {onSetAlert && (
+              <button
+                onClick={onSetAlert}
+                className="text-xs text-slate-500 hover:text-amber-400 transition-colors flex items-center gap-1"
+              >
+                🔔 Alert
+              </button>
+            )}
             <button
               onClick={() => setExpanded(e => !e)}
               className="text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all
@@ -411,10 +421,12 @@ export default function FlightResultsCard({
   data,
   analysis,
   streaming,
+  onSetAlert,
 }: {
   data: FlightSearchResult;
   analysis?: string;
   streaming?: boolean;
+  onSetAlert?: (data: { origin: string; destination: string; departureDate: string; price: number }) => void;
 }) {
   const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
   const [showINR, setShowINR] = useState(true);
@@ -650,6 +662,12 @@ export default function FlightResultsCard({
             isSelected={selectedIdx === i}
             onSelect={() => handleSelect(i)}
             showINR={showINR}
+            onSetAlert={onSetAlert ? () => onSetAlert({
+              origin,
+              destination,
+              departureDate: offer.segments[0]?.departs?.split(" ")[0] ?? "",
+              price: offer.price_number,
+            }) : undefined}
           />
         ))}
       </div>

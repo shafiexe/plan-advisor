@@ -52,3 +52,20 @@ class Passenger(Base):
     phone           = Column(String, default="")
     created_at      = Column(DateTime, default=_now)
     updated_at      = Column(DateTime, default=_now, onupdate=_now)
+
+
+class PriceAlert(Base):
+    """Price alert — notify a user when a flight route drops below their threshold."""
+    __tablename__ = "price_alerts"
+
+    id              = Column(Integer, primary_key=True, autoincrement=True)
+    user_email      = Column(String, nullable=False, index=True)
+    origin          = Column(String, nullable=False)          # IATA e.g. "BLR"
+    destination     = Column(String, nullable=False)          # IATA e.g. "DXB"
+    departure_date  = Column(String, nullable=False)          # YYYY-MM-DD
+    threshold_inr   = Column(Integer, nullable=False)         # target price
+    last_price_inr  = Column(Integer, nullable=True)          # last checked price
+    triggered       = Column(Boolean, default=False)          # sent at least one alert
+    active          = Column(Boolean, default=True)
+    created_at      = Column(DateTime, default=_now)
+    last_checked    = Column(DateTime, nullable=True)

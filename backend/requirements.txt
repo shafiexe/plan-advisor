@@ -19,3 +19,6 @@ arize-phoenix-otel>=0.6.0
 openinference-instrumentation-anthropic>=0.1.0
 # Error tracking
 sentry-sdk[fastapi]>=2.0.0
+# Price alerts — scheduler + email
+apscheduler>=3.10.0
+aiosmtplib>=3.0.0

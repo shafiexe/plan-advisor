@@ -18,6 +18,8 @@ import type { FlightSearchResult, PriceCalendarResult } from "@/types/flights";
 import type { HotelSearchResult, RestaurantSearchResult } from "@/types/places";
 import type { BusSearchResult } from "@/types/buses";
 import type { TrainSearchResult } from "@/types/transport";
+import ItinerarySidebar from "@/components/ItinerarySidebar";
+import PriceAlertModal from "@/components/PriceAlertModal";
 
 /* ── Persistence helpers ─────────────────────────────────── */
 function loadConversations(key: string): Conversation[] {
@@ -64,6 +66,8 @@ export default function Home() {
   const [savedPassengers, setSavedPassengers] = useState<PassengerRecord[]>([]);
   const [editingPassenger, setEditingPassenger] = useState<PassengerRecord | null>(null);
   const [showPassengerModal, setShowPassengerModal] = useState(false);
+  const [itineraryOpen, setItineraryOpen] = useState(false);
+  const [alertData, setAlertData] = useState<{ origin: string; destination: string; departureDate: string; price: number } | null>(null);
   const serverLoadedRef = useRef(false);
 
   const { speak, stop, speaking, autoSpeak, toggleAutoSpeak } = useSpeech();
@@ -120,6 +124,9 @@ export default function Home() {
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
   const messages = activeConversation?.messages ?? [];
+  const hasCardData = messages.some(
+    (m) => m.flightData || m.hotelData || m.restaurantData || m.busData || m.trainData
+  );
 
   /* ── Update active conversation's messages ─── */
   const updateActive = useCallback((updater: (msgs: Message[]) => Message[]) => {
@@ -448,6 +455,18 @@ export default function Home() {
         />
       )}
 
+      {/* ── Price alert modal ── */}
+      {alertData && (
+        <PriceAlertModal
+          origin={alertData.origin}
+          destination={alertData.destination}
+          departureDate={alertData.departureDate}
+          currentPrice={alertData.price}
+          userEmail={userEmail}
+          onClose={() => setAlertData(null)}
+        />
+      )}
+
       {/* ── Sidebar ── */}
       <ConversationSidebar
         conversations={conversations}
@@ -474,6 +493,13 @@ export default function Home() {
         onSignOut={() => signOut({ callbackUrl: "/login" })}
       />
 
+      {/* ── Itinerary sidebar ── */}
+      <ItinerarySidebar
+        messages={messages}
+        isOpen={itineraryOpen}
+        onClose={() => setItineraryOpen(false)}
+      />
+
       {/* ── Main area ── */}
       <div className="flex flex-col flex-1 min-w-0 relative">
 
@@ -492,9 +518,20 @@ export default function Home() {
           </button>
         )}
 
-        {/* Export PDF button — visible only when a conversation is active */}
+        {/* Top-right action buttons — visible only when a conversation is active */}
         {activeConversation && activeConversation.messages.length > 0 && (
-          <div className="absolute top-3 right-3 z-20">
+          <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5">
+            {/* Trip Summary toggle — only when card data exists */}
+            {hasCardData && (
+              <button
+                onClick={() => setItineraryOpen((v) => !v)}
+                title="Trip summary"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                  text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition-colors backdrop-blur-sm border border-transparent hover:border-slate-700/60"
+              >
+                🗺️ Summary
+              </button>
+            )}
             <button
               onClick={handleExport}
               title="Export as PDF"
@@ -516,6 +553,7 @@ export default function Home() {
         <ChatWindow
           messages={messages}
           typing={typing}
+          streaming={streaming}
           toolLabel={toolLabel}
           toolName={toolName}
           onSuggestion={(text) => handleSend(text)}
@@ -523,6 +561,7 @@ export default function Home() {
           onSpeak={speak}
           onStopSpeak={stop}
           speaking={speaking}
+          onSetAlert={setAlertData}
         />
 
         {/* Input */}
