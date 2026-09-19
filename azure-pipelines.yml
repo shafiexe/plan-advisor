@@ -153,7 +153,7 @@ stages:
                           "TRAVELPAYOUTS_TOKEN=$(TRAVELPAYOUTS_TOKEN)" \
                           "ALLOWED_ORIGINS=https://$(FRONTEND_FQDN)" \
                           "PHOENIX_API_KEY=$(PHOENIX_API_KEY)" \
-                          "PHOENIX_PROJECT_NAME=plan-advisor" \
+                          "PHOENIX_PROJECT_NAME=$(PHOENIX_PROJECT_NAME)" \
                           "PHOENIX_COLLECTOR_ENDPOINT=$(PHOENIX_COLLECTOR_ENDPOINT)" \
                           "SENTRY_DSN=$(SENTRY_DSN)"
 
