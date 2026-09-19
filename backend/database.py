@@ -33,6 +33,13 @@ async def get_db():
 
 
 async def init_db():
-    """Create all tables on startup."""
+    """Create all tables on startup, and apply any missing column migrations."""
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Add columns that were introduced after the initial schema
+        if is_sqlite:
+            for col_def in ("ALTER TABLE conversations ADD COLUMN pinned BOOLEAN DEFAULT 0",):
+                try:
+                    await conn.execute(__import__("sqlalchemy").text(col_def))
+                except Exception:
+                    pass  # column already exists

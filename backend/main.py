@@ -13,8 +13,6 @@ if _phoenix_key:
         from phoenix.otel import register as _phoenix_register
         _tp = _phoenix_register(
             project_name=_os.getenv("PHOENIX_PROJECT_NAME", "plan-advisor"),
-            endpoint="https://app.phoenix.arize.com/v1/traces",
-            headers={"api_key": _phoenix_key},
         )
         from openinference.instrumentation.anthropic import AnthropicInstrumentor
         AnthropicInstrumentor().instrument(tracer_provider=_tp)
