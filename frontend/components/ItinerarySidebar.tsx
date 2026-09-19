@@ -38,7 +38,7 @@ export default function ItinerarySidebar({ messages, isOpen, onClose }: Props) {
 
       {/* Panel */}
       <div
-        className={`fixed top-0 right-0 h-full z-40 w-72 bg-slate-900 border-l border-slate-700/60
+        className={`fixed top-0 right-0 h-full z-40 w-full md:w-72 bg-slate-900 border-l border-slate-700/60
           flex flex-col shadow-2xl transition-transform duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "translate-x-full"}`}
         aria-label="Trip summary sidebar"

@@ -317,7 +317,7 @@ function FlightCard({
             : "border-slate-700/60 bg-slate-800/40 hover:border-slate-600/80 hover:bg-slate-800/70"}`}
     >
       {/* Selection indicator + best badge */}
-      <div className="px-4 pt-2.5 pb-0 flex gap-2 items-center">
+      <div className="px-3 pt-2 pb-0 flex gap-2 items-center md:px-4 md:pt-2.5">
         <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all
           ${isSelected ? "border-indigo-400 bg-indigo-500" : "border-slate-600"}`}
         >
@@ -336,16 +336,16 @@ function FlightCard({
       </div>
 
       {/* Main row */}
-      <div className="flex items-center gap-4 px-4 py-4">
-        <div className="flex flex-col items-center gap-1.5 shrink-0 w-16">
+      <div className="flex items-center gap-1.5 px-3 py-3 md:gap-4 md:px-4 md:py-4">
+        <div className="flex flex-col items-center gap-1.5 shrink-0 w-12 md:w-16">
           <AirlineLogo src={offer.airline_logo} name={offer.airline} size={48} />
-          <span className="text-[10px] text-slate-400 text-center leading-tight max-w-[64px] truncate">
+          <span className="text-[10px] text-slate-400 text-center leading-tight max-w-12 md:max-w-16 truncate">
             {offer.airline}
           </span>
         </div>
 
         <div className="flex flex-col items-end shrink-0">
-          <span className="text-2xl font-bold text-slate-100 tabular-nums leading-none">
+          <span className="text-xl md:text-2xl font-bold text-slate-100 tabular-nums leading-none">
             {timeOnly(first?.departs)}
           </span>
           <span className="text-xs text-slate-500 mt-0.5">{first?.from}</span>
@@ -357,7 +357,7 @@ function FlightCard({
         <DurationBar duration={offer.total_duration} stops={offer.stops} layovers={layovers} />
 
         <div className="flex flex-col items-start shrink-0">
-          <span className="text-2xl font-bold text-slate-100 tabular-nums leading-none">
+          <span className="text-xl md:text-2xl font-bold text-slate-100 tabular-nums leading-none">
             {timeOnly(last?.arrives)}
           </span>
           <span className="text-xs text-slate-500 mt-0.5">{last?.to}</span>
@@ -369,7 +369,7 @@ function FlightCard({
         {/* Price + CTAs */}
         <div className="flex flex-col items-end gap-2 ml-auto shrink-0">
           <div className="text-right">
-            <span className={`text-xl font-bold tabular-nums ${isLowest ? "text-emerald-400" : "text-slate-100"}`}>
+            <span className={`text-base md:text-xl font-bold tabular-nums ${isLowest ? "text-emerald-400" : "text-slate-100"}`}>
               {price}
             </span>
             <p className="text-[10px] text-slate-500 mt-0.5">per person</p>
@@ -593,56 +593,58 @@ export default function FlightResultsCard({
       )}
 
       {/* ── Filter bar ── */}
-      <div className="px-4 py-2.5 border-b border-slate-700/40 flex items-center gap-2 flex-wrap">
-        {/* Stops */}
-        <div className="flex rounded-lg overflow-hidden border border-slate-700/60 text-[11px] font-semibold">
-          {(["all", 0, 1] as const).map(v => (
-            <button
-              key={String(v)}
-              onClick={() => { setFilterStops(v); setSelectedIdx(null); setSelectedBank(null); }}
-              className={`px-2.5 py-1 transition-all ${filterStops === v ? "bg-indigo-600 text-white" : "bg-slate-800/50 text-slate-400 hover:text-white"}`}
-            >
-              {v === "all" ? "All" : v === 0 ? "Nonstop" : "1 stop"}
-            </button>
-          ))}
-        </div>
+      <div className="border-b border-slate-700/40 overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-2 flex-nowrap px-4 py-2.5 md:flex-wrap">
+          {/* Stops */}
+          <div className="flex rounded-lg overflow-hidden border border-slate-700/60 text-[11px] font-semibold shrink-0">
+            {(["all", 0, 1] as const).map(v => (
+              <button
+                key={String(v)}
+                onClick={() => { setFilterStops(v); setSelectedIdx(null); setSelectedBank(null); }}
+                className={`px-2.5 py-1 transition-all ${filterStops === v ? "bg-indigo-600 text-white" : "bg-slate-800/50 text-slate-400 hover:text-white"}`}
+              >
+                {v === "all" ? "All" : v === 0 ? "Nonstop" : "1 stop"}
+              </button>
+            ))}
+          </div>
 
-        {/* Airline */}
-        {airlines.length > 1 && (
+          {/* Airline */}
+          {airlines.length > 1 && (
+            <select
+              value={filterAirline}
+              onChange={e => { setFilterAirline(e.target.value); setSelectedIdx(null); setSelectedBank(null); }}
+              className="text-[11px] bg-slate-800/60 border border-slate-700/60 rounded-lg px-2 py-1 text-slate-300 font-medium shrink-0"
+            >
+              <option value="all">All airlines</option>
+              {airlines.map(a => <option key={a} value={a}>{a}</option>)}
+            </select>
+          )}
+
+          {/* Departure time */}
           <select
-            value={filterAirline}
-            onChange={e => { setFilterAirline(e.target.value); setSelectedIdx(null); setSelectedBank(null); }}
-            className="text-[11px] bg-slate-800/60 border border-slate-700/60 rounded-lg px-2 py-1 text-slate-300 font-medium"
+            value={filterTime}
+            onChange={e => { setFilterTime(e.target.value); setSelectedIdx(null); setSelectedBank(null); }}
+            className="text-[11px] bg-slate-800/60 border border-slate-700/60 rounded-lg px-2 py-1 text-slate-300 font-medium shrink-0"
           >
-            <option value="all">All airlines</option>
-            {airlines.map(a => <option key={a} value={a}>{a}</option>)}
+            <option value="all">Any time</option>
+            <option value="morning">Morning (6–12)</option>
+            <option value="afternoon">Afternoon (12–17)</option>
+            <option value="evening">Evening (17–21)</option>
+            <option value="night">Night (21–6)</option>
           </select>
-        )}
 
-        {/* Departure time */}
-        <select
-          value={filterTime}
-          onChange={e => { setFilterTime(e.target.value); setSelectedIdx(null); setSelectedBank(null); }}
-          className="text-[11px] bg-slate-800/60 border border-slate-700/60 rounded-lg px-2 py-1 text-slate-300 font-medium"
-        >
-          <option value="all">Any time</option>
-          <option value="morning">Morning (6–12)</option>
-          <option value="afternoon">Afternoon (12–17)</option>
-          <option value="evening">Evening (17–21)</option>
-          <option value="night">Night (21–6)</option>
-        </select>
-
-        {/* Sort */}
-        <div className="ml-auto flex rounded-lg overflow-hidden border border-slate-700/60 text-[11px] font-semibold">
-          {(["price", "duration", "depart"] as const).map(v => (
-            <button
-              key={v}
-              onClick={() => setSortBy(v)}
-              className={`px-2.5 py-1 transition-all ${sortBy === v ? "bg-indigo-600 text-white" : "bg-slate-800/50 text-slate-400 hover:text-white"}`}
-            >
-              {v === "price" ? "Price" : v === "duration" ? "Duration" : "Depart"}
-            </button>
-          ))}
+          {/* Sort */}
+          <div className="md:ml-auto flex rounded-lg overflow-hidden border border-slate-700/60 text-[11px] font-semibold shrink-0">
+            {(["price", "duration", "depart"] as const).map(v => (
+              <button
+                key={v}
+                onClick={() => setSortBy(v)}
+                className={`px-2.5 py-1 transition-all ${sortBy === v ? "bg-indigo-600 text-white" : "bg-slate-800/50 text-slate-400 hover:text-white"}`}
+              >
+                {v === "price" ? "Price" : v === "duration" ? "Duration" : "Depart"}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

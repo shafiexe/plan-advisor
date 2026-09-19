@@ -89,7 +89,7 @@ export default function PriceAlertModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="relative w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl shadow-black/60">
+      <div className="relative w-full max-w-sm rounded-2xl bg-slate-900 border border-slate-700/60 shadow-2xl shadow-black/60 max-h-[90vh] overflow-y-auto">
 
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-700/50">

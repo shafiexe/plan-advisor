@@ -559,16 +559,16 @@ export default function Home() {
               <button
                 onClick={() => setItineraryOpen((v) => !v)}
                 title="Trip summary"
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 rounded-lg text-xs font-medium
                   text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition-colors backdrop-blur-sm border border-transparent hover:border-slate-700/60"
               >
-                🗺️ Summary
+                🗺️ <span className="hidden sm:inline">Summary</span>
               </button>
             )}
             <button
               onClick={handleExport}
               title="Export as PDF"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
+              className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 rounded-lg text-xs font-medium
                 text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition-colors backdrop-blur-sm border border-transparent hover:border-slate-700/60"
             >
               <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -577,7 +577,7 @@ export default function Home() {
                 <line x1="12" y1="18" x2="12" y2="12"/>
                 <line x1="9" y1="15" x2="15" y2="15"/>
               </svg>
-              Export
+              <span className="hidden sm:inline">Export</span>
             </button>
           </div>
         )}

@@ -140,7 +140,7 @@ export default function ChatWindow({
               />
             ))}
             {lastAssistantMsg && (
-              <div className="flex flex-wrap gap-2 mt-2 pl-11">
+              <div className="flex flex-wrap gap-2 mt-2 pl-4 sm:pl-11">
                 {getSuggestions(lastAssistantMsg).map((s) => (
                   <button
                     key={s}
