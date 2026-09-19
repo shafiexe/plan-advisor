@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Message } from "./MessageBubble";
 import type { PassengerRecord } from "./PassengerFormModal";
 import type { AlertRecord } from "@/hooks/useServerSync";
+import ConversationSearchModal from "./ConversationSearchModal";
 
 export type Conversation = {
   id: string;
@@ -269,6 +270,7 @@ export default function ConversationSidebar({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -333,6 +335,17 @@ export default function ConversationSidebar({
               <p className="text-[11px] text-slate-500 mt-0.5">AI Assistant</p>
             </div>
           </div>
+          {/* Search button */}
+          <button
+            onClick={() => setSearchOpen(true)}
+            title="Search chats (⌘K)"
+            className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:text-slate-200 hover:bg-slate-800 transition-colors"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </button>
           {/* Close sidebar button — visible on all screen sizes */}
           <button
             onClick={onClose}
@@ -714,6 +727,15 @@ export default function ConversationSidebar({
           </>
         )}
       </aside>
+
+      {/* Search modal */}
+      {searchOpen && (
+        <ConversationSearchModal
+          conversations={conversations}
+          onSelect={(id) => { onSelect(id); onClose(); }}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
     </>
   );
 }

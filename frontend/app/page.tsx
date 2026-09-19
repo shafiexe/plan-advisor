@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import ChatWindow from "@/components/ChatWindow";
 import InputBar from "@/components/InputBar";
 import ConversationSidebar, { Conversation } from "@/components/ConversationSidebar";
+import ConversationSearchModal from "@/components/ConversationSearchModal";
 import PassengerFormModal from "@/components/PassengerFormModal";
 import type { PassengerRecord } from "@/components/PassengerFormModal";
 import { Message } from "@/components/MessageBubble";
@@ -81,6 +82,7 @@ export default function Home() {
   const [typing, setTyping]               = useState(false);
   const [streaming, setStreaming]         = useState(false);
   const [sidebarOpen, setSidebarOpen]     = useState(true);
+  const [searchOpen, setSearchOpen]       = useState(false);
   const [toolLabel, setToolLabel]         = useState<string | null>(null);
   const [toolName, setToolName]           = useState<string | null>(null);
   const [passportFile, setPassportFile]   = useState<File | null>(null);
@@ -318,6 +320,18 @@ export default function Home() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, activeId, streaming, typing]);
+
+  /* ── Cmd+K global search shortcut ─── */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(o => !o);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
 
   /* ── New conversation ─── */
   // Just clears the view. A real conversation is only created when
@@ -686,6 +700,15 @@ export default function Home() {
           onPassportUpload={(file) => setPassportFile(file)}
         />
       </div>
+
+      {/* ── Global conversation search (⌘K) ── */}
+      {searchOpen && (
+        <ConversationSearchModal
+          conversations={conversations}
+          onSelect={(id) => { setActiveId(id); setSidebarOpen(true); }}
+          onClose={() => setSearchOpen(false)}
+        />
+      )}
     </div>
   );
 }
