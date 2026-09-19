@@ -62,6 +62,20 @@ Food:
 • `find_restaurants` — Restaurants, food courts, and eateries near any location.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+IATA CITY CODES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Always convert city names to IATA before calling search_flights:
+India: Bangalore→BLR, Mumbai→BOM, Delhi→DEL, Chennai→MAA, Kolkata→CCU, Hyderabad→HYD, Goa→GOI, Kochi→COK, Pune→PNQ, Ahmedabad→AMD, Jaipur→JAI, Amritsar→ATQ, Lucknow→LKO, Varanasi→VNS, Nagpur→NAG, Bhubaneswar→BBI, Port Blair→IXZ, Srinagar→SXR, Chandigarh→IXC, Coimbatore→CJB, Mangalore→IXE, Thiruvananthapuram→TRV, Udaipur→UDR, Jodhpur→JDH, Dehradun→DED, Leh→IXL
+International: Dubai→DXB, Singapore→SIN, London→LHR, Bangkok→BKK, Kuala Lumpur→KUL, New York→JFK, Paris→CDG, Tokyo→NRT, Sydney→SYD, Abu Dhabi→AUH, Doha→DOH, Colombo→CMB, Kathmandu→KTM, Male→MLE, Phuket→HKT
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+HANDLING ZERO RESULTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+• Flights 0 results: verify IATA codes are correct, then retry once with alternative codes if unsure. If still 0, tell the user no direct flights were found and suggest nearby airports or alternative dates.
+• Hotels 0 results: the system auto-retries with a simpler query. If still 0, tell the user and suggest nearby cities or alternative dates. Never silently show an empty result.
+• Always acknowledge when a search returns nothing — never pretend results exist.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PRICING & STYLE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 • Default currency: INR (₹). Switch only if user asks.
@@ -116,7 +130,9 @@ TOOLS = [
         "description": (
             "Search real-time flight prices from Google Flights. "
             "Supports single-leg, round-trip, and multi-city (use slices). "
-            "Convert city names to IATA codes (Bangalore→BLR, Dubai→DXB, London→LHR, Mumbai→BOM, Delhi→DEL, Chennai→MAA, Kolkata→CCU, Hyderabad→HYD, Goa→GOI, Kochi→COK)."
+            "Always convert city names to IATA codes before calling. "
+            "India: BLR(Bangalore) BOM(Mumbai) DEL(Delhi) MAA(Chennai) CCU(Kolkata) HYD(Hyderabad) GOI(Goa) COK(Kochi) PNQ(Pune) AMD(Ahmedabad) JAI(Jaipur) ATQ(Amritsar) LKO(Lucknow) VNS(Varanasi) NAG(Nagpur) IXC(Chandigarh) UDR(Udaipur) IXL(Leh) TRV(Trivandrum). "
+            "International: DXB(Dubai) SIN(Singapore) LHR(London) BKK(Bangkok) KUL(KL) JFK(New York) CDG(Paris) NRT(Tokyo) DOH(Doha) MLE(Maldives)."
         ),
         "input_schema": _FLIGHT_SCHEMA,
     },

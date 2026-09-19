@@ -8,7 +8,9 @@ set -euo pipefail
 
 # ── Configuration — edit these if needed ────────────────────────────────────
 RESOURCE_GROUP="plan-advisor-rg"
-LOCATION="eastus"
+# eastus is restricted for PostgreSQL in this subscription; eastus2 is in
+# the same metro area as the Container App (eastus) with no extra latency.
+LOCATION="eastus2"
 SERVER_NAME="plan-advisor-pg"          # must be globally unique on Azure
 DB_NAME="planadvisor"
 ADMIN_USER="planadmin"
@@ -38,7 +40,7 @@ echo "==> Creating database: $DB_NAME"
 az postgres flexible-server db create \
   --resource-group "$RESOURCE_GROUP" \
   --server-name "$SERVER_NAME" \
-  --database-name "$DB_NAME"
+  --name "$DB_NAME"
 
 echo "==> Allowing access from Azure Container Apps (Azure services)"
 az postgres flexible-server firewall-rule create \

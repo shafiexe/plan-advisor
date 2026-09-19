@@ -31,21 +31,33 @@ async def search_hotels(
     if cached:
         return cached
 
-    params = {
-        "engine":         "google_hotels",
-        "q":              f"Hotels in {location}",
-        "check_in_date":  check_in_date,
-        "check_out_date": check_out_date,
-        "adults":         adults,
-        "currency":       currency,
-        "hl":             "en",
-        "api_key":        api_key,
-    }
+    async def _fetch_hotels(q: str) -> dict:
+        params = {
+            "engine":         "google_hotels",
+            "q":              q,
+            "check_in_date":  check_in_date,
+            "check_out_date": check_out_date,
+            "adults":         adults,
+            "currency":       currency,
+            "sort_by":        8,   # highest rating first
+            "hl":             "en",
+            "api_key":        api_key,
+        }
+        async with httpx.AsyncClient() as c:
+            resp = await c.get(_BASE, params=params, timeout=25.0)
+            resp.raise_for_status()
+            return resp.json()
 
-    async with httpx.AsyncClient() as c:
-        resp = await c.get(_BASE, params=params, timeout=25.0)
-        resp.raise_for_status()
-        result = _parse_hotels(resp.json(), max_results, location, currency)
+    raw = await _fetch_hotels(f"Hotels in {location}")
+    result = _parse_hotels(raw, max_results, location, currency)
+
+    # Retry with a simpler query if no results (e.g. "North Goa" → "Goa")
+    if result["hotels_found"] == 0:
+        log.info("Hotels: 0 results for '%s', retrying with bare location name", location)
+        city = location.split(",")[0].strip()
+        if city.lower() != location.lower():
+            raw = await _fetch_hotels(f"Hotels in {city}")
+            result = _parse_hotels(raw, max_results, city, currency)
 
     await _cache.set(cache_key, result, ttl=_CACHE_TTL)
     return result
