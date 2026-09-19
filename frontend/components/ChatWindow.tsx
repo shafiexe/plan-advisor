@@ -52,18 +52,114 @@ type Props = {
   onSetAlert?: (data: AlertData) => void;
   onSaveTrip?: (tripData: Record<string, unknown>, name: string, destination: string, dateRange: string) => Promise<void>;
   userEssentials?: string[];
+  recentMessages?: Message[];
 };
 
-type EmptyProps = { onSuggestion: (text: string) => void };
+type EmptyProps = { onSuggestion: (text: string) => void; recentMessages?: Message[] };
 
-function EmptyState({ onSuggestion }: EmptyProps) {
+// Common destination names for text-scan extraction
+const DEST_KEYWORDS = [
+  "dubai","tokyo","paris","london","singapore","bangkok","bali","goa","kerala","ooty",
+  "manali","shimla","ladakh","mumbai","delhi","bangalore","chennai","kolkata","jaipur",
+  "agra","varanasi","rishikesh","mussoorie","kodaikanal","munnar","coorg","istanbul",
+  "new york","maldives","sri lanka","nepal","bhutan","malaysia","australia","canada",
+  "japan","thailand","indonesia","vietnam","france","italy","germany","spain","switzerland",
+];
+
+function extractDestFromText(text: string): string {
+  const lower = text.toLowerCase();
+  for (const kw of DEST_KEYWORDS) {
+    if (lower.includes(kw)) return kw.split(" ").map(w => w[0].toUpperCase() + w.slice(1)).join(" ");
+  }
+  return "";
+}
+
+function buildSmartSuggestions(recent: Message[], fallback: string[]): string[] {
+  const used = new Set<string>();
+  let dest = "";
+
+  for (const m of recent) {
+    // --- Card data (tools used) ---
+    if (m.flightData)     { used.add("flight");    const fd = m.flightData as {destination?: string}; dest = fd.destination || dest; }
+    if (m.roundTripData)  { used.add("flight");    const rt = m.roundTripData as {outbound?: {destination?: string}}; dest = rt.outbound?.destination || dest; }
+    if (m.hotelData)      { used.add("hotel");     const hd = m.hotelData as {location?: string}; dest = hd.location || dest; }
+    if (m.guideData)      { used.add("guide");     const gd = m.guideData as {destination?: string}; dest = gd.destination || dest; }
+    if (m.itineraryData)  { used.add("itinerary"); const id = m.itineraryData as {destination?: string}; dest = id.destination || dest; }
+    if (m.weatherData || m.forecastData) used.add("weather");
+    if (m.packingData)    used.add("packing");
+    if (m.visaData)       used.add("visa");
+    if (m.eventsData)     used.add("events");
+    if (m.documentCheckData) used.add("docs");
+    if (m.layoverData)    used.add("layover");
+    if (m.recapData)      used.add("recap");
+    if (m.insuranceData)  used.add("insurance");
+    if (m.phrasebookData) used.add("phrasebook");
+    if (m.splitData)      used.add("split");
+    if (m.groupTripData)  { used.add("group"); const gt = m.groupTripData as {destination?: string}; dest = gt.destination || dest; }
+    if (m.hotelComparisonData) used.add("hotelcmp");
+    if (m.timelineData)   used.add("timeline");
+    if (m.restaurantData) used.add("food");
+
+    // --- Text content scan (user queries + AI responses) ---
+    if (m.content) {
+      const fromText = extractDestFromText(m.content);
+      if (fromText) dest = fromText;
+      const lower = m.content.toLowerCase();
+      if (lower.includes("group") || lower.includes("family") || /\b\d{2,}\s*(member|people|person|pax)\b/.test(lower)) used.add("group");
+      if (lower.includes("layover") || lower.includes("stopover") || lower.includes("transit")) used.add("layover");
+      if (lower.includes("packing") || lower.includes("carry") || lower.includes("what to bring")) used.add("packing");
+      if (lower.includes("passport") || lower.includes("document") || lower.includes("visa")) used.add("docs");
+      if (lower.includes("weather") || lower.includes("rain") || lower.includes("temperature")) used.add("weather");
+      if (lower.includes("event") || lower.includes("festival") || lower.includes("concert")) used.add("events");
+      if (lower.includes("insurance")) used.add("insurance");
+      if (lower.includes("recap") || lower.includes("summary") || lower.includes("review")) used.add("recap");
+    }
+  }
+
+  if (!used.size) return [];
+
+  const d = dest ? dest : "your destination";
+  const smart: string[] = [];
+
+  if (used.has("flight") && !used.has("hotel"))     smart.push(`🏨 Find hotels in ${d}`);
+  if (used.has("flight") && !used.has("docs"))      smart.push(`📋 Check travel documents for ${d}`);
+  if (used.has("flight") && !used.has("weather"))   smart.push(`🌤️ What's the weather like in ${d}?`);
+  if (used.has("flight") && !used.has("packing"))   smart.push(`🎒 Build a packing list for ${d}`);
+  if (used.has("flight") && !used.has("events"))    smart.push(`🎉 What events are happening in ${d}?`);
+  if (used.has("flight") && !used.has("guide"))     smart.push(`🗺️ Tell me about ${d} — top places & tips`);
+  if (used.has("flight") && !used.has("insurance")) smart.push(`🛡️ Get travel insurance for this trip`);
+  if (used.has("hotel") && !used.has("food"))       smart.push(`🍽️ Best restaurants near my hotel in ${d}`);
+  if (used.has("hotel") && !used.has("phrasebook")) smart.push(`💬 Useful phrases for ${d}`);
+  if (used.has("itinerary") && !used.has("recap"))  smart.push(`📖 Recap and review this trip to ${d}`);
+  if (used.has("itinerary") && !used.has("timeline")) smart.push(`📅 Build a trip timeline for ${d}`);
+  if (used.has("group") && !used.has("split"))      smart.push(`👥 Split group expenses for ${d}`);
+  if (used.has("packing"))                          smart.push(`🎒 Add personal items to My Essentials`);
+  if (used.has("guide") && !used.has("events"))     smart.push(`🎉 What's happening in ${d} during my trip?`);
+  if (used.has("weather") && !used.has("packing"))  smart.push(`🎒 Build a packing list based on the ${d} weather`);
+
+  // Pad with random fallbacks not already covered
+  if (smart.length < 4) {
+    const used_text = smart.map(s => s.toLowerCase());
+    const pads = [...fallback]
+      .sort(() => Math.random() - 0.5)
+      .filter(s => !used_text.some(u => s.toLowerCase().includes(u.slice(4, 18))));
+    smart.push(...pads.slice(0, 4 - smart.length));
+  }
+
+  return smart.slice(0, 4);
+}
+
+function EmptyState({ onSuggestion, recentMessages = [] }: EmptyProps) {
   const { t, tArray } = useLanguage();
   const allSuggestions = tArray("suggestions");
-  // Pick 4 random suggestions from the pool — shuffled once per mount
+
   const suggestions = useMemo(() => {
-    const shuffled = [...allSuggestions].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 4);
-  }, [allSuggestions]);
+    const smart = buildSmartSuggestions(recentMessages, allSuggestions);
+    if (smart.length === 4) return smart;
+    // No history → random 4 from pool
+    return [...allSuggestions].sort(() => Math.random() - 0.5).slice(0, 4);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center h-full gap-6 px-4 text-center">
@@ -309,7 +405,7 @@ type ChatWindowProps = Props & { onSuggestion: (text: string) => void; toolName?
 
 export default function ChatWindow({
   messages, typing, streaming, toolLabel, toolName, onSuggestion,
-  onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip, userEssentials,
+  onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip, userEssentials, recentMessages,
 }: ChatWindowProps) {
   const bottomRef    = useRef<HTMLDivElement>(null);
   const scrollRef    = useRef<HTMLDivElement>(null);
@@ -348,7 +444,7 @@ export default function ChatWindow({
     <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto chat-scroll flex flex-col">
       <div className="px-4 py-6 flex-1">
         {messages.length === 0 ? (
-          <EmptyState onSuggestion={onSuggestion} />
+          <EmptyState onSuggestion={onSuggestion} recentMessages={recentMessages} />
         ) : (
           <div className="flex flex-col gap-4 max-w-3xl mx-auto">
             {messages.map((msg) => (

@@ -228,6 +228,11 @@ export default function Home() {
 
   const activeConversation = conversations.find((c) => c.id === activeId) ?? null;
   const messages = activeConversation?.messages ?? [];
+  // Messages from up to 3 recent conversations (excluding active) — used to personalize empty state suggestions
+  const recentMessages = conversations
+    .filter((c) => c.id !== activeId)
+    .slice(0, 3)
+    .flatMap((c) => c.messages ?? []);
   const hasCardData = messages.some(
     (m) => m.flightData || m.hotelData || m.restaurantData || m.busData || m.trainData
   );
@@ -1143,6 +1148,7 @@ export default function Home() {
           onSetAlert={setAlertData}
           onSaveTrip={handleSaveTrip}
           userEssentials={userPrefs?.packing_essentials ?? []}
+          recentMessages={recentMessages}
         />
 
         {/* Input */}
