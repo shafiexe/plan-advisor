@@ -8,6 +8,7 @@ type Props = {
   value: string;
   onChange: (val: string) => void;
   onSend: () => void;
+  onStop?: () => void;
   onToggleMic: () => void;
   recording: boolean;
   disabled: boolean;
@@ -36,6 +37,7 @@ export default function InputBar({
   value,
   onChange,
   onSend,
+  onStop,
   onToggleMic,
   recording,
   disabled,
@@ -224,20 +226,34 @@ export default function InputBar({
               )}
             </button>
 
-            {/* Send */}
+            {/* Stop (while AI is responding) / Send */}
             {!recording && (
-              <button
-                onClick={onSend}
-                disabled={disabled || !value.trim() || atLimit}
-                title="Send (Enter)"
-                className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center
-                  hover:bg-indigo-500 active:scale-95 transition-all
-                  disabled:opacity-30 disabled:cursor-not-allowed shadow shadow-indigo-900/40"
-              >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
-                </svg>
-              </button>
+              disabled && onStop ? (
+                <button
+                  onClick={onStop}
+                  title="Stop generating"
+                  className="w-9 h-9 rounded-full bg-indigo-600 text-white
+                    flex items-center justify-center hover:bg-indigo-500
+                    active:scale-95 transition-all shadow shadow-indigo-900/40"
+                >
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="6" width="12" height="12" rx="2" />
+                  </svg>
+                </button>
+              ) : (
+                <button
+                  onClick={onSend}
+                  disabled={disabled || !value.trim() || atLimit}
+                  title="Send (Enter)"
+                  className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center
+                    hover:bg-indigo-500 active:scale-95 transition-all
+                    disabled:opacity-30 disabled:cursor-not-allowed shadow shadow-indigo-900/40"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                  </svg>
+                </button>
+              )
             )}
 
             {/* Cancel recording */}

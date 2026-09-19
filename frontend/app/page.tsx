@@ -210,7 +210,7 @@ export default function Home() {
   }, [speak, sync]);
 
   /* ── WebSocket ─── */
-  const { send, connected } = useWebSocket({
+  const { send, stop: stopWs, connected } = useWebSocket({
     onTyping:  () => { setTyping(true); setStreaming(false); setToolLabel(null); setToolName(null); },
     onToken:   (t) => { setTyping(false); setStreaming(true); setToolLabel(null); setToolName(null); appendToken(t); },
     onDone:    markDone,
@@ -251,6 +251,11 @@ export default function Home() {
       setToolLabel(null);
     },
   });
+
+  const handleStop = useCallback(() => {
+    stopWs();
+    markDone();
+  }, [stopWs, markDone]);
 
   /* ── New conversation ─── */
   // Just clears the view. A real conversation is only created when
@@ -610,6 +615,7 @@ export default function Home() {
           value={input}
           onChange={setInput}
           onSend={() => handleSend()}
+          onStop={handleStop}
           onToggleMic={toggleRecording}
           recording={recording}
           disabled={!connected || streaming || typing}

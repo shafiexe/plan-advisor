@@ -82,5 +82,9 @@ export function useWebSocket(opts: Options) {
     }
   }, []);
 
-  return { send, connected };
+  const stop = useCallback(() => {
+    wsRef.current?.close();
+  }, []);
+
+  return { send, stop, connected };
 }
