@@ -9,7 +9,8 @@ import RestaurantCard from "./RestaurantCard";
 import BusResultsCard from "./BusResultsCard";
 import TrainResultsCard from "./TrainResultsCard";
 import TransportComparisonCard from "./TransportComparisonCard";
-import type { FlightSearchResult, PriceCalendarResult } from "@/types/flights";
+import RoundTripCard from "./RoundTripCard";
+import type { FlightSearchResult, PriceCalendarResult, RoundTripResult } from "@/types/flights";
 import type { HotelSearchResult, RestaurantSearchResult } from "@/types/places";
 import type { BusSearchResult } from "@/types/buses";
 import type { TrainSearchResult } from "@/types/transport";
@@ -26,6 +27,7 @@ export type Message = {
   restaurantData?: RestaurantSearchResult;
   busData?: BusSearchResult;
   trainData?: TrainSearchResult;
+  roundTripData?: RoundTripResult;
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -44,10 +46,10 @@ function formatTime(ts: number) {
 }
 
 export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert }: Props) {
-  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData } = message;
+  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData } = message;
   const isUser = role === "user";
   const isTransportComparison = !isUser && ((!!flightData && (!!busData || !!trainData)) || (!!busData && !!trainData));
-  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData);
+  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData);
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -101,6 +103,10 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
 
         {!isUser && trainData && !isTransportComparison && (
           <TrainResultsCard data={trainData} streaming={streaming} />
+        )}
+
+        {!isUser && roundTripData && (
+          <RoundTripCard data={roundTripData} streaming={streaming} onSetAlert={onSetAlert} />
         )}
 
         {/* When a card is shown, render analysis text below it using MarkdownBody */}

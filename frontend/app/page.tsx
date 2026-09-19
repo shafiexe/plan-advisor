@@ -15,7 +15,7 @@ import { useServerSync } from "@/hooks/useServerSync";
 import type { AlertRecord } from "@/hooks/useServerSync";
 import { useTheme } from "@/hooks/useTheme";
 import { useUserLocation } from "@/hooks/useUserLocation";
-import type { FlightSearchResult, PriceCalendarResult } from "@/types/flights";
+import type { FlightSearchResult, PriceCalendarResult, RoundTripResult } from "@/types/flights";
 import type { HotelSearchResult, RestaurantSearchResult } from "@/types/places";
 import type { BusSearchResult } from "@/types/buses";
 import type { TrainSearchResult } from "@/types/transport";
@@ -80,6 +80,7 @@ export default function Home() {
   const autoSpeakRef  = useRef(autoSpeak);
   // Holds card data to attach to the next streaming assistant message
   const pendingFlightRef      = useRef<FlightSearchResult | null>(null);
+  const pendingRoundTripRef   = useRef<RoundTripResult | null>(null);
   const pendingCalendarRef    = useRef<PriceCalendarResult | null>(null);
   const pendingHotelRef       = useRef<HotelSearchResult | null>(null);
   const pendingRestaurantRef  = useRef<RestaurantSearchResult | null>(null);
@@ -172,12 +173,14 @@ export default function Home() {
     setTyping(false);
     setStreaming(false);
     // Flush transport refs — reading outside the updater avoids Strict Mode double-invoke
-    const flightData = pendingFlightRef.current ?? undefined;
-    const busData    = pendingBusRef.current    ?? undefined;
-    const trainData  = pendingTrainRef.current  ?? undefined;
-    pendingFlightRef.current = null;
-    pendingBusRef.current   = null;
-    pendingTrainRef.current = null;
+    const flightData    = pendingFlightRef.current    ?? undefined;
+    const busData       = pendingBusRef.current       ?? undefined;
+    const trainData     = pendingTrainRef.current     ?? undefined;
+    const roundTripData = pendingRoundTripRef.current ?? undefined;
+    pendingFlightRef.current    = null;
+    pendingBusRef.current       = null;
+    pendingTrainRef.current     = null;
+    pendingRoundTripRef.current = null;
 
     setConversations((prev) => {
       const convId = activeIdRef.current;
@@ -188,9 +191,10 @@ export default function Home() {
         const finished = {
           ...(last ?? {}),
           streaming: false,
-          ...(flightData && { flightData }),
-          ...(busData    && { busData }),
-          ...(trainData  && { trainData }),
+          ...(flightData    && { flightData }),
+          ...(busData       && { busData }),
+          ...(trainData     && { trainData }),
+          ...(roundTripData && { roundTripData }),
         } as typeof last;
         if (last?.streaming && autoSpeakRef.current) speak(finished.content);
         const updated: Conversation = {
@@ -240,6 +244,10 @@ export default function Home() {
     },
     onBusResults: (data) => {
       pendingBusRef.current = data as BusSearchResult;
+      setToolLabel(null);
+    },
+    onRoundTripResults: (data) => {
+      pendingRoundTripRef.current = data as RoundTripResult;
       setToolLabel(null);
     },
   });

@@ -85,6 +85,45 @@ async def search_flights(
     return result
 
 
+async def search_round_trip(
+    origin: str = "",
+    destination: str = "",
+    departure_date: str = "",
+    return_date: str = "",
+    adults: int = 1,
+    cabin_class: str = "economy",
+    max_results: int = 5,
+    currency: str = "INR",
+) -> dict:
+    """Search outbound and return legs in parallel and return both results."""
+    import asyncio as _asyncio
+
+    try:
+        outbound_task = search_flights(
+            origin=origin,
+            destination=destination,
+            departure_date=departure_date,
+            adults=adults,
+            cabin_class=cabin_class,
+            max_results=max_results,
+            currency=currency,
+        )
+        return_task = search_flights(
+            origin=destination,
+            destination=origin,
+            departure_date=return_date,
+            adults=adults,
+            cabin_class=cabin_class,
+            max_results=max_results,
+            currency=currency,
+        )
+        outbound, return_flight = await _asyncio.gather(outbound_task, return_task)
+        return {"outbound": outbound, "return_flight": return_flight}
+    except Exception as e:
+        log.warning("search_round_trip error: %s", e)
+        return {"error": str(e), "outbound": None, "return_flight": None}
+
+
 def _duration_str(minutes: int) -> str:
     h, m = divmod(minutes, 60)
     return f"{h}h {m}m" if m else f"{h}h"

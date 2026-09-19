@@ -56,3 +56,8 @@ export type PriceCalendarResult = {
   currency: string;
   prices: CalendarPrice[];
 };
+
+export type RoundTripResult = {
+  outbound: FlightSearchResult;
+  return_flight: FlightSearchResult;
+};

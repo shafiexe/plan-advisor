@@ -5,7 +5,7 @@ import datetime
 from typing import AsyncGenerator
 import anthropic
 
-from services.serpapi_flights import search_flights
+from services.serpapi_flights import search_flights, search_round_trip
 
 SYSTEM_PROMPT = """You are Plan Advisor, a full-service AI travel and lifestyle assistant based in India.
 You help users plan every step of their journey — from picking a destination to booking transport, finding hotels and discovering where to eat.
@@ -48,6 +48,7 @@ TOOLS AVAILABLE
 
 Flights (real-time prices):
 • `search_flights`       — Google Flights. Single-leg, round-trip, multi-city.
+• `search_round_trip`    — Google Flights outbound + return legs searched in parallel. Use for any round-trip or return flight query.
 • `compare_flights`      — Google Flights + Travelpayouts side-by-side. Only when user explicitly wants platform comparison.
 • `get_price_calendar`   — Cheapest price per day in a month. Use for flexible dates.
 
@@ -64,6 +65,7 @@ Food:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IATA CITY CODES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+For round-trip or return flight queries, always call `search_round_trip` instead of calling `search_flights` twice.
 Always convert city names to IATA before calling search_flights:
 India: Bangalore→BLR, Mumbai→BOM, Delhi→DEL, Chennai→MAA, Kolkata→CCU, Hyderabad→HYD, Goa→GOI, Kochi→COK, Pune→PNQ, Ahmedabad→AMD, Jaipur→JAI, Amritsar→ATQ, Lucknow→LKO, Varanasi→VNS, Nagpur→NAG, Bhubaneswar→BBI, Port Blair→IXZ, Srinagar→SXR, Chandigarh→IXC, Coimbatore→CJB, Mangalore→IXE, Thiruvananthapuram→TRV, Udaipur→UDR, Jodhpur→JDH, Dehradun→DED, Leh→IXL
 International: Dubai→DXB, Singapore→SIN, London→LHR, Bangkok→BKK, Kuala Lumpur→KUL, New York→JFK, Paris→CDG, Tokyo→NRT, Sydney→SYD, Abu Dhabi→AUH, Doha→DOH, Colombo→CMB, Kathmandu→KTM, Male→MLE, Phuket→HKT
@@ -135,6 +137,27 @@ TOOLS = [
             "International: DXB(Dubai) SIN(Singapore) LHR(London) BKK(Bangkok) KUL(KL) JFK(New York) CDG(Paris) NRT(Tokyo) DOH(Doha) MLE(Maldives)."
         ),
         "input_schema": _FLIGHT_SCHEMA,
+    },
+    {
+        "name": "search_round_trip",
+        "description": (
+            "Search round-trip flights: outbound AND return legs simultaneously. "
+            "Use this whenever the user asks for a round trip, return flight, or mentions both departure and return dates. "
+            "Always convert city names to IATA codes. Returns both legs with prices."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "origin":         {"type": "string", "description": "IATA code e.g. BLR"},
+                "destination":    {"type": "string", "description": "IATA code e.g. DXB"},
+                "departure_date": {"type": "string", "description": "YYYY-MM-DD"},
+                "return_date":    {"type": "string", "description": "YYYY-MM-DD"},
+                "adults":         {"type": "integer", "description": "Default 1"},
+                "cabin_class":    {"type": "string",  "description": "economy/business. Default economy"},
+                "currency":       {"type": "string",  "description": "Default INR"},
+            },
+            "required": ["origin", "destination", "departure_date", "return_date"],
+        },
     },
     {
         "name": "compare_flights",
@@ -269,6 +292,22 @@ async def _run_tool(name: str, tool_input: dict) -> str:
         except Exception as e:
             return json.dumps({"error": str(e), "flights_found": 0})
 
+    if name == "search_round_trip":
+        try:
+            result = await search_round_trip(
+                origin=tool_input.get("origin", ""),
+                destination=tool_input.get("destination", ""),
+                departure_date=tool_input.get("departure_date", ""),
+                return_date=tool_input.get("return_date", ""),
+                adults=int(tool_input.get("adults", 1)),
+                cabin_class=tool_input.get("cabin_class", "economy"),
+                max_results=int(tool_input.get("max_results", 5)),
+                currency=tool_input.get("currency", "INR"),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({"error": str(e), "outbound": None, "return_flight": None})
+
     if name == "compare_flights":
         try:
             from services.travelpayouts import search_travelpayouts
@@ -381,6 +420,10 @@ def _tool_label(name: str, tool_input: dict) -> str:
 
     if name == "search_flights":
         return f"Searching flights {orig} → {dest} on {date}…"
+    if name == "search_round_trip":
+        dep  = tool_input.get("departure_date", "")
+        ret  = tool_input.get("return_date", "")
+        return f"Searching round-trip {orig} ↔ {dest} ({dep} / {ret})…"
     if name == "compare_flights":
         return f"Comparing Google Flights + Travelpayouts for {orig} → {dest}…"
     if name == "get_price_calendar":
@@ -498,6 +541,13 @@ async def stream_response(messages: list, extra_system: str | None = None) -> As
                         bd = json.loads(result_str)
                         if bd.get("buses_found", 0) > 0:
                             yield {"type": "bus_results", "data": bd}
+                    except Exception:
+                        pass
+                elif block.name == "search_round_trip":
+                    try:
+                        rd = json.loads(result_str)
+                        if rd.get("outbound") or rd.get("return_flight"):
+                            yield {"type": "round_trip_results", "data": rd}
                     except Exception:
                         pass
 

@@ -33,6 +33,7 @@ function cleanMessages(messages: Message[]): Message[] {
       if (m.restaurantData)  Object.assign(base, { restaurantData: m.restaurantData });
       if (m.busData)         Object.assign(base, { busData: m.busData });
       if (m.trainData)       Object.assign(base, { trainData: m.trainData });
+      if (m.roundTripData)   Object.assign(base, { roundTripData: m.roundTripData });
       return base;
     });
 }
