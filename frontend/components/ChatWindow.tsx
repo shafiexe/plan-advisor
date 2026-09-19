@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useMemo } from "react";
 import MessageBubble, { Message } from "./MessageBubble";
 import TypingDots from "./TypingDots";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -58,7 +58,12 @@ type EmptyProps = { onSuggestion: (text: string) => void };
 
 function EmptyState({ onSuggestion }: EmptyProps) {
   const { t, tArray } = useLanguage();
-  const suggestions = tArray("suggestions");
+  const allSuggestions = tArray("suggestions");
+  // Pick 4 random suggestions from the pool — shuffled once per mount
+  const suggestions = useMemo(() => {
+    const shuffled = [...allSuggestions].sort(() => Math.random() - 0.5);
+    return shuffled.slice(0, 4);
+  }, [allSuggestions]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full gap-6 px-4 text-center">
