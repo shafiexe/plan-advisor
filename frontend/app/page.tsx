@@ -12,6 +12,7 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useSpeech } from "@/hooks/useSpeech";
 import { useServerSync } from "@/hooks/useServerSync";
+import type { AlertRecord } from "@/hooks/useServerSync";
 import { useTheme } from "@/hooks/useTheme";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import type { FlightSearchResult, PriceCalendarResult } from "@/types/flights";
@@ -68,6 +69,8 @@ export default function Home() {
   const [showPassengerModal, setShowPassengerModal] = useState(false);
   const [itineraryOpen, setItineraryOpen] = useState(false);
   const [alertData, setAlertData] = useState<{ origin: string; destination: string; departureDate: string; price: number } | null>(null);
+  const [editingAlertId, setEditingAlertId] = useState<number | null>(null);
+  const [savedAlerts, setSavedAlerts] = useState<AlertRecord[]>([]);
   const serverLoadedRef = useRef(false);
 
   const { speak, stop, speaking, autoSpeak, toggleAutoSpeak } = useSpeech();
@@ -101,6 +104,7 @@ export default function Home() {
 
     // Logged in: DB is the single source of truth — never read localStorage for convs
     sync.loadPassengers().then(setSavedPassengers).catch(() => {});
+    sync.loadAlerts().then(setSavedAlerts).catch(() => {});
 
     sync.loadConversations().then((serverConvs) => {
       serverLoadedRef.current = true;
@@ -314,6 +318,25 @@ export default function Home() {
     });
   }, [sync]);
 
+  const reloadAlerts = useCallback(() => {
+    sync.loadAlerts().then(setSavedAlerts).catch(() => {});
+  }, [sync]);
+
+  const handleDeleteAlert = useCallback(async (id: number) => {
+    await sync.deleteAlert(id);
+    setSavedAlerts(prev => prev.filter(a => a.id !== id));
+  }, [sync]);
+
+  const handleEditAlert = useCallback((alert: AlertRecord) => {
+    setEditingAlertId(alert.id);
+    setAlertData({
+      origin: alert.origin,
+      destination: alert.destination,
+      departureDate: alert.departure_date,
+      price: alert.threshold_inr,
+    });
+  }, []);
+
   const renameChat = useCallback((id: string, title: string) => {
     setConversations(prev => {
       const next = prev.map(c => c.id === id ? { ...c, title } : c);
@@ -463,7 +486,14 @@ export default function Home() {
           departureDate={alertData.departureDate}
           currentPrice={alertData.price}
           userEmail={userEmail}
-          onClose={() => setAlertData(null)}
+          onClose={() => { setAlertData(null); setEditingAlertId(null); }}
+          onSuccess={() => {
+            if (editingAlertId !== null) {
+              sync.deleteAlert(editingAlertId);
+              setSavedAlerts(prev => prev.filter(a => a.id !== editingAlertId));
+            }
+            reloadAlerts();
+          }}
         />
       )}
 
@@ -479,6 +509,9 @@ export default function Home() {
         onShare={handleShare}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        alerts={savedAlerts}
+        onDeleteAlert={handleDeleteAlert}
+        onEditAlert={handleEditAlert}
         passengers={savedPassengers}
         onEditPassenger={(p) => { setEditingPassenger(p); setShowPassengerModal(true); }}
         onDeletePassenger={(id) => {

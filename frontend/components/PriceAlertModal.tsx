@@ -11,6 +11,7 @@ type Props = {
   currentPrice?: number;
   userEmail: string | null;
   onClose: () => void;
+  onSuccess?: () => void;
 };
 
 function roundToNearest500(n: number): number {
@@ -24,6 +25,7 @@ export default function PriceAlertModal({
   currentPrice,
   userEmail,
   onClose,
+  onSuccess,
 }: Props) {
   const [origin, setOrigin]               = useState(initialOrigin.toUpperCase());
   const [destination, setDestination]     = useState(initialDestination.toUpperCase());
@@ -73,6 +75,7 @@ export default function PriceAlertModal({
       setSuccess(
         `Alert set! We'll email you when prices drop below ₹${thresholdNum.toLocaleString("en-IN")}.`
       );
+      onSuccess?.();
       setTimeout(onClose, 2000);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong. Please try again.");
@@ -201,7 +204,7 @@ export default function PriceAlertModal({
                 value={threshold}
                 onChange={e => setThreshold(e.target.value)}
                 min={1}
-                step={500}
+                step={1}
                 placeholder="e.g. 8000"
                 className="w-full rounded-lg pl-7 pr-3 py-2.5 text-sm bg-slate-800/80 border border-slate-700/60
                   text-slate-100 placeholder-slate-600 outline-none tabular-nums

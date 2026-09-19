@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Message } from "./MessageBubble";
 import type { PassengerRecord } from "./PassengerFormModal";
+import type { AlertRecord } from "@/hooks/useServerSync";
 
 export type Conversation = {
   id: string;
@@ -31,6 +32,10 @@ type Props = {
   onEditPassenger?: (p: PassengerRecord) => void;
   onDeletePassenger?: (id: number) => void;
   onAddPassenger?: () => void;
+  /* Alerts */
+  alerts?: AlertRecord[];
+  onDeleteAlert?: (id: number) => void;
+  onEditAlert?: (alert: AlertRecord) => void;
   /* Bottom bar */
   sessionUser?: SessionUser | null;
   theme?: "dark" | "light";
@@ -183,6 +188,58 @@ function PassengerInitials({ p }: { p: PassengerRecord }) {
   );
 }
 
+function AlertRow({
+  alert, onEdit, onDelete,
+}: { alert: AlertRecord; onEdit: () => void; onDelete: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const isPast = !!alert.departure_date && new Date(alert.departure_date) < new Date();
+
+  return (
+    <div className={`rounded-lg border p-2 ${isPast ? "border-slate-700/30 opacity-50" : "border-slate-700/50 bg-slate-800/40"}`}>
+      <div className="flex items-center justify-between gap-1">
+        <div className="min-w-0">
+          <p className="text-[11px] font-semibold text-slate-200">
+            {alert.origin} → {alert.destination}
+          </p>
+          <p className="text-[10px] text-slate-500">
+            {alert.departure_date} · below ₹{alert.threshold_inr.toLocaleString("en-IN")}
+          </p>
+          {alert.last_price_inr && (
+            <p className="text-[10px] text-slate-600">
+              Last seen: ₹{alert.last_price_inr.toLocaleString("en-IN")}
+            </p>
+          )}
+        </div>
+        {confirming ? (
+          <div className="flex gap-1 shrink-0">
+            <button
+              onClick={() => { onDelete(); setConfirming(false); }}
+              className="text-[10px] px-1.5 py-0.5 rounded bg-red-600 hover:bg-red-500 text-white font-bold"
+            >Yes</button>
+            <button
+              onClick={() => setConfirming(false)}
+              className="text-[10px] px-1.5 py-0.5 rounded border border-slate-600 text-slate-400 hover:text-white"
+            >No</button>
+          </div>
+        ) : (
+          <div className="flex gap-1 shrink-0">
+            <button
+              onClick={onEdit}
+              title="Edit alert"
+              className="w-5 h-5 rounded flex items-center justify-center text-slate-500 hover:text-indigo-400 hover:bg-indigo-950/40 text-[10px] transition-all"
+            >✎</button>
+            <button
+              onClick={() => setConfirming(true)}
+              title="Delete alert"
+              className="w-5 h-5 rounded flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-950/40 text-[10px] transition-all"
+            >✕</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export default function ConversationSidebar({
   conversations,
   activeId,
@@ -198,6 +255,9 @@ export default function ConversationSidebar({
   onEditPassenger,
   onDeletePassenger,
   onAddPassenger,
+  alerts = [],
+  onDeleteAlert,
+  onEditAlert,
   sessionUser,
   theme = "dark",
   onToggleTheme,
@@ -466,6 +526,34 @@ export default function ConversationSidebar({
                     <p className="text-sm font-semibold text-slate-200 truncate">{sessionUser.name}</p>
                     <p className="text-xs text-slate-500 truncate">{sessionUser.email}</p>
                   </div>
+                  {/* Price alerts */}
+                  <div className="px-3 py-2 border-b border-slate-800">
+                    <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1">
+                      🔔 Price Alerts
+                      {alerts.length > 0 && (
+                        <span className="ml-auto text-[9px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-semibold">
+                          {alerts.length}
+                        </span>
+                      )}
+                    </p>
+                    {alerts.length === 0 ? (
+                      <p className="text-[11px] text-slate-600 text-center py-1">
+                        No active alerts. Click 🔔 on a flight.
+                      </p>
+                    ) : (
+                      <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                        {alerts.map(a => (
+                          <AlertRow
+                            key={a.id}
+                            alert={a}
+                            onEdit={() => { setShowUserMenu(false); onEditAlert?.(a); }}
+                            onDelete={() => onDeleteAlert?.(a.id)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   {/* Sign out */}
                   {onSignOut && (
                     <button

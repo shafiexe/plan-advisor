@@ -198,6 +198,28 @@ export function useServerSync(userEmail: string | null | undefined) {
     } catch { return false; }
   }, [enabled, userEmail]);
 
+  const loadAlerts = useCallback(async (): Promise<AlertRecord[]> => {
+    if (!enabled) return [];
+    try {
+      const resp = await fetch(`${API}/api/alerts`, {
+        headers: { "X-User-Email": userEmail! },
+      });
+      if (!resp.ok) return [];
+      return await resp.json() as AlertRecord[];
+    } catch { return []; }
+  }, [enabled, userEmail]);
+
+  const deleteAlert = useCallback(async (id: number): Promise<boolean> => {
+    if (!enabled) return false;
+    try {
+      const resp = await fetch(`${API}/api/alerts/${id}`, {
+        method:  "DELETE",
+        headers: { "X-User-Email": userEmail! },
+      });
+      return resp.ok;
+    } catch { return false; }
+  }, [enabled, userEmail]);
+
   return {
     enabled,
     loadConversations,
@@ -211,5 +233,20 @@ export function useServerSync(userEmail: string | null | undefined) {
     updatePassenger,
     deletePassenger,
     addAlert,
+    loadAlerts,
+    deleteAlert,
   };
 }
+
+export type AlertRecord = {
+  id: number;
+  origin: string;
+  destination: string;
+  departure_date: string;
+  threshold_inr: number;
+  last_price_inr?: number;
+  triggered: boolean;
+  active: boolean;
+  created_at: string;
+  last_checked?: string;
+};
