@@ -39,15 +39,19 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
         # Add columns that were introduced after the initial schema
         if is_sqlite:
-            # SQLite doesn't support IF NOT EXISTS on ALTER TABLE — catch the error instead
-            for col_def in ("ALTER TABLE conversations ADD COLUMN pinned BOOLEAN DEFAULT 0",):
+            for col_def in (
+                "ALTER TABLE conversations ADD COLUMN pinned BOOLEAN DEFAULT 0",
+                "ALTER TABLE conversations ADD COLUMN share_token TEXT",
+            ):
                 try:
                     await conn.execute(text(col_def))
                 except Exception:
                     pass
         else:
-            # PostgreSQL supports IF NOT EXISTS — safe to run on every startup
-            for col_def in ("ALTER TABLE conversations ADD COLUMN IF NOT EXISTS pinned BOOLEAN DEFAULT FALSE",):
+            for col_def in (
+                "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS pinned BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE conversations ADD COLUMN IF NOT EXISTS share_token TEXT UNIQUE",
+            ):
                 try:
                     await conn.execute(text(col_def))
                 except Exception:

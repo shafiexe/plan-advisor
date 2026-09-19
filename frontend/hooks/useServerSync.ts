@@ -95,6 +95,19 @@ export function useServerSync(userEmail: string | null | undefined) {
     } catch {}
   }, [enabled, userEmail]);
 
+  const shareConversation = useCallback(async (id: string): Promise<string | null> => {
+    if (!enabled) return null;
+    try {
+      const resp = await fetch(`${API}/api/user/conversations/${id}/share`, {
+        method:  "POST",
+        headers: { "X-User-Email": userEmail! },
+      });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      return data.share_token as string;
+    } catch { return null; }
+  }, [enabled, userEmail]);
+
   /* ── Passenger profile ──────────────────────────────────── */
   const loadPassengerProfile = useCallback(async (): Promise<Record<string, string> | null> => {
     if (!enabled) return null;
@@ -172,6 +185,7 @@ export function useServerSync(userEmail: string | null | undefined) {
     loadConversations,
     saveConversation,
     deleteConversation,
+    shareConversation,
     loadPassengerProfile,
     savePassengerProfile,
     loadPassengers,

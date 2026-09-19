@@ -252,6 +252,48 @@ export default function Home() {
     sync.deleteConversation(id);
   }, [activeId, STORAGE_KEY, sync]);
 
+  /* ── Share conversation ─── */
+  const handleShare = useCallback(async (id: string) => {
+    const token = await sync.shareConversation(id);
+    if (!token) { alert("Could not generate share link. Please try again."); return; }
+    const url = `${window.location.origin}/share/${token}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      alert("Share link copied to clipboard!");
+    } catch {
+      prompt("Copy this share link:", url);
+    }
+  }, [sync]);
+
+  /* ── Export conversation as PDF ─── */
+  const handleExport = useCallback(() => {
+    if (!activeConversation || activeConversation.messages.length === 0) return;
+    const rows = activeConversation.messages
+      .filter(m => !m.streaming)
+      .map(m => {
+        const who = m.role === "user" ? "You" : "Plan Advisor";
+        const text = m.content.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\n/g, "<br>");
+        const bg = m.role === "user" ? "#1e293b" : "#0f172a";
+        const color = m.role === "user" ? "#93c5fd" : "#e2e8f0";
+        return `<div style="margin:12px 0;padding:12px 16px;border-radius:12px;background:${bg};">
+          <div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:6px;text-transform:uppercase;">${who}</div>
+          <div style="font-size:14px;color:${color};line-height:1.6;">${text}</div>
+        </div>`;
+      }).join("");
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8">
+      <title>${activeConversation.title} — Plan Advisor</title>
+      <style>body{margin:0;padding:32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#020617;color:#e2e8f0;}
+      h1{font-size:20px;font-weight:700;margin-bottom:4px;color:#f1f5f9;}
+      .sub{font-size:12px;color:#475569;margin-bottom:24px;}
+      @media print{body{background:#fff;color:#111;}}</style></head>
+      <body><h1>${activeConversation.title}</h1>
+      <div class="sub">Exported from Plan Advisor · ${new Date().toLocaleDateString()}</div>
+      ${rows}
+      <script>window.onload=()=>window.print();<\/script></body></html>`;
+    const win = window.open("", "_blank");
+    if (win) { win.document.write(html); win.document.close(); }
+  }, [activeConversation]);
+
   /* ── Pin / unpin a conversation ─── */
   const pinConversation = useCallback((id: string) => {
     setConversations(prev => {
@@ -415,6 +457,7 @@ export default function Home() {
         onDelete={deleteChat}
         onRename={renameChat}
         onPin={pinConversation}
+        onShare={handleShare}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         passengers={savedPassengers}
@@ -447,6 +490,26 @@ export default function Home() {
               <path d="M9 3v18" />
             </svg>
           </button>
+        )}
+
+        {/* Export PDF button — visible only when a conversation is active */}
+        {activeConversation && activeConversation.messages.length > 0 && (
+          <div className="absolute top-3 right-3 z-20">
+            <button
+              onClick={handleExport}
+              title="Export as PDF"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium
+                text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition-colors backdrop-blur-sm border border-transparent hover:border-slate-700/60"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="12" y1="18" x2="12" y2="12"/>
+                <line x1="9" y1="15" x2="15" y2="15"/>
+              </svg>
+              Export
+            </button>
+          </div>
         )}
 
         {/* Chat area */}

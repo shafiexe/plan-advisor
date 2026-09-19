@@ -1,6 +1,7 @@
 import json
 import logging
 import traceback
+import uuid
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Header, HTTPException
@@ -114,6 +115,64 @@ async def upsert_conversation(
     except Exception:
         log.error("upsert_conversation failed for conv_id=%s email=%s\n%s", conv_id, email, traceback.format_exc())
         raise
+
+
+@router.post("/conversations/{conv_id}/share")
+async def share_conversation(
+    conv_id: str,
+    email: str = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate (or return existing) a public share token for a conversation."""
+    row = (await db.execute(
+        select(Conversation).where(
+            Conversation.id == conv_id,
+            Conversation.user_email == email,
+        )
+    )).scalar_one_or_none()
+    if not row:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    if not row.share_token:
+        row.share_token = str(uuid.uuid4())
+        await db.commit()
+    return {"share_token": row.share_token}
+
+
+@router.delete("/conversations/{conv_id}/share")
+async def unshare_conversation(
+    conv_id: str,
+    email: str = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Revoke a conversation's public share link."""
+    row = (await db.execute(
+        select(Conversation).where(
+            Conversation.id == conv_id,
+            Conversation.user_email == email,
+        )
+    )).scalar_one_or_none()
+    if row:
+        row.share_token = None
+        await db.commit()
+    return {"ok": True}
+
+
+@router.get("/share/{token}", include_in_schema=True)
+async def get_shared_conversation(
+    token: str,
+    db: AsyncSession = Depends(get_db),
+):
+    """Public endpoint — no auth. Returns a shared conversation by token."""
+    row = (await db.execute(
+        select(Conversation).where(Conversation.share_token == token)
+    )).scalar_one_or_none()
+    if not row:
+        raise HTTPException(status_code=404, detail="Share link not found or has been revoked")
+    return {
+        "title":    row.title,
+        "messages": json.loads(row.messages_json or "[]"),
+        "sharedAt": _now_ms(row.updated_at),
+    }
 
 
 @router.delete("/conversations/{conv_id}")

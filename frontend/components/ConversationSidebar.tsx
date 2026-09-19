@@ -23,6 +23,7 @@ type Props = {
   onDelete: (id: string) => void;
   onRename: (id: string, title: string) => void;
   onPin: (id: string) => void;
+  onShare: (id: string) => void;
   isOpen: boolean;
   onClose: () => void;
   /* Passengers */
@@ -190,6 +191,7 @@ export default function ConversationSidebar({
   onDelete,
   onRename,
   onPin,
+  onShare,
   isOpen,
   onClose,
   passengers = [],
@@ -415,10 +417,16 @@ export default function ConversationSidebar({
                         </div>
                       )}
 
-                      {/* ── Hover action buttons (pin + rename + delete) ── */}
+                      {/* ── Hover action buttons (share + pin + rename + delete) ── */}
                       {!isEditing && (
                         <div className="absolute top-2 right-2 flex gap-0.5
                           opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={e => { e.stopPropagation(); onShare(conv.id); }}
+                            className="w-5 h-5 rounded-md flex items-center justify-center
+                              text-slate-500 hover:text-emerald-400 hover:bg-emerald-950/40 transition-all text-[11px]"
+                            title="Copy share link"
+                          >🔗</button>
                           <button
                             onClick={e => { e.stopPropagation(); onPin(conv.id); }}
                             className={`w-5 h-5 rounded-md flex items-center justify-center transition-all text-[11px]

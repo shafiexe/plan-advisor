@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
-from sqlalchemy import Boolean, Column, Integer, String, Text, DateTime, UniqueConstraint
+from sqlalchemy import Boolean, Column, Integer, String, Text, DateTime, UniqueConstraint, Uuid
+import uuid
 from database import Base
 
 
@@ -15,6 +16,7 @@ class Conversation(Base):
     title         = Column(String,  default="")
     messages_json = Column(Text,    default="[]")       # JSON array of Message objects
     pinned        = Column(Boolean, default=False)
+    share_token   = Column(String,  nullable=True, unique=True, index=True)
     created_at    = Column(DateTime, default=_now)
     updated_at    = Column(DateTime, default=_now, onupdate=_now)
 

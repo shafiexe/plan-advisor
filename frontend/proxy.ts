@@ -14,11 +14,12 @@ export const config = {
     /*
      * Match everything EXCEPT:
      *   /login          — the sign-in page itself
+     *   /share/*        — public shared conversation links (no auth needed)
      *   /api/auth/*     — NextAuth's own OAuth callbacks
      *   /_next/*        — Next.js internals (JS, CSS, images)
      *   /favicon.ico    — browser icon
      *   /*.svg|png|…    — public static assets
      */
-    "/((?!login|api/auth|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!login|share|api/auth|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
