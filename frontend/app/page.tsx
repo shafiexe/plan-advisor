@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef, DragEvent } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import ChatWindow from "@/components/ChatWindow";
 import InputBar from "@/components/InputBar";
 import ConversationSidebar, { Conversation } from "@/components/ConversationSidebar";
@@ -91,9 +92,21 @@ function isConvStopped(convId: string): boolean {
 }
 
 /* ── Component ───────────────────────────────────────────── */
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const userEmail = session?.user?.email ?? null;
+
+  // Redirect agents away from the traveller chat view
+  useEffect(() => {
+    if (status !== "authenticated" || !userEmail) return;
+    fetch(`${API}/api/agent/check`, { headers: { "X-User-Email": userEmail } })
+      .then(r => r.json())
+      .then(d => { if (d.is_agent) router.replace("/agent/dashboard"); })
+      .catch(() => {});
+  }, [status, userEmail, router]);
   const userKey   = userEmail ?? "guest";
   const STORAGE_KEY = `plan-advisory-${userKey}-conversations`;
   const ACTIVE_KEY  = `plan-advisory-${userKey}-active-id`;

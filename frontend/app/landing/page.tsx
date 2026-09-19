@@ -48,22 +48,28 @@ export default function LandingPage() {
             Real-time prices, offline support, and multi-language guidance.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-14">
+          {/* ── Two-path CTA ── */}
+          <div className="flex flex-col sm:flex-row items-stretch justify-center gap-4 mb-14 max-w-lg mx-auto">
             <Link
               href="/login"
-              className="w-full sm:w-auto px-6 py-3 rounded-xl text-white font-semibold text-sm
-                transition-colors duration-150 shadow-lg text-center"
+              className="flex-1 flex flex-col items-center gap-1 px-6 py-4 rounded-2xl text-white font-semibold text-sm
+                transition-all duration-150 shadow-lg border border-[#1e3a8a]/40 hover:border-[#1e3a8a] text-center"
               style={{ background: "#1e3a8a" }}
             >
-              Get Started Free →
+              <span className="text-2xl mb-1">🧳</span>
+              <span>Plan a Trip</span>
+              <span className="text-xs font-normal text-blue-300/70">Search flights, hotels & tours</span>
             </Link>
-            <a
-              href="#how-it-works"
-              className="w-full sm:w-auto px-6 py-3 rounded-xl border border-slate-700 hover:border-slate-600 text-slate-300
-                hover:text-slate-100 font-medium text-sm transition-colors duration-150 text-center"
+            <Link
+              href="/login/agent"
+              className="flex-1 flex flex-col items-center gap-1 px-6 py-4 rounded-2xl font-semibold text-sm
+                transition-all duration-150 border text-center hover:bg-white/5"
+              style={{ borderColor: "#d4a017", color: "#d4a017" }}
             >
-              See how it works
-            </a>
+              <span className="text-2xl mb-1">🏢</span>
+              <span>I&apos;m an Agent</span>
+              <span className="text-xs font-normal text-slate-500">Manage listings & bookings</span>
+            </Link>
           </div>
 
           {/* ── Fake chat mockup ─── */}
