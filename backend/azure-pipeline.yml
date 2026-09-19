@@ -101,7 +101,9 @@ stages:
                           "DATABASE_URL=$(DATABASE_URL)" \
                           "ALLOWED_ORIGINS=https://$(FRONTEND_FQDN)" \
                           "PHOENIX_API_KEY=$(PHOENIX_API_KEY)" \
-                          "PHOENIX_PROJECT_NAME=plan-advisor"
+                          "PHOENIX_PROJECT_NAME=plan-advisor" \
+                          "PHOENIX_COLLECTOR_ENDPOINT=$(PHOENIX_COLLECTOR_ENDPOINT)" \
+                          "SENTRY_DSN=$(SENTRY_DSN)"
 
                       FQDN=$(az containerapp show \
                         --name "$(BACKEND_APP_NAME)" \
