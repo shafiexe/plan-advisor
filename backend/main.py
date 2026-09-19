@@ -107,6 +107,11 @@ async def health():
     return {"status": "ok", "app": "Plan Advisor"}
 
 
+@app.get("/sentry-test")
+async def sentry_test():
+    1 / 0
+
+
 @app.get("/debug/html")
 async def debug_html(
     origin: str = Query("BLR"),
