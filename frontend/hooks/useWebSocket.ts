@@ -15,6 +15,9 @@ export type WsMessage =
   | { type: "round_trip_results"; data: unknown }
   | { type: "weather_results"; data: unknown }
   | { type: "visa_results"; data: unknown }
+  | { type: "guide_results"; data: unknown }
+  | { type: "currency_results"; data: unknown }
+  | { type: "budget_results"; data: unknown }
   | { type: "done" }
   | { type: "error"; content: string };
 
@@ -35,6 +38,9 @@ type Options = {
   onRoundTripResults?: (data: unknown) => void;
   onWeatherResults?: (data: unknown) => void;
   onVisaResults?: (data: unknown) => void;
+  onGuideResults?: (data: unknown) => void;
+  onCurrencyResults?: (data: unknown) => void;
+  onBudgetResults?: (data: unknown) => void;
 };
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000/ws/chat";
@@ -66,6 +72,9 @@ export function useWebSocket(opts: Options) {
       else if (msg.type === "round_trip_results") optsRef.current.onRoundTripResults?.(msg.data);
       else if (msg.type === "weather_results")    optsRef.current.onWeatherResults?.(msg.data);
       else if (msg.type === "visa_results")       optsRef.current.onVisaResults?.(msg.data);
+      else if (msg.type === "guide_results")      optsRef.current.onGuideResults?.(msg.data);
+      else if (msg.type === "currency_results")   optsRef.current.onCurrencyResults?.(msg.data);
+      else if (msg.type === "budget_results")     optsRef.current.onBudgetResults?.(msg.data);
     };
 
     ws.onclose = () => {

@@ -57,19 +57,23 @@ export function usePushNotifications(
   }, [supported, userEmail]);
 
   const subscribe = async (): Promise<boolean> => {
+    console.log("[Push] subscribe() called — supported:", supported, "email:", userEmail, "vapidKey:", VAPID_PUBLIC_KEY ? "set" : "MISSING");
     if (!supported || !userEmail || !VAPID_PUBLIC_KEY) {
-      console.warn("[PushNotifications] Not supported or missing VAPID key");
+      console.warn("[Push] Guard failed — supported:", supported, "email:", !!userEmail, "vapidKey:", !!VAPID_PUBLIC_KEY);
       return false;
     }
     try {
       const permission = await Notification.requestPermission();
+      console.log("[Push] Notification permission:", permission);
       if (permission !== "granted") return false;
 
       const reg = await navigator.serviceWorker.ready;
+      console.log("[Push] SW ready, subscribing to push...");
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY).buffer as ArrayBuffer,
       });
+      console.log("[Push] PushManager subscription created:", sub.endpoint.slice(0, 60));
 
       const subJson = sub.toJSON() as {
         endpoint: string;
@@ -98,10 +102,12 @@ export function usePushNotifications(
   };
 
   const unsubscribe = async (): Promise<boolean> => {
+    console.log("[Push] unsubscribe() called");
     if (!supported || !userEmail) return false;
     try {
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
+      console.log("[Push] existing subscription:", sub ? sub.endpoint.slice(0, 60) : "none");
       if (sub) {
         const endpoint = sub.endpoint;
         await sub.unsubscribe();
@@ -115,9 +121,10 @@ export function usePushNotifications(
         });
       }
       setSubscribed(false);
+      console.log("[Push] unsubscribed, state set to false");
       return true;
     } catch (e) {
-      console.error("[PushNotifications] Unsubscribe failed:", e);
+      console.error("[Push] Unsubscribe failed:", e);
       return false;
     }
   };

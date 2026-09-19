@@ -276,6 +276,8 @@ export default function ConversationSidebar({
 
   const { supported: pushSupported, subscribed: pushSubscribed, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } =
     usePushNotifications(sessionUser?.email);
+  const [pushLoading, setPushLoading] = useState(false);
+  const [pushError, setPushError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!showUserMenu) return;
@@ -573,27 +575,51 @@ export default function ConversationSidebar({
 
                   {/* Push notifications toggle */}
                   {pushSupported && (
-                    <div className="px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm">{pushSubscribed ? "🔔" : "🔕"}</span>
-                        <div>
-                          <p className="text-xs font-semibold text-slate-300">Push Alerts</p>
-                          <p className="text-[10px] text-slate-600">
-                            {pushSubscribed ? "Price alerts via notification" : "Get notified when prices drop"}
-                          </p>
+                    <div className="px-4 py-2.5 border-b border-slate-800">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">{pushSubscribed ? "🔔" : "🔕"}</span>
+                          <div>
+                            <p className="text-xs font-semibold text-slate-300">Push Alerts</p>
+                            <p className="text-[10px] text-slate-600">
+                              {pushSubscribed ? "Notifications enabled" : "Get notified when prices drop"}
+                            </p>
+                          </div>
                         </div>
+                        <button
+                          disabled={pushLoading}
+                          onClick={async () => {
+                            setPushError(null);
+                            setPushLoading(true);
+                            try {
+                              const ok = pushSubscribed ? await pushUnsubscribe() : await pushSubscribe();
+                              if (!ok && !pushSubscribed) setPushError("Permission denied or not supported");
+                            } catch {
+                              setPushError("Something went wrong");
+                            } finally {
+                              setPushLoading(false);
+                            }
+                          }}
+                          className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${
+                            pushLoading ? "opacity-50 cursor-not-allowed" :
+                            pushSubscribed ? "bg-indigo-600" : "bg-slate-700"
+                          }`}
+                          title={pushSubscribed ? "Disable push notifications" : "Enable push notifications"}
+                        >
+                          {pushLoading ? (
+                            <span className="absolute inset-0 flex items-center justify-center">
+                              <span className="w-3 h-3 border border-white/40 border-t-white rounded-full animate-spin" />
+                            </span>
+                          ) : (
+                            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                              pushSubscribed ? "translate-x-4" : "translate-x-0.5"
+                            }`} />
+                          )}
+                        </button>
                       </div>
-                      <button
-                        onClick={() => pushSubscribed ? pushUnsubscribe() : pushSubscribe()}
-                        className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${
-                          pushSubscribed ? "bg-indigo-600" : "bg-slate-700"
-                        }`}
-                        title={pushSubscribed ? "Disable push notifications" : "Enable push notifications"}
-                      >
-                        <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
-                          pushSubscribed ? "translate-x-4" : "translate-x-0.5"
-                        }`} />
-                      </button>
+                      {pushError && (
+                        <p className="text-[10px] text-red-400 mt-1">{pushError}</p>
+                      )}
                     </div>
                   )}
 

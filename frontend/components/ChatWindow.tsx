@@ -15,6 +15,9 @@ const TOOL_ICONS: Record<string, string> = {
   find_restaurants:  "🍽️",
   get_weather:       "🌤️",
   get_visa_requirements: "🛂",
+  get_destination_guide:  "🗺️",
+  convert_currency:       "💱",
+  calculate_trip_budget:  "💰",
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -118,6 +121,30 @@ function getSuggestions(msg: Message): string[] {
       dest ? `Search flights to ${dest}` : "Search flights",
       dest ? `Find hotels in ${dest}` : "Find hotels",
       dest ? `What's the weather in ${dest}?` : "Check the weather",
+    ];
+  }
+  if (msg.guideData) {
+    const dest = msg.guideData.destination ?? "";
+    return [
+      dest ? `Search flights to ${dest}` : "Search flights",
+      dest ? `Find hotels in ${dest}` : "Find hotels",
+      dest ? `What's the weather in ${dest}?` : "Check the weather",
+    ];
+  }
+  if (msg.currencyData) {
+    const base = msg.currencyData.base_currency ?? "";
+    return [
+      "Show flights in this currency",
+      "What's my total trip budget?",
+      base ? `Convert 1000 ${base} to INR` : "Convert another amount",
+    ];
+  }
+  if (msg.budgetData) {
+    const dest = msg.budgetData.destination ?? "";
+    return [
+      "How can I reduce this budget?",
+      dest ? `Find cheaper hotels in ${dest}` : "Find cheaper hotels",
+      "Convert to USD",
     ];
   }
   if (msg.busData || msg.trainData) {

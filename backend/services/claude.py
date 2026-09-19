@@ -68,6 +68,15 @@ Weather:
 Visa & Entry:
 • `get_visa_requirements` — Check visa type (visa-free / on-arrival / eVisa / required), days allowed, and entry notes for any passport → destination pair. Call whenever the user asks about visas, entry requirements, or documents needed for international travel. Default passport to "India" if the user's nationality is not stated.
 
+Currency:
+• `convert_currency` — Convert amounts and show live exchange rates for major travel currencies. Call when user mentions prices in foreign currency or asks about conversion.
+
+Destination Guide:
+• `get_destination_guide` — Rich destination guide: attractions, neighbourhoods, food, tips, packing list. Call after a destination is confirmed or when user asks what to do there.
+
+Budget:
+• `calculate_trip_budget` — Show itemized trip cost breakdown with total. Call when user asks about total cost or after confirming flight + hotel. Estimate meals at ₹2,000-5,000/day depending on destination; activities at 15-20% of total if not specified.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IATA CITY CODES
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -297,6 +306,86 @@ TOOLS = [
                 },
             },
             "required": ["passport_country", "destination_country"],
+
+        },
+    },
+    {
+        "name": "get_destination_guide",
+        "description": (
+            "Generate a comprehensive travel guide for any destination: top attractions, best neighbourhoods, "
+            "must-try food, practical tips, what to avoid, and packing list. "
+            "Call when user asks for a destination overview, travel guide, things to do, "
+            "or after flights/hotels are booked."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination": {
+                    "type": "string",
+                    "description": "Destination city or country name, e.g. 'Tokyo', 'Bali', 'Paris'",
+                },
+                "duration_days": {
+                    "type": "integer",
+                    "description": "Trip duration in days. Default 5.",
+                },
+                "interests": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "Optional list of traveller interests, e.g. ['beaches', 'food', 'adventure']",
+                },
+            },
+            "required": ["destination"],
+        },
+    },
+    {
+        "name": "convert_currency",
+        "description": (
+            "Convert an amount between currencies and show rates for major travel currencies "
+            "(INR, USD, EUR, GBP, AED, THB, SGD, JPY, AUD, MYR). "
+            "Call when user asks about exchange rates, currency conversion, or 'how much is X in Y'."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "number",
+                    "description": "The amount to convert.",
+                },
+                "from_currency": {
+                    "type": "string",
+                    "description": "Source currency code, e.g. 'USD', 'EUR', 'INR'.",
+                },
+                "to_currency": {
+                    "type": "string",
+                    "description": "Optional target currency code, e.g. 'INR'. If omitted, rates for all major currencies are shown.",
+                },
+            },
+            "required": ["amount", "from_currency"],
+        },
+    },
+    {
+        "name": "calculate_trip_budget",
+        "description": (
+            "Calculate total trip cost and show an itemized budget breakdown. "
+            "Call this after the user has flight + hotel information, or when they ask about total cost, budget, or how much the trip will cost. "
+            "Extract costs from the conversation: flight price, hotel price per night, number of nights, and estimate daily meals and activities."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination":          {"type": "string", "description": "Destination city/country"},
+                "from_city":            {"type": "string", "description": "Origin city"},
+                "currency":             {"type": "string", "description": "Currency code, e.g. INR. Default INR."},
+                "flight_cost":          {"type": "number", "description": "Total flight cost (one-way or return) in the given currency"},
+                "hotel_cost_per_night": {"type": "number", "description": "Hotel cost per night"},
+                "nights":               {"type": "integer", "description": "Number of nights"},
+                "daily_meal_budget":    {"type": "number", "description": "Estimated daily food/meal budget"},
+                "days":                 {"type": "integer", "description": "Number of days"},
+                "activities_budget":    {"type": "number", "description": "Estimated total activities/sightseeing budget. 0 if unknown."},
+                "misc_budget":          {"type": "number", "description": "Misc (transport, shopping, tips). 0 if unknown."},
+                "num_people":           {"type": "integer", "description": "Number of travellers. Default 1."},
+            },
+            "required": ["destination", "flight_cost", "hotel_cost_per_night", "nights", "daily_meal_budget", "days"],
         },
     },
 ]
@@ -473,6 +562,74 @@ async def _run_tool(name: str, tool_input: dict) -> str:
         except Exception as e:
             return json.dumps({"error": str(e), "visa_type": "unknown", "label": "Unknown", "notes": []})
 
+    # ── Destination guide ──
+    if name == "get_destination_guide":
+        from services.destination_guide import get_destination_guide
+        result = await get_destination_guide(
+            destination=tool_input.get("destination", ""),
+            duration_days=tool_input.get("duration_days", 5),
+            interests=tool_input.get("interests"),
+        )
+        return json.dumps(result)
+
+    # ── Currency conversion ──
+    if name == "convert_currency":
+        try:
+            from services.currency import get_exchange_rates
+            result = await get_exchange_rates(
+                base_currency=tool_input.get("from_currency", "USD"),
+                amount=float(tool_input.get("amount", 1.0)),
+            )
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({
+                "error": str(e),
+                "base_currency": tool_input.get("from_currency", ""),
+                "amount": tool_input.get("amount", 1.0),
+                "rates": [],
+            })
+
+    # ── Trip budget ──
+    if name == "calculate_trip_budget":
+        try:
+            dest        = tool_input.get("destination", "")
+            from_city   = tool_input.get("from_city", "")
+            currency    = tool_input.get("currency", "INR")
+            flight      = float(tool_input.get("flight_cost", 0))
+            hotel_ppn   = float(tool_input.get("hotel_cost_per_night", 0))
+            nights      = int(tool_input.get("nights", 0))
+            meal_pd     = float(tool_input.get("daily_meal_budget", 0))
+            days        = int(tool_input.get("days", nights))
+            activities  = float(tool_input.get("activities_budget", 0))
+            misc        = float(tool_input.get("misc_budget", 0))
+            num_people  = int(tool_input.get("num_people", 1))
+
+            hotel_total  = hotel_ppn * nights
+            meal_total   = meal_pd * days
+            grand_total  = flight + hotel_total + meal_total + activities + misc
+
+            items = []
+            if flight      > 0: items.append({"label": f"Flights {'(return) ' if from_city else ''}","icon": "✈️", "amount": flight,       "detail": f"{'Return ' if from_city else ''}flight cost"})
+            if hotel_total > 0: items.append({"label": "Hotel",     "icon": "🏨", "amount": hotel_total,  "detail": f"{nights} night{'s' if nights!=1 else ''} × {currency} {hotel_ppn:,.0f}"})
+            if meal_total  > 0: items.append({"label": "Meals",     "icon": "🍽️", "amount": meal_total,   "detail": f"{days} day{'s' if days!=1 else ''} × {currency} {meal_pd:,.0f}/day"})
+            if activities  > 0: items.append({"label": "Activities","icon": "🎯", "amount": activities,   "detail": "Sightseeing & experiences"})
+            if misc        > 0: items.append({"label": "Misc",      "icon": "🛍️", "amount": misc,         "detail": "Transport, shopping, tips"})
+
+            result = {
+                "destination":   dest,
+                "from_city":     from_city,
+                "currency":      currency,
+                "items":         items,
+                "total":         grand_total,
+                "per_person":    grand_total / max(num_people, 1),
+                "num_people":    num_people,
+                "nights":        nights,
+                "days":          days,
+            }
+            return json.dumps(result)
+        except Exception as e:
+            return json.dumps({"error": str(e), "items": [], "total": 0})
+
     return json.dumps({"error": f"Unknown tool: {name}"})
 
 
@@ -508,6 +665,12 @@ def _tool_label(name: str, tool_input: dict) -> str:
         p = tool_input.get("passport_country", "")
         d = tool_input.get("destination_country", "")
         return f"Checking visa requirements for {p} → {d}…"
+    if name == "get_destination_guide":
+        return f"Generating destination guide for {tool_input.get('destination', '')}…"
+    if name == "convert_currency":
+        return f"Converting {tool_input.get('amount', '')} {tool_input.get('from_currency', '')}…"
+    if name == "calculate_trip_budget":
+        return f"Calculating trip budget for {tool_input.get('destination', '')}…"
     return f"Running {name}…"
 
 
@@ -634,6 +797,27 @@ async def stream_response(messages: list, extra_system: str | None = None) -> As
                         vd = json.loads(result_str)
                         if not vd.get("error"):
                             yield {"type": "visa_results", "data": vd}
+                    except Exception:
+                        pass
+                elif block.name == "get_destination_guide":
+                    try:
+                        gd = json.loads(result_str)
+                        if not gd.get("error") and gd.get("top_attractions"):
+                            yield {"type": "guide_results", "data": gd}
+                    except Exception:
+                        pass
+                elif block.name == "convert_currency":
+                    try:
+                        cd = json.loads(result_str)
+                        if not cd.get("error") and cd.get("rates"):
+                            yield {"type": "currency_results", "data": cd}
+                    except Exception:
+                        pass
+                elif block.name == "calculate_trip_budget":
+                    try:
+                        bd = json.loads(result_str)
+                        if not bd.get("error") and bd.get("total", 0) > 0:
+                            yield {"type": "budget_results", "data": bd}
                     except Exception:
                         pass
 

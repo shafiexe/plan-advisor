@@ -22,6 +22,9 @@ import type { BusSearchResult } from "@/types/buses";
 import type { TrainSearchResult } from "@/types/transport";
 import type { WeatherResult } from "@/types/weather";
 import type { VisaResult } from "@/types/visa";
+import type { DestinationGuide } from "@/types/destination";
+import type { CurrencyResult } from "@/types/currency";
+import type { TripBudget } from "@/types/budget";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
 
@@ -115,6 +118,9 @@ export default function Home() {
   const pendingTrainRef       = useRef<TrainSearchResult | null>(null);
   const pendingWeatherRef     = useRef<WeatherResult | null>(null);
   const pendingVisaRef        = useRef<VisaResult | null>(null);
+  const pendingGuideRef       = useRef<DestinationGuide | null>(null);
+  const pendingCurrencyRef    = useRef<CurrencyResult | null>(null);
+  const pendingBudgetRef      = useRef<TripBudget | null>(null);
 
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
@@ -198,15 +204,19 @@ export default function Home() {
     const calendarData   = pendingCalendarRef.current ?? undefined;
     const hotelData      = pendingHotelRef.current ?? undefined;
     const restaurantData = pendingRestaurantRef.current ?? undefined;
-    const weatherData    = pendingWeatherRef.current ?? undefined;
-    const visaData       = pendingVisaRef.current    ?? undefined;
+    const weatherData    = pendingWeatherRef.current    ?? undefined;
+    const visaData       = pendingVisaRef.current       ?? undefined;
+    const guideData      = pendingGuideRef.current      ?? undefined;
+    const currencyData   = pendingCurrencyRef.current   ?? undefined;
     if (calendarData)   pendingCalendarRef.current   = null;
     if (hotelData)      pendingHotelRef.current      = null;
     if (restaurantData) pendingRestaurantRef.current = null;
     if (weatherData)    pendingWeatherRef.current    = null;
     if (visaData)       pendingVisaRef.current       = null;
+    if (guideData)      pendingGuideRef.current      = null;
+    if (currencyData)   pendingCurrencyRef.current   = null;
 
-    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData);
+    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData);
     updateActive((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!hasCard && last?.role === "assistant" && last.streaming) {
@@ -214,7 +224,7 @@ export default function Home() {
       }
       return [
         ...msgs,
-        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData },
+        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData },
       ];
     });
   }, [updateActive]);
@@ -227,10 +237,12 @@ export default function Home() {
     const busData       = pendingBusRef.current       ?? undefined;
     const trainData     = pendingTrainRef.current     ?? undefined;
     const roundTripData = pendingRoundTripRef.current ?? undefined;
+    const budgetData    = pendingBudgetRef.current    ?? undefined;
     pendingFlightRef.current    = null;
     pendingBusRef.current       = null;
     pendingTrainRef.current     = null;
     pendingRoundTripRef.current = null;
+    pendingBudgetRef.current    = null;
 
     setConversations((prev) => {
       const convId = activeIdRef.current;
@@ -245,6 +257,7 @@ export default function Home() {
           ...(busData       && { busData }),
           ...(trainData     && { trainData }),
           ...(roundTripData && { roundTripData }),
+          ...(budgetData    && { budgetData }),
         } as typeof last;
         if (last?.streaming && autoSpeakRef.current) speak(finished.content);
         const updated: Conversation = {
@@ -306,6 +319,18 @@ export default function Home() {
     },
     onVisaResults: (data) => {
       pendingVisaRef.current = data as VisaResult;
+      setToolLabel(null);
+    },
+    onGuideResults: (data) => {
+      pendingGuideRef.current = data as DestinationGuide;
+      setToolLabel(null);
+    },
+    onCurrencyResults: (data) => {
+      pendingCurrencyRef.current = data as CurrencyResult;
+      setToolLabel(null);
+    },
+    onBudgetResults: (data) => {
+      pendingBudgetRef.current = data as TripBudget;
       setToolLabel(null);
     },
   });
