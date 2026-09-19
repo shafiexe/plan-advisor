@@ -28,6 +28,7 @@ const TOOL_ICONS: Record<string, string> = {
   get_travel_insurance:   "🛡️",
   get_trip_timeline:      "📅",
   split_group_expenses:   "👥",
+  compare_hotels:         "🔍",
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -221,6 +222,14 @@ function getSuggestions(msg: Message): string[] {
       "Share this with the group",
       "Add another expense",
       "Convert to USD",
+    ];
+  }
+  if (msg.hotelComparisonData) {
+    const winner = msg.hotelComparisonData.winner ?? "";
+    return [
+      winner ? `Book the ${winner}` : "Book the recommended hotel",
+      winner ? `Find restaurants near ${winner}` : "Find restaurants nearby",
+      "What's the weather like there?",
     ];
   }
   if (msg.busData || msg.trainData) {

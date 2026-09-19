@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from models import Conversation, Passenger, PassengerProfile
+from models import Conversation, Passenger, PassengerProfile, UserPreferences
 
 log = logging.getLogger(__name__)
 
@@ -350,6 +350,72 @@ async def update_passenger(
     await db.commit()
     await db.refresh(row)
     return _row_to_dict(row)
+
+
+# ── User preferences ──────────────────────────────────────────────────────────
+
+class PreferencesBody(BaseModel):
+    nationality:     str = "India"
+    home_city:       str = ""
+    home_iata:       str = ""
+    currency:        str = "INR"
+    travel_style:    str = ""
+    onboarding_done: bool = False
+
+
+@router.get("/preferences")
+async def get_preferences(
+    email: str = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    prefs = (await db.execute(
+        select(UserPreferences).where(UserPreferences.user_email == email)
+    )).scalar_one_or_none()
+    if not prefs:
+        return {
+            "nationality": "India", "home_city": "", "home_iata": "",
+            "currency": "INR", "travel_style": "", "onboarding_done": False,
+        }
+    return {
+        "nationality":     prefs.nationality,
+        "home_city":       prefs.home_city,
+        "home_iata":       prefs.home_iata,
+        "currency":        prefs.currency,
+        "travel_style":    prefs.travel_style,
+        "onboarding_done": prefs.onboarding_done,
+    }
+
+
+@router.put("/preferences")
+async def save_preferences(
+    body: PreferencesBody,
+    email: str = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    prefs = (await db.execute(
+        select(UserPreferences).where(UserPreferences.user_email == email)
+    )).scalar_one_or_none()
+
+    if prefs:
+        prefs.nationality     = body.nationality
+        prefs.home_city       = body.home_city
+        prefs.home_iata       = body.home_iata
+        prefs.currency        = body.currency
+        prefs.travel_style    = body.travel_style
+        prefs.onboarding_done = body.onboarding_done
+    else:
+        db.add(UserPreferences(
+            user_email=email,
+            nationality=body.nationality,
+            home_city=body.home_city,
+            home_iata=body.home_iata,
+            currency=body.currency,
+            travel_style=body.travel_style,
+            onboarding_done=body.onboarding_done,
+        ))
+
+    await db.commit()
+    return {"ok": True}
 
 
 @router.delete("/passengers/{passenger_id}")

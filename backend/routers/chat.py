@@ -56,6 +56,7 @@ async def websocket_chat(websocket: WebSocket):
             passenger_context: str | None = data.get("passenger_context") or None
             user_email: str | None = data.get("user_email") or None
             user_location: str | None = data.get("user_location") or None
+            user_preferences: dict | None = data.get("user_preferences") or None
 
             if not user_text:
                 continue
@@ -87,6 +88,20 @@ async def websocket_chat(websocket: WebSocket):
                     "When they refer to a passenger by name, use these details to fill in travel forms or answer questions:\n"
                     + passenger_context
                 )
+            if user_preferences:
+                nat   = user_preferences.get("nationality", "India")
+                home  = user_preferences.get("home_city", "")
+                iata  = user_preferences.get("home_iata", "")
+                curr  = user_preferences.get("currency", "INR")
+                style = user_preferences.get("travel_style", "")
+                pref_block = (
+                    "User preferences (use these as defaults unless overridden by the conversation):\n"
+                    f"- Nationality: {nat} (use for visa checks)\n"
+                    f"- Home city: {home} ({iata}) — use as origin for flights unless specified\n"
+                    f"- Currency: {curr} — show all prices in this currency\n"
+                    f"- Travel style: {style or 'not specified'}"
+                )
+                extra_parts.append(pref_block)
             extra_system = "\n\n".join(extra_parts) or None
 
             await websocket.send_json({"type": "typing"})

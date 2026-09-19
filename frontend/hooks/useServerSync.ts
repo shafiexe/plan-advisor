@@ -47,7 +47,8 @@ function cleanMessages(messages: Message[]): Message[] {
       if (m.phrasebookData)    Object.assign(base, { phrasebookData: m.phrasebookData });
       if (m.insuranceData)     Object.assign(base, { insuranceData: m.insuranceData });
       if (m.timelineData)      Object.assign(base, { timelineData: m.timelineData });
-      if (m.splitData)         Object.assign(base, { splitData: m.splitData });
+      if (m.splitData)              Object.assign(base, { splitData: m.splitData });
+      if (m.hotelComparisonData)    Object.assign(base, { hotelComparisonData: m.hotelComparisonData });
       return base;
     });
 }
@@ -326,6 +327,30 @@ export function useServerSync(userEmail: string | null | undefined) {
     } catch { return false; }
   }, [enabled, userEmail]);
 
+  /* ── User preferences ──────────────────────────────────── */
+  const loadPreferences = useCallback(async (): Promise<UserPreferences | null> => {
+    if (!enabled) return null;
+    try {
+      const resp = await fetch(`${API}/api/user/preferences`, {
+        headers: { "X-User-Email": userEmail! },
+      });
+      if (!resp.ok) return null;
+      return await resp.json() as UserPreferences;
+    } catch { return null; }
+  }, [enabled, userEmail]);
+
+  const savePreferences = useCallback(async (prefs: UserPreferences): Promise<boolean> => {
+    if (!enabled) return false;
+    try {
+      const resp = await fetch(`${API}/api/user/preferences`, {
+        method: "PUT",
+        headers: authHeaders(userEmail!),
+        body: JSON.stringify(prefs),
+      });
+      return resp.ok;
+    } catch { return false; }
+  }, [enabled, userEmail]);
+
   return {
     enabled,
     loadConversations,
@@ -349,8 +374,19 @@ export function useServerSync(userEmail: string | null | undefined) {
     emailTrip,
     addCollaborator,
     removeCollaborator,
+    loadPreferences,
+    savePreferences,
   };
 }
+
+export type UserPreferences = {
+  nationality: string;
+  home_city: string;
+  home_iata: string;
+  currency: string;
+  travel_style: string;
+  onboarding_done: boolean;
+};
 
 export type SavedTrip = {
   id: number;

@@ -46,6 +46,8 @@ import type { TravelInsurance } from "@/types/insurance";
 import type { TripTimeline } from "@/types/timeline";
 import GroupSplitCard from "./GroupSplitCard";
 import type { GroupSplit } from "@/types/expenseSplit";
+import HotelComparisonCard from "./HotelComparisonCard";
+import type { HotelComparison } from "@/types/hotelComparison";
 
 export type Message = {
   id: string;
@@ -74,6 +76,7 @@ export type Message = {
   insuranceData?: TravelInsurance;
   timelineData?: TripTimeline;
   splitData?: GroupSplit;
+  hotelComparisonData?: HotelComparison;
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -93,10 +96,10 @@ function formatTime(ts: number) {
 }
 
 export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking, onAction, onSetAlert, onSaveTrip }: Props) {
-  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData, itineraryData, predictionData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData } = message;
+  const { role, content, streaming, timestamp, flightData, calendarData, hotelData, restaurantData, busData, trainData, roundTripData, weatherData, visaData, guideData, currencyData, budgetData, itineraryData, predictionData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData } = message;
   const isUser = role === "user";
   const isTransportComparison = !isUser && ((!!flightData && (!!busData || !!trainData)) || (!!busData && !!trainData));
-  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData || !!itineraryData || !!predictionData || !!packingData || !!flightStatusData || !!transitData || !!phrasebookData || !!insuranceData || !!timelineData || !!splitData);
+  const hasCard = !isUser && (!!flightData || !!calendarData || !!hotelData || !!restaurantData || !!busData || !!trainData || !!roundTripData || !!weatherData || !!visaData || !!guideData || !!currencyData || !!budgetData || !!itineraryData || !!predictionData || !!packingData || !!flightStatusData || !!transitData || !!phrasebookData || !!insuranceData || !!timelineData || !!splitData || !!hotelComparisonData);
   const [copied, setCopied] = useState(false);
   const { data: session } = useSession();
   const isLoggedIn = !!session?.user;
@@ -221,6 +224,10 @@ export default function MessageBubble({ message, onSpeak, onStopSpeak, speaking,
 
         {!isUser && splitData && (
           <GroupSplitCard data={splitData} />
+        )}
+
+        {!isUser && hotelComparisonData && (
+          <HotelComparisonCard data={hotelComparisonData} />
         )}
 
         {/* When a card is shown, render analysis text below it using MarkdownBody */}

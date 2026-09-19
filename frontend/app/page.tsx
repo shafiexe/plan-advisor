@@ -13,7 +13,8 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { useVoiceInput } from "@/hooks/useVoiceInput";
 import { useSpeech } from "@/hooks/useSpeech";
 import { useServerSync } from "@/hooks/useServerSync";
-import type { AlertRecord, SavedTrip } from "@/hooks/useServerSync";
+import type { AlertRecord, SavedTrip, UserPreferences } from "@/hooks/useServerSync";
+import OnboardingModal from "@/components/OnboardingModal";
 import { useTheme } from "@/hooks/useTheme";
 import { useUserLocation } from "@/hooks/useUserLocation";
 import type { FlightSearchResult, PriceCalendarResult, RoundTripResult } from "@/types/flights";
@@ -34,6 +35,7 @@ import type { Phrasebook } from "@/types/phrasebook";
 import type { TravelInsurance } from "@/types/insurance";
 import type { GroupSplit } from "@/types/expenseSplit";
 import type { TripTimeline } from "@/types/timeline";
+import type { HotelComparison } from "@/types/hotelComparison";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
 
@@ -108,6 +110,8 @@ export default function Home() {
   const [editingAlertId, setEditingAlertId] = useState<number | null>(null);
   const [savedAlerts, setSavedAlerts] = useState<AlertRecord[]>([]);
   const [savedTrips, setSavedTrips] = useState<SavedTrip[]>([]);
+  const [userPrefs, setUserPrefs] = useState<UserPreferences | null>(null);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const serverLoadedRef = useRef(false);
   // Set during page-load only; cleared once fired; prevents duplicate auto-sends
   type AutoSendPending = { convId: string; text: string; history: { role: string; content: string }[] };
@@ -140,6 +144,7 @@ export default function Home() {
   const pendingInsuranceRef    = useRef<TravelInsurance | null>(null);
   const pendingTimelineRef     = useRef<TripTimeline | null>(null);
   const pendingSplitRef        = useRef<GroupSplit | null>(null);
+  const pendingHotelComparisonRef = useRef<HotelComparison | null>(null);
 
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
@@ -176,6 +181,14 @@ export default function Home() {
     sync.loadPassengers().then(setSavedPassengers).catch(() => {});
     sync.loadAlerts().then(setSavedAlerts).catch(() => {});
     sync.loadTrips().then(setSavedTrips).catch(() => {});
+    sync.loadPreferences().then((prefs) => {
+      if (prefs) {
+        setUserPrefs(prefs);
+        if (!prefs.onboarding_done) setShowOnboarding(true);
+      } else {
+        setShowOnboarding(true);
+      }
+    }).catch(() => { setShowOnboarding(true); });
 
     sync.loadConversations().then((serverConvs) => {
       serverLoadedRef.current = true;
@@ -235,7 +248,8 @@ export default function Home() {
     const phrasebookData    = pendingPhrasebookRef.current    ?? undefined;
     const insuranceData     = pendingInsuranceRef.current     ?? undefined;
     const timelineData      = pendingTimelineRef.current      ?? undefined;
-    const splitData         = pendingSplitRef.current         ?? undefined;
+    const splitData              = pendingSplitRef.current              ?? undefined;
+    const hotelComparisonData    = pendingHotelComparisonRef.current    ?? undefined;
     if (calendarData)      pendingCalendarRef.current      = null;
     if (hotelData)         pendingHotelRef.current         = null;
     if (restaurantData)    pendingRestaurantRef.current    = null;
@@ -250,9 +264,10 @@ export default function Home() {
     if (phrasebookData)    pendingPhrasebookRef.current    = null;
     if (insuranceData)     pendingInsuranceRef.current     = null;
     if (timelineData)      pendingTimelineRef.current      = null;
-    if (splitData)         pendingSplitRef.current         = null;
+    if (splitData)              pendingSplitRef.current              = null;
+    if (hotelComparisonData)    pendingHotelComparisonRef.current    = null;
 
-    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData || timelineData || splitData);
+    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData || timelineData || splitData || hotelComparisonData);
     updateActive((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!hasCard && last?.role === "assistant" && last.streaming) {
@@ -260,7 +275,7 @@ export default function Home() {
       }
       return [
         ...msgs,
-        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData },
+        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData, hotelComparisonData },
       ];
     });
   }, [updateActive]);
@@ -406,6 +421,10 @@ export default function Home() {
     },
     onSplitResults: (data) => {
       pendingSplitRef.current = data as GroupSplit;
+      setToolLabel(null);
+    },
+    onHotelComparisonResults: (data) => {
+      pendingHotelComparisonRef.current = data as HotelComparison;
       setToolLabel(null);
     },
   });
@@ -829,8 +848,25 @@ export default function Home() {
       ...(passengerContext ? { passenger_context: passengerContext } : {}),
       ...(userEmail ? { user_email: userEmail } : {}),
       ...(userLocation ? { user_location: userLocation.label } : {}),
+      ...(userPrefs ? {
+        user_preferences: {
+          nationality:  userPrefs.nationality,
+          home_city:    userPrefs.home_city,
+          home_iata:    userPrefs.home_iata,
+          currency:     userPrefs.currency,
+          travel_style: userPrefs.travel_style,
+        },
+      } : {}),
     });
-  }, [input, connected, streaming, typing, activeConversation, send, sync]);
+  }, [input, connected, streaming, typing, activeConversation, send, sync, userPrefs]);
+
+  /* ── Onboarding ─── */
+  const handleOnboardingComplete = useCallback(async (prefs: UserPreferences) => {
+    const completed = { ...prefs, onboarding_done: true };
+    await sync.savePreferences(completed);
+    setUserPrefs(completed);
+    setShowOnboarding(false);
+  }, [sync]);
 
   /* ── Voice input ─── */
   const { recording, toggleRecording } = useVoiceInput({
@@ -886,6 +922,11 @@ export default function Home() {
           onClose={() => { setPassportFile(null); setEditingPassenger(null); setShowPassengerModal(false); }}
           onPassengersChange={setSavedPassengers}
         />
+      )}
+
+      {/* ── Onboarding modal ── */}
+      {showOnboarding && userEmail && (
+        <OnboardingModal onComplete={handleOnboardingComplete} />
       )}
 
       {/* ── Price alert modal ── */}
@@ -954,6 +995,7 @@ export default function Home() {
         onToggleTheme={toggleTheme}
         connected={connected}
         onSignOut={() => signOut({ callbackUrl: "/login" })}
+        onEditPreferences={() => setShowOnboarding(true)}
       />
 
       {/* ── Itinerary sidebar ── */}
