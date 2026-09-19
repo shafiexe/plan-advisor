@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import MessageBubble, { Message } from "./MessageBubble";
 import TypingDots from "./TypingDots";
 
@@ -167,18 +167,41 @@ export default function ChatWindow({
   messages, typing, streaming, toolLabel, toolName, onSuggestion,
   onSpeak, onStopSpeak, speaking, onAction, onSetAlert,
 }: ChatWindowProps) {
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const bottomRef    = useRef<HTMLDivElement>(null);
+  const scrollRef    = useRef<HTMLDivElement>(null);
+  const atBottomRef  = useRef(true);   // true = user is near the bottom → auto-scroll
+  const streamingRef = useRef(streaming);
+  streamingRef.current = streaming;
 
+  // Track whether the user has scrolled up away from the bottom
+  const onScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    atBottomRef.current = distFromBottom < 120;
+  }, []);
+
+  // Auto-scroll only when the user is already near the bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (atBottomRef.current) {
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
   }, [messages, typing]);
+
+  // When a new user message is sent (streaming starts), always jump to bottom
+  useEffect(() => {
+    if (streaming) {
+      atBottomRef.current = true;
+      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [streaming]);
 
   const lastAssistantMsg = !typing && !streaming
     ? [...messages].reverse().find((m) => m.role === "assistant" && !m.streaming) ?? null
     : null;
 
   return (
-    <div className="flex-1 overflow-y-auto chat-scroll flex flex-col">
+    <div ref={scrollRef} onScroll={onScroll} className="flex-1 overflow-y-auto chat-scroll flex flex-col">
       <div className="px-4 py-6 flex-1">
         {messages.length === 0 ? (
           <EmptyState onSuggestion={onSuggestion} />
