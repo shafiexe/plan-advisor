@@ -4,9 +4,25 @@ import type { FlightSearchResult } from "@/types/flights";
 import type { HotelSearchResult } from "@/types/places";
 import type { WeatherResult } from "@/types/weather";
 
+/* ── Markdown table → plain text ───────────────────────────── */
+function convertTableToText(text: string): string {
+  const lines = text.split("\n");
+  const out: string[] = [];
+  for (const line of lines) {
+    const t = line.trim();
+    if (!t.startsWith("|")) { out.push(line); continue; }
+    // Separator row (|---|---|) — skip entirely
+    if (t.replace(/[\|\s\-:]/g, "").length === 0 && t.includes("-")) continue;
+    // Data row — join cells with aligned separator
+    const cells = t.split("|").slice(1, -1).map((c) => c.trim()).filter(Boolean);
+    out.push(cells.join("  |  "));
+  }
+  return out.join("\n");
+}
+
 /* ── Markdown stripper ─────────────────────────────────────── */
 function stripMarkdown(text: string): string {
-  return text
+  return convertTableToText(text)
     .replace(/\*\*(.+?)\*\*/g, "$1")           // bold
     .replace(/\*(.+?)\*/g, "$1")                // italic
     .replace(/#{1,6}\s+/g, "")                 // headings
@@ -15,6 +31,48 @@ function stripMarkdown(text: string): string {
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")   // links
     .replace(/\n{3,}/g, "\n\n")                // excess blank lines
     .trim();
+}
+
+/* ── Markdown → safe HTML (for print view) ─────────────────── */
+function renderForPrint(content: string): string {
+  const lines = content.split("\n");
+  const out: string[] = [];
+  let i = 0;
+  while (i < lines.length) {
+    const t = lines[i].trim();
+    if (t.startsWith("|")) {
+      // Collect the whole table block
+      const block: string[] = [];
+      while (i < lines.length && lines[i].trim().startsWith("|")) {
+        block.push(lines[i]);
+        i++;
+      }
+      const isSep = (l: string) =>
+        l.trim().replace(/[\|\s\-:]/g, "").length === 0 && l.includes("-");
+      const dataRows = block.filter((l) => !isSep(l));
+      if (dataRows.length === 0) continue;
+      const parseRow = (l: string) =>
+        l.trim().split("|").slice(1, -1).map((c) => c.trim());
+      const [header, ...body] = dataRows;
+      const headers = parseRow(header);
+      const rows = body.map(parseRow);
+      const thead = `<thead><tr>${headers.map((h) => `<th>${esc(h)}</th>`).join("")}</tr></thead>`;
+      const tbody = `<tbody>${rows.map((r) => `<tr>${r.map((c) => `<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+      out.push(`<table class="md-table">${thead}${tbody}</table>`);
+    } else {
+      let html = lines[i]
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+        .replace(/\*(.+?)\*/g, "<em>$1</em>")
+        .replace(/^#{1,6}\s+(.+)$/, "<strong style=\"font-size:15px\">$1</strong>")
+        .replace(/^[-*]\s+/, "• ")
+        .replace(/`{1,3}[^`]*`{1,3}/g, "")
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
+      out.push(html);
+      i++;
+    }
+  }
+  return out.join("<br>");
 }
 
 /* ── Card summarizers ──────────────────────────────────────── */
@@ -306,11 +364,12 @@ export function buildPrintHTML(messages: Message[]): string {
     .filter((m) => !m.streaming)
     .forEach((m) => {
       const who = m.role === "user" ? "You" : "Plan Advisor";
-      const text = stripMarkdown(m.content).replace(/\n/g, "<br>");
 
       if (m.role === "user") {
+        const text = esc(stripMarkdown(m.content)).replace(/\n/g, "<br>");
         contentParts.push(`<div class="message"><div class="label">${who}</div><div class="user-msg">${text}</div></div>`);
       } else {
+        const text = renderForPrint(m.content);
         contentParts.push(`<div class="message"><div class="label">${who}</div><div class="ai-msg">${text}</div></div>`);
       }
 
@@ -344,6 +403,9 @@ export function buildPrintHTML(messages: Message[]): string {
     table { width: 100%; border-collapse: collapse; margin: 8px 0; }
     td, th { padding: 6px 10px; border: 1px solid #e5e7eb; font-size: 13px; }
     th { background: #f9fafb; font-weight: bold; }
+    table.md-table { margin: 12px 0; }
+    table.md-table th { background: #eef2ff; color: #3730a3; }
+    table.md-table td:first-child { font-weight: 500; }
     .cost-total { font-weight: bold; background: #ede9fe; }
     .alert { background: #fef3c7; padding: 8px; border-left: 4px solid #f59e0b; margin: 8px 0; font-size: 13px; }
     @media print { body { margin: 20px; } }
