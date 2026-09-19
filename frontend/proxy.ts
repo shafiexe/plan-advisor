@@ -3,9 +3,8 @@ import { NextResponse } from "next/server";
 
 export default auth((req) => {
   if (!req.auth) {
-    const loginUrl = new URL("/login", req.nextUrl.origin);
-    loginUrl.searchParams.set("callbackUrl", req.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+    const landingUrl = new URL("/landing", req.nextUrl.origin);
+    return NextResponse.redirect(landingUrl);
   }
 });
 
@@ -13,6 +12,7 @@ export const config = {
   matcher: [
     /*
      * Match everything EXCEPT:
+     *   /landing        — the public marketing page (no auth needed)
      *   /login          — the sign-in page itself
      *   /share/*        — public shared conversation links (no auth needed)
      *   /api/auth/*     — NextAuth's own OAuth callbacks
@@ -20,6 +20,6 @@ export const config = {
      *   /favicon.ico    — browser icon
      *   /*.svg|png|…    — public static assets
      */
-    "/((?!login|share|api/auth|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!landing|login|share|api/auth|_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };
