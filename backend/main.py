@@ -28,13 +28,19 @@ if _sentry_dsn:
 _phoenix_key = _os.getenv("PHOENIX_API_KEY", "")
 if _phoenix_key:
     try:
+        import warnings
+        from opentelemetry.sdk.trace.export import BatchSpanProcessor
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
         from phoenix.otel import register as _phoenix_register
-        _tp = _phoenix_register(
-            project_name=_os.getenv("PHOENIX_PROJECT_NAME", "plan-advisor"),
-        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            _tp = _phoenix_register(
+                project_name=_os.getenv("PHOENIX_PROJECT_NAME", "plan-advisor"),
+                batch=True,
+            )
         from openinference.instrumentation.anthropic import AnthropicInstrumentor
         AnthropicInstrumentor().instrument(tracer_provider=_tp)
-        logging.getLogger(__name__).info("Arize Phoenix tracing enabled")
+        logging.getLogger(__name__).info("Arize Phoenix tracing enabled (batch mode)")
     except Exception as _e:
         logging.getLogger(__name__).warning("Phoenix init failed (non-fatal): %s", _e)
 # ───────────────────────────────────────────────────────────────────────────────
