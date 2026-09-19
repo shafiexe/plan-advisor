@@ -26,6 +26,8 @@ const TOOL_ICONS: Record<string, string> = {
   get_airport_transit:    "🚌",
   get_phrasebook:         "💬",
   get_travel_insurance:   "🛡️",
+  get_trip_timeline:      "📅",
+  split_group_expenses:   "👥",
 };
 
 type AlertData = { origin: string; destination: string; departureDate: string; price: number };
@@ -204,6 +206,21 @@ function getSuggestions(msg: Message): string[] {
       dest ? `Compare flight prices to ${dest}` : "Compare flight prices",
       dest ? `Check visa requirements for ${dest}` : "Check visa requirements",
       dest ? `Build packing list for ${dest}` : "Build packing list",
+    ];
+  }
+  if (msg.timelineData) {
+    const dest = msg.timelineData.destination ?? "";
+    return [
+      dest ? `Save this trip to ${dest}` : "Save this trip",
+      dest ? `Build packing list for ${dest}` : "Show packing list",
+      dest ? `What travel insurance do I need for ${dest}?` : "Check travel insurance",
+    ];
+  }
+  if (msg.splitData) {
+    return [
+      "Share this with the group",
+      "Add another expense",
+      "Convert to USD",
     ];
   }
   if (msg.busData || msg.trainData) {

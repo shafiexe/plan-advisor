@@ -32,6 +32,8 @@ import type { FlightStatus } from "@/types/flightStatus";
 import type { AirportTransit } from "@/types/transit";
 import type { Phrasebook } from "@/types/phrasebook";
 import type { TravelInsurance } from "@/types/insurance";
+import type { GroupSplit } from "@/types/expenseSplit";
+import type { TripTimeline } from "@/types/timeline";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
 
@@ -136,6 +138,8 @@ export default function Home() {
   const pendingTransitRef      = useRef<AirportTransit | null>(null);
   const pendingPhrasebookRef   = useRef<Phrasebook | null>(null);
   const pendingInsuranceRef    = useRef<TravelInsurance | null>(null);
+  const pendingTimelineRef     = useRef<TripTimeline | null>(null);
+  const pendingSplitRef        = useRef<GroupSplit | null>(null);
 
   autoSpeakRef.current = autoSpeak;
   activeIdRef.current  = activeId;
@@ -230,6 +234,8 @@ export default function Home() {
     const transitData       = pendingTransitRef.current       ?? undefined;
     const phrasebookData    = pendingPhrasebookRef.current    ?? undefined;
     const insuranceData     = pendingInsuranceRef.current     ?? undefined;
+    const timelineData      = pendingTimelineRef.current      ?? undefined;
+    const splitData         = pendingSplitRef.current         ?? undefined;
     if (calendarData)      pendingCalendarRef.current      = null;
     if (hotelData)         pendingHotelRef.current         = null;
     if (restaurantData)    pendingRestaurantRef.current    = null;
@@ -243,8 +249,10 @@ export default function Home() {
     if (transitData)       pendingTransitRef.current       = null;
     if (phrasebookData)    pendingPhrasebookRef.current    = null;
     if (insuranceData)     pendingInsuranceRef.current     = null;
+    if (timelineData)      pendingTimelineRef.current      = null;
+    if (splitData)         pendingSplitRef.current         = null;
 
-    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData);
+    const hasCard = !!(calendarData || hotelData || restaurantData || weatherData || visaData || guideData || currencyData || itineraryData || packingData || flightStatusData || transitData || phrasebookData || insuranceData || timelineData || splitData);
     updateActive((msgs) => {
       const last = msgs[msgs.length - 1];
       if (!hasCard && last?.role === "assistant" && last.streaming) {
@@ -252,7 +260,7 @@ export default function Home() {
       }
       return [
         ...msgs,
-        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData },
+        { id: `${Date.now()}`, role: "assistant" as const, content: token, streaming: true, timestamp: Date.now(), calendarData, hotelData, restaurantData, weatherData, visaData, guideData, currencyData, itineraryData, packingData, flightStatusData, transitData, phrasebookData, insuranceData, timelineData, splitData },
       ];
     });
   }, [updateActive]);
@@ -390,6 +398,14 @@ export default function Home() {
     },
     onInsuranceResults: (data) => {
       pendingInsuranceRef.current = data as TravelInsurance;
+      setToolLabel(null);
+    },
+    onTimelineResults: (data) => {
+      pendingTimelineRef.current = data as TripTimeline;
+      setToolLabel(null);
+    },
+    onSplitResults: (data) => {
+      pendingSplitRef.current = data as GroupSplit;
       setToolLabel(null);
     },
   });

@@ -46,6 +46,8 @@ function cleanMessages(messages: Message[]): Message[] {
       if (m.transitData)       Object.assign(base, { transitData: m.transitData });
       if (m.phrasebookData)    Object.assign(base, { phrasebookData: m.phrasebookData });
       if (m.insuranceData)     Object.assign(base, { insuranceData: m.insuranceData });
+      if (m.timelineData)      Object.assign(base, { timelineData: m.timelineData });
+      if (m.splitData)         Object.assign(base, { splitData: m.splitData });
       return base;
     });
 }

@@ -25,6 +25,8 @@ export type WsMessage =
   | { type: "transit_results"; data: unknown }
   | { type: "phrasebook_results"; data: unknown }
   | { type: "insurance_results"; data: unknown }
+  | { type: "timeline_results"; data: unknown }
+  | { type: "split_results"; data: unknown }
   | { type: "done" }
   | { type: "error"; content: string };
 
@@ -55,6 +57,8 @@ type Options = {
   onTransitResults?: (data: unknown) => void;
   onPhrasebookResults?: (data: unknown) => void;
   onInsuranceResults?: (data: unknown) => void;
+  onTimelineResults?: (data: unknown) => void;
+  onSplitResults?: (data: unknown) => void;
 };
 
 const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:8000/ws/chat";
@@ -96,6 +100,8 @@ export function useWebSocket(opts: Options) {
       else if (msg.type === "transit_results")          optsRef.current.onTransitResults?.(msg.data);
       else if (msg.type === "phrasebook_results")       optsRef.current.onPhrasebookResults?.(msg.data);
       else if (msg.type === "insurance_results")        optsRef.current.onInsuranceResults?.(msg.data);
+      else if (msg.type === "timeline_results")         optsRef.current.onTimelineResults?.(msg.data);
+      else if (msg.type === "split_results")            optsRef.current.onSplitResults?.(msg.data);
     };
 
     ws.onclose = () => {

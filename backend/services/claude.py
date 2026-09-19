@@ -76,6 +76,7 @@ Destination Guide:
 
 Budget:
 • `calculate_trip_budget` — Show itemized trip cost breakdown with total. Call when user asks about total cost or after confirming flight + hotel. Estimate meals at ₹2,000-5,000/day depending on destination; activities at 15-20% of total if not specified.
+• `split_group_expenses` — Split trip costs among group members, calculate who owes whom. Call when user mentions splitting costs or group travel expenses.
 
 Price analysis:
 • `predict_flight_price` — Evaluate if a flight price is a good deal vs typical prices for that route/month. Call when user asks if a price is good/reasonable/worth it.
@@ -97,6 +98,9 @@ Language:
 
 Travel Insurance:
 • `get_travel_insurance` — Travel insurance guidance (coverage types, cost estimate, providers). Call when user asks about travel insurance.
+
+Trip Timeline:
+• `get_trip_timeline` — Assemble a visual trip timeline from flights, hotel, and itinerary. Call when user asks to see the full trip overview or timeline.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 IATA CITY CODES
@@ -510,6 +514,42 @@ TOOLS = [
         },
     },
     {
+        "name": "split_group_expenses",
+        "description": (
+            "Split trip expenses equally (or by custom shares) among group members. "
+            "Shows each person's share and who owes whom. "
+            "Call when user asks to split costs, calculate shares, or divide trip expenses among people."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "description": "List of member names e.g. ['Shafi', 'Priya', 'Ravi']",
+                },
+                "expenses": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name":     {"type": "string",  "description": "Expense name e.g. 'Flight tickets'"},
+                            "amount":   {"type": "number",  "description": "Total cost"},
+                            "paid_by":  {"type": "string",  "description": "Member who paid (must be in members list)"},
+                            "split":    {"type": "string",  "enum": ["equal", "custom"], "description": "How to split"},
+                            "shares":   {"type": "object",  "description": "For custom split: {member: amount}"},
+                            "emoji":    {"type": "string",  "description": "Emoji for this expense e.g. ✈️"},
+                        },
+                        "required": ["name", "amount", "paid_by"],
+                    },
+                    "description": "List of expenses",
+                },
+                "currency": {"type": "string", "description": "Currency code e.g. INR"},
+            },
+            "required": ["members", "expenses"],
+        },
+    },
+    {
         "name": "calculate_trip_budget",
         "description": (
             "Calculate total trip cost and show an itemized budget breakdown. "
@@ -532,6 +572,67 @@ TOOLS = [
                 "num_people":           {"type": "integer", "description": "Number of travellers. Default 1."},
             },
             "required": ["destination", "flight_cost", "hotel_cost_per_night", "nights", "daily_meal_budget", "days"],
+        },
+    },
+    {
+        "name": "get_trip_timeline",
+        "description": (
+            "Assemble a complete trip timeline combining flights, hotel check-in/out, and daily activities. "
+            "Call after the user has confirmed flights, hotel, and wants to see the full trip overview. "
+            "Populate all known fields from the conversation."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destination": {"type": "string"},
+                "outbound_flight": {
+                    "type": "object",
+                    "description": "Outbound flight details",
+                    "properties": {
+                        "flight_number": {"type": "string"},
+                        "departure_airport": {"type": "string"},
+                        "arrival_airport": {"type": "string"},
+                        "departure_datetime": {"type": "string", "description": "ISO datetime or 'YYYY-MM-DD HH:MM'"},
+                        "arrival_datetime": {"type": "string"},
+                        "airline": {"type": "string"},
+                    }
+                },
+                "return_flight": {
+                    "type": "object",
+                    "description": "Return flight (optional)",
+                    "properties": {
+                        "flight_number": {"type": "string"},
+                        "departure_airport": {"type": "string"},
+                        "arrival_airport": {"type": "string"},
+                        "departure_datetime": {"type": "string"},
+                        "arrival_datetime": {"type": "string"},
+                        "airline": {"type": "string"},
+                    }
+                },
+                "hotel": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "location": {"type": "string"},
+                        "check_in_date": {"type": "string", "description": "YYYY-MM-DD"},
+                        "check_out_date": {"type": "string", "description": "YYYY-MM-DD"},
+                    }
+                },
+                "itinerary_days": {
+                    "type": "array",
+                    "description": "Array of days from the itinerary",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "day": {"type": "integer"},
+                            "date": {"type": "string"},
+                            "theme": {"type": "string"},
+                            "highlight": {"type": "string", "description": "Single most exciting activity of the day"},
+                        }
+                    }
+                },
+            },
+            "required": ["destination"],
         },
     },
 ]
@@ -817,6 +918,77 @@ async def _run_tool(name: str, tool_input: dict) -> str:
         )
         return json.dumps(result)
 
+    # ── Group expense splitter ──
+    if name == "split_group_expenses":
+        import json as _json
+        members  = tool_input.get("members", [])
+        expenses = tool_input.get("expenses", [])
+        currency = tool_input.get("currency", "INR")
+        n = len(members)
+
+        # Track net balance per person (positive = owed money, negative = owes money)
+        balances = {m: 0.0 for m in members}
+        expense_rows = []
+
+        for exp in expenses:
+            amount   = float(exp.get("amount", 0))
+            paid_by  = exp.get("paid_by", "")
+            split    = exp.get("split", "equal")
+            shares   = exp.get("shares", {})
+
+            if split == "custom" and shares:
+                per_person = shares
+            else:
+                each = amount / n if n else 0
+                per_person = {m: each for m in members}
+
+            # payer gets credit for full amount
+            if paid_by in balances:
+                balances[paid_by] += amount
+            # each member owes their share
+            for m, share in per_person.items():
+                if m in balances:
+                    balances[m] -= share
+
+            expense_rows.append({
+                "name":       exp.get("name", ""),
+                "emoji":      exp.get("emoji", "💰"),
+                "amount":     amount,
+                "paid_by":    paid_by,
+                "per_person": per_person,
+            })
+
+        # Compute settlements (who pays whom) using greedy algorithm
+        pos = [(m, b) for m, b in balances.items() if b > 0.01]   # creditors
+        neg = [(m, -b) for m, b in balances.items() if b < -0.01] # debtors
+        pos.sort(key=lambda x: -x[1])
+        neg.sort(key=lambda x: -x[1])
+
+        settlements = []
+        i, j = 0, 0
+        while i < len(pos) and j < len(neg):
+            creditor, credit = pos[i]
+            debtor,   debt   = neg[j]
+            amount = min(credit, debt)
+            settlements.append({"from": debtor, "to": creditor, "amount": round(amount, 2)})
+            pos[i] = (creditor, credit - amount)
+            neg[j] = (debtor,   debt   - amount)
+            if pos[i][1] < 0.01: i += 1
+            if neg[j][1] < 0.01: j += 1
+
+        total = sum(e["amount"] for e in expenses)
+
+        result = {
+            "members":          members,
+            "currency":         currency,
+            "total":            round(total, 2),
+            "per_person_total": round(total / n, 2) if n else 0,
+            "expenses":         expense_rows,
+            "balances":         {m: round(b, 2) for m, b in balances.items()},
+            "settlements":      settlements,
+        }
+        return _json.dumps(result)
+
     # ── Trip budget ──
     if name == "calculate_trip_budget":
         try:
@@ -857,6 +1029,18 @@ async def _run_tool(name: str, tool_input: dict) -> str:
             return json.dumps(result)
         except Exception as e:
             return json.dumps({"error": str(e), "items": [], "total": 0})
+
+    # ── Trip timeline ──
+    if name == "get_trip_timeline":
+        import json as _json
+        timeline = {
+            "destination": tool_input.get("destination", ""),
+            "outbound_flight": tool_input.get("outbound_flight"),
+            "return_flight": tool_input.get("return_flight"),
+            "hotel": tool_input.get("hotel"),
+            "itinerary_days": tool_input.get("itinerary_days", []),
+        }
+        return _json.dumps(timeline)
 
     return json.dumps({"error": f"Unknown tool: {name}"})
 
@@ -917,6 +1101,10 @@ def _tool_label(name: str, tool_input: dict) -> str:
     if name == "get_travel_insurance":
         destination = tool_input.get("destination", "")
         return f"Checking insurance for {destination}…"
+    if name == "get_trip_timeline":
+        return f"Building trip timeline for {tool_input.get('destination', '')}…"
+    if name == "split_group_expenses":
+        return "Splitting group expenses…"
     return f"Running {name}…"
 
 
@@ -1111,6 +1299,20 @@ async def stream_response(messages: list, extra_system: str | None = None) -> As
                         ins = json.loads(result_str)
                         if not ins.get("error") or ins.get("coverage_types"):
                             yield {"type": "insurance_results", "data": ins}
+                    except Exception:
+                        pass
+                elif block.name == "get_trip_timeline":
+                    try:
+                        tl = json.loads(result_str)
+                        if tl.get("destination"):
+                            yield {"type": "timeline_results", "data": tl}
+                    except Exception:
+                        pass
+                elif block.name == "split_group_expenses":
+                    try:
+                        split = json.loads(result_str)
+                        if split.get("members"):
+                            yield {"type": "split_results", "data": split}
                     except Exception:
                         pass
 
