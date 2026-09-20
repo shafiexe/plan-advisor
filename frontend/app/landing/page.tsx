@@ -57,8 +57,8 @@ export default function LandingPage() {
               style={{ background: "#1e3a8a" }}
             >
               <span className="text-2xl mb-1">🧳</span>
-              <span>Plan a Trip</span>
-              <span className="text-xs font-normal text-blue-300/70">Search flights, hotels & tours</span>
+              <span>Start Planning</span>
+              <span className="text-xs font-normal text-blue-300/70">Chat, explore & book your trip</span>
             </Link>
             <Link
               href="/login/agent"
@@ -67,8 +67,8 @@ export default function LandingPage() {
               style={{ borderColor: "#d4a017", color: "#d4a017" }}
             >
               <span className="text-2xl mb-1">🏢</span>
-              <span>I&apos;m an Agent</span>
-              <span className="text-xs font-normal text-slate-500">Manage listings & bookings</span>
+              <span>Agent Dashboard</span>
+              <span className="text-xs font-normal text-slate-500">Publish packages, tickets & visa</span>
             </Link>
           </div>
 

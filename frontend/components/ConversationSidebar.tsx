@@ -585,7 +585,17 @@ export default function ConversationSidebar({
   const [editTitle, setEditTitle] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [isAgent, setIsAgent] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  useEffect(() => {
+    if (!userEmail) return;
+    fetch(`${API_BASE}/api/agent/check`, { headers: { "X-User-Email": userEmail } })
+      .then(r => r.json())
+      .then(d => setIsAgent(!!d.is_agent))
+      .catch(() => {});
+  }, [userEmail, API_BASE]);
 
   const { supported: pushSupported, subscribed: pushSubscribed, subscribe: pushSubscribe, unsubscribe: pushUnsubscribe } =
     usePushNotifications(sessionUser?.email);
@@ -887,8 +897,13 @@ export default function ConversationSidebar({
               })}
             </div>
 
-            {/* ── Explore shortcut ── */}
-            <div className="px-3 pb-2">
+            {/* ── Quick links ── */}
+            <div className="px-3 pb-2 flex flex-col gap-0.5">
+              {isAgent && (
+                <a href="/agent/dashboard" className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-800/60 transition-all w-full" style={{ color: "#d4a017" }}>
+                  ⚙️ <span>Manage Listings</span>
+                </a>
+              )}
               <a href="/explore" className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500 hover:text-slate-300 rounded-xl hover:bg-slate-800/60 transition-all w-full">
                 🌐 <span>Explore Listings</span>
               </a>
