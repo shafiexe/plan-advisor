@@ -27,10 +27,10 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
       fetch(`${API}/api/agent/check`, { headers: { "X-User-Email": session.user.email } })
         .then(r => r.json())
         .then(d => {
-          if (!d.is_agent) router.push("/register/agent");
+          if (!d.is_admin) router.push("/");
           else setIsAgent(true);
         })
-        .catch(() => router.push("/register/agent"));
+        .catch(() => router.push("/"));
     }
   }, [status, session, router]);
 

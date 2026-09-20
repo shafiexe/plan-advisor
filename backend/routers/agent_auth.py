@@ -26,6 +26,12 @@ from models import AgentProfile, OTPRecord, _now
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/agent")
 
+# Comma-separated admin emails in the ADMIN_EMAILS env var.
+# e.g. ADMIN_EMAILS=admin@example.com,ops@example.com
+ADMIN_EMAILS: set[str] = {
+    e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()
+}
+
 
 async def current_user(x_user_email: str = Header(..., alias="X-User-Email")) -> str:
     if not x_user_email or "@" not in x_user_email:
@@ -42,7 +48,23 @@ async def require_agent(
         select(AgentProfile).where(AgentProfile.user_email == email, AgentProfile.is_active == True)
     )).scalar_one_or_none()
     if not profile:
-        raise HTTPException(status_code=403, detail="Agent profile required. Please register as an agent first.")
+        raise HTTPException(status_code=403, detail="Agent profile required.")
+    return profile
+
+
+async def require_admin(
+    email: str = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+) -> AgentProfile:
+    """Dependency: ensures the current user is a platform admin (in ADMIN_EMAILS)
+    AND has an active AgentProfile (so their content has proper agent info)."""
+    if email not in ADMIN_EMAILS:
+        raise HTTPException(status_code=403, detail="Admin access required.")
+    profile = (await db.execute(
+        select(AgentProfile).where(AgentProfile.user_email == email, AgentProfile.is_active == True)
+    )).scalar_one_or_none()
+    if not profile:
+        raise HTTPException(status_code=403, detail="Admin must have an active agent profile.")
     return profile
 
 
@@ -217,25 +239,26 @@ async def check_agent(
     email: str = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """Quick check: is this user an agent? Returns {is_agent, profile}."""
+    """Quick role check. Returns {is_admin, is_agent, profile}."""
     profile = (await db.execute(
         select(AgentProfile).where(AgentProfile.user_email == email)
     )).scalar_one_or_none()
     return {
+        "is_admin": email in ADMIN_EMAILS,
         "is_agent": profile is not None and profile.is_active,
         "profile":  _profile_to_dict(profile) if profile else None,
     }
 
 
 @router.get("/profile")
-async def get_profile(profile: AgentProfile = Depends(require_agent)):
+async def get_profile(profile: AgentProfile = Depends(require_admin)):
     return _profile_to_dict(profile)
 
 
 @router.put("/profile")
 async def update_profile(
     body: UpdateProfileBody,
-    profile: AgentProfile = Depends(require_agent),
+    profile: AgentProfile = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     if body.name:        profile.name             = body.name.strip()
@@ -256,7 +279,7 @@ async def update_profile(
 
 @router.get("/dashboard/stats")
 async def dashboard_stats(
-    profile: AgentProfile = Depends(require_agent),
+    profile: AgentProfile = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     """Return counts for the agent dashboard."""

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import AgentProfile, Enquiry, _now
-from routers.agent_auth import require_agent
+from routers.agent_auth import require_admin
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/agent/enquiries")
@@ -31,7 +31,7 @@ def _enq_to_dict(e: Enquiry) -> dict:
 
 @router.get("")
 async def list_enquiries(
-    profile: AgentProfile = Depends(require_agent),
+    profile: AgentProfile = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     rows = (await db.execute(
@@ -45,7 +45,7 @@ async def list_enquiries(
 @router.patch("/{enquiry_id}/read")
 async def mark_read(
     enquiry_id: int,
-    profile: AgentProfile = Depends(require_agent),
+    profile: AgentProfile = Depends(require_admin),
     db: AsyncSession = Depends(get_db),
 ):
     enq = (await db.execute(

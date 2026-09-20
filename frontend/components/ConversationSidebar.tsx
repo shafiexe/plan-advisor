@@ -593,7 +593,7 @@ export default function ConversationSidebar({
     if (!userEmail) return;
     fetch(`${API_BASE}/api/agent/check`, { headers: { "X-User-Email": userEmail } })
       .then(r => r.json())
-      .then(d => setIsAgent(!!d.is_agent))
+      .then(d => setIsAgent(!!d.is_admin))
       .catch(() => {});
   }, [userEmail, API_BASE]);
 
@@ -901,7 +901,7 @@ export default function ConversationSidebar({
             <div className="px-3 pb-2 flex flex-col gap-0.5">
               {isAgent && (
                 <a href="/agent/dashboard" className="flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-slate-800/60 transition-all w-full" style={{ color: "#d4a017" }}>
-                  ⚙️ <span>Manage Listings</span>
+                  ⚙️ <span>Admin Panel</span>
                 </a>
               )}
               <a href="/explore" className="flex items-center gap-2 px-3 py-2 text-xs text-slate-500 hover:text-slate-300 rounded-xl hover:bg-slate-800/60 transition-all w-full">
