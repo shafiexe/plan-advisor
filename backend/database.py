@@ -46,6 +46,8 @@ async def init_db():
                 "ALTER TABLE agent_profiles ADD COLUMN languages JSON",
                 "ALTER TABLE agent_profiles ADD COLUMN experience_years INTEGER DEFAULT 0",
                 "ALTER TABLE agent_profiles ADD COLUMN agency_code TEXT DEFAULT ''",
+                "ALTER TABLE user_preferences ADD COLUMN onboarding_done BOOLEAN DEFAULT 0",
+                "ALTER TABLE user_preferences ADD COLUMN packing_essentials JSON",
             ):
                 try:
                     await conn.execute(text(col_def))
@@ -59,6 +61,8 @@ async def init_db():
                 "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS languages JSON",
                 "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS experience_years INTEGER DEFAULT 0",
                 "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS agency_code TEXT DEFAULT ''",
+                "ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS onboarding_done BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS packing_essentials JSON",
             ):
                 try:
                     await conn.execute(text(col_def))
