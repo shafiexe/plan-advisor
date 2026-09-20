@@ -1,6 +1,6 @@
 """
 Tour package CRUD + AI-assisted draft generation.
-All endpoints require admin access (checked via require_admin from agent_auth).
+All endpoints require an active agent profile (ownership enforced per agent_email).
 """
 import logging
 import os
@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import AgentProfile, TourPackage, _now, make_slug
-from routers.agent_auth import require_admin
+from routers.agent_auth import require_agent
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/agent/packages")
@@ -102,7 +102,7 @@ def _pkg_to_dict(p: TourPackage) -> dict:
 @router.post("/ai-draft")
 async def ai_draft(
     body: AIDraftBody,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
 ):
     """Generate a full package draft from a short brief using Claude."""
     api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -166,7 +166,7 @@ Write in a friendly, professional tone suitable for travelers booking through an
 @router.post("", status_code=201)
 async def create_package(
     body: PackageBody,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     suffix = str(uuid.uuid4())[:6]
@@ -186,7 +186,7 @@ async def create_package(
 @router.get("")
 async def list_packages(
     status: str | None = None,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     q = select(TourPackage).where(TourPackage.agent_email == profile.user_email)
@@ -202,7 +202,7 @@ async def list_packages(
 @router.get("/{pkg_id}")
 async def get_package(
     pkg_id: int,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     pkg = (await db.execute(
@@ -217,7 +217,7 @@ async def get_package(
 async def update_package(
     pkg_id: int,
     body: PackageBody,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     pkg = (await db.execute(
@@ -237,7 +237,7 @@ async def update_package(
 @router.patch("/{pkg_id}/toggle")
 async def toggle_public(
     pkg_id: int,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     pkg = (await db.execute(
@@ -255,7 +255,7 @@ async def toggle_public(
 async def set_status(
     pkg_id: int,
     body: dict,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     valid = ("draft", "published", "archived")
@@ -276,7 +276,7 @@ async def set_status(
 @router.delete("/{pkg_id}")
 async def delete_package(
     pkg_id: int,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     pkg = (await db.execute(

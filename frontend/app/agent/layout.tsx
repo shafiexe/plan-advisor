@@ -9,17 +9,23 @@ const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const NAV = [
   { href: "/agent/dashboard", icon: "📊", label: "Dashboard" },
-  { href: "/agent/packages", icon: "🌍", label: "Tour Packages" },
-  { href: "/agent/tickets",  icon: "🎫", label: "Tickets" },
-  { href: "/agent/visa",     icon: "🛂", label: "Visa Services" },
-  { href: "/agent/profile",  icon: "👤", label: "Profile" },
+  { href: "/agent/packages",  icon: "🌍", label: "Tour Packages" },
+  { href: "/agent/tickets",   icon: "🎫", label: "Tickets" },
+  { href: "/agent/visa",      icon: "🛂", label: "Visa Services" },
+  { href: "/agent/profile",   icon: "👤", label: "Profile" },
+];
+
+const ADMIN_NAV = [
+  { href: "/agent/admin/agents", icon: "🏢", label: "All Agents" },
+  { href: "/agent/admin/users",  icon: "👥", label: "All Travellers" },
 ];
 
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
-  const [isAgent, setIsAgent] = useState<boolean | null>(null);
+  const [ready, setReady] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") { router.push("/login?callbackUrl=/agent/dashboard"); return; }
@@ -27,14 +33,15 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
       fetch(`${API}/api/agent/check`, { headers: { "X-User-Email": session.user.email } })
         .then(r => r.json())
         .then(d => {
-          if (!d.is_admin) router.push("/");
-          else setIsAgent(true);
+          if (!d.is_agent && !d.is_admin) { router.push("/"); return; }
+          setIsAdmin(!!d.is_admin);
+          setReady(true);
         })
         .catch(() => router.push("/"));
     }
   }, [status, session, router]);
 
-  if (status === "loading" || isAgent === null) {
+  if (status === "loading" || !ready) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="flex gap-2 items-center text-slate-400">
@@ -45,6 +52,8 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
     );
   }
 
+  const allNav = isAdmin ? [...NAV, ...ADMIN_NAV] : NAV;
+
   return (
     <div className="flex min-h-screen bg-slate-950">
       {/* Sidebar */}
@@ -52,19 +61,32 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
         <div className="p-4 border-b border-white/10">
           <Link href="/"><BrandLogo size={28} /></Link>
           <p className="text-xs text-blue-300/60 mt-2 truncate">{session?.user?.email}</p>
+          {isAdmin && (
+            <span className="mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: "#d4a01720", color: "#d4a017" }}>
+              Admin
+            </span>
+          )}
         </div>
 
         <nav className="flex flex-col gap-1 p-3 flex-1">
-          {NAV.map(item => {
+          {allNav.map((item, i) => {
+            const isAdminSection = i === NAV.length && isAdmin;
             const active = pathname === item.href || (item.href !== "/agent/dashboard" && pathname.startsWith(item.href));
             return (
-              <Link key={item.href} href={item.href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
-                  ${active ? "text-white border-l-2 border-[#d4a017]" : "text-blue-200/60 hover:text-white hover:bg-white/5"}`}
-                style={active ? { background: "#1e3a8a60" } : {}}>
-                <span className="text-base">{item.icon}</span>
-                {item.label}
-              </Link>
+              <div key={item.href}>
+                {isAdminSection && (
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-blue-300/30 px-3 pt-3 pb-1">
+                    Admin
+                  </p>
+                )}
+                <Link href={item.href}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all
+                    ${active ? "text-white border-l-2 border-[#d4a017]" : "text-blue-200/60 hover:text-white hover:bg-white/5"}`}
+                  style={active ? { background: "#1e3a8a60" } : {}}>
+                  <span className="text-base">{item.icon}</span>
+                  {item.label}
+                </Link>
+              </div>
             );
           })}
         </nav>

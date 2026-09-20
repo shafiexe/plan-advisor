@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import AgentProfile, Ticket, _now
-from routers.agent_auth import require_admin
+from routers.agent_auth import require_agent
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/agent/tickets")
@@ -85,7 +85,7 @@ def _ticket_to_dict(t: Ticket) -> dict:
 @router.post("", status_code=201)
 async def create_ticket(
     body: TicketBody,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     t = Ticket(agent_email=profile.user_email, **body.model_dump())
@@ -98,7 +98,7 @@ async def create_ticket(
 @router.get("")
 async def list_tickets(
     upcoming: bool = False,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     q = select(Ticket).where(Ticket.agent_email == profile.user_email).order_by(Ticket.travel_date)
@@ -114,7 +114,7 @@ async def list_tickets(
 async def update_ticket(
     ticket_id: int,
     body: TicketBody,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     t = (await db.execute(
@@ -133,7 +133,7 @@ async def update_ticket(
 async def update_seats(
     ticket_id: int,
     body: dict,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     """body: {"sold": N} — deducts N from available_seats."""
@@ -152,7 +152,7 @@ async def update_seats(
 @router.patch("/{ticket_id}/toggle")
 async def toggle_public(
     ticket_id: int,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     t = (await db.execute(
@@ -169,7 +169,7 @@ async def toggle_public(
 @router.delete("/{ticket_id}")
 async def delete_ticket(
     ticket_id: int,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     t = (await db.execute(

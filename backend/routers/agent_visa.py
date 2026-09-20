@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
 from models import AgentProfile, VisaService, _now
-from routers.agent_auth import require_admin
+from routers.agent_auth import require_agent
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/agent/visa")
@@ -77,7 +77,7 @@ def _visa_to_dict(v: VisaService) -> dict:
 @router.post("/ai-fill")
 async def ai_fill(
     body: AIFillBody,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
 ):
     """Fill visa requirements from Claude's knowledge of country/type pairs."""
     api_key = os.getenv("ANTHROPIC_API_KEY")
@@ -137,7 +137,7 @@ Base answers on commonly known requirements for Indian passport holders unless s
 @router.post("", status_code=201)
 async def create_visa(
     body: VisaBody,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     v = VisaService(agent_email=profile.user_email, **body.model_dump())
@@ -149,7 +149,7 @@ async def create_visa(
 
 @router.get("")
 async def list_visa(
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     rows = (await db.execute(
@@ -164,7 +164,7 @@ async def list_visa(
 async def update_visa(
     visa_id: int,
     body: VisaBody,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     v = (await db.execute(
@@ -183,7 +183,7 @@ async def update_visa(
 async def set_status(
     visa_id: int,
     body: dict,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     valid = ("active", "paused", "discontinued")
@@ -204,7 +204,7 @@ async def set_status(
 @router.delete("/{visa_id}")
 async def delete_visa(
     visa_id: int,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     v = (await db.execute(

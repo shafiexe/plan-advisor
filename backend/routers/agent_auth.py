@@ -251,14 +251,14 @@ async def check_agent(
 
 
 @router.get("/profile")
-async def get_profile(profile: AgentProfile = Depends(require_admin)):
+async def get_profile(profile: AgentProfile = Depends(require_agent)):
     return _profile_to_dict(profile)
 
 
 @router.put("/profile")
 async def update_profile(
     body: UpdateProfileBody,
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     if body.name:        profile.name             = body.name.strip()
@@ -279,7 +279,7 @@ async def update_profile(
 
 @router.get("/dashboard/stats")
 async def dashboard_stats(
-    profile: AgentProfile = Depends(require_admin),
+    profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
     """Return counts for the agent dashboard."""
@@ -323,3 +323,93 @@ async def dashboard_stats(
             for p in recent_pkgs
         ],
     }
+
+
+# ── Admin-only endpoints ──────────────────────────────────────────────────────
+
+class AdminCreateAgentBody(BaseModel):
+    user_email:       str
+    agent_type:       str
+    name:             str
+    phone:            str
+    location:         str = ""
+    website:          str = ""
+    description:      str = ""
+    logo_url:         str = ""
+    specializations:  list[str] = []
+    languages:        list[str] = []
+    experience_years: int = 0
+    agency_code:      str = ""
+
+
+@router.get("/admin/agents")
+async def admin_list_agents(
+    _admin: AgentProfile = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin: list all agent profiles."""
+    agents = (await db.execute(
+        select(AgentProfile).order_by(AgentProfile.created_at.desc())
+    )).scalars().all()
+    return [_profile_to_dict(a) for a in agents]
+
+
+@router.post("/admin/agents", status_code=201)
+async def admin_create_agent(
+    body: AdminCreateAgentBody,
+    _admin: AgentProfile = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin: create an agent profile for any user email."""
+    target_email = body.user_email.lower().strip()
+    existing = (await db.execute(
+        select(AgentProfile).where(AgentProfile.user_email == target_email)
+    )).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=409, detail="Agent profile already exists for this email.")
+    if body.agent_type not in ("agency", "individual"):
+        raise HTTPException(status_code=422, detail="agent_type must be 'agency' or 'individual'")
+
+    profile = AgentProfile(
+        user_email=target_email,
+        agent_type=body.agent_type,
+        name=body.name.strip(),
+        phone=body.phone.strip(),
+        location=body.location,
+        website=body.website,
+        description=body.description,
+        logo_url=body.logo_url,
+        specializations=body.specializations,
+        languages=body.languages,
+        experience_years=body.experience_years,
+        agency_code=body.agency_code,
+        phone_verified=False,
+        is_active=True,
+    )
+    db.add(profile)
+    await db.commit()
+    await db.refresh(profile)
+    return {"ok": True, "profile": _profile_to_dict(profile)}
+
+
+@router.get("/admin/users")
+async def admin_list_users(
+    _admin: AgentProfile = Depends(require_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Admin: list all registered travellers (users with preferences)."""
+    from models import UserPreferences
+    users = (await db.execute(
+        select(UserPreferences).order_by(UserPreferences.id.desc())
+    )).scalars().all()
+    return [
+        {
+            "email":          u.user_email,
+            "home_city":      u.home_city or "",
+            "nationality":    u.nationality or "",
+            "travel_style":   u.travel_style or "",
+            "currency":       u.currency or "INR",
+            "onboarding_done": u.onboarding_done,
+        }
+        for u in users
+    ]
