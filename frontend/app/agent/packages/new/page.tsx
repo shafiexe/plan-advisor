@@ -149,18 +149,26 @@ export default function NewPackagePage() {
         body: JSON.stringify({ brief: aiBrief, category }),
       });
       if (!res.ok) throw new Error("AI draft generation failed");
-      const d = await res.json();
-      if (d.title) setTitle(d.title);
-      if (d.destinations) setDestinations(d.destinations);
-      if (d.duration_days) setDurationDays(d.duration_days);
-      if (d.duration_nights) setDurationNights(d.duration_nights);
-      if (d.itinerary) setItinerary(d.itinerary);
-      if (d.highlights) setHighlights(d.highlights);
-      if (d.inclusions) setInclusions(d.inclusions);
-      if (d.exclusions) setExclusions(d.exclusions);
-      if (d.what_to_carry) setWhatToCarry(d.what_to_carry);
-      if (d.price_per_person) setPricePer(d.price_per_person);
-      if (d.cancellation_policy) setCancellationPolicy(d.cancellation_policy);
+      const { draft } = await res.json();
+      if (draft.title)               setTitle(draft.title);
+      if (draft.category)            setCategory(draft.category);
+      if (draft.difficulty)          setDifficulty(draft.difficulty);
+      if (draft.destinations)        setDestinations(draft.destinations);
+      if (draft.duration_days)       setDurationDays(draft.duration_days);
+      if (draft.duration_nights)     setDurationNights(draft.duration_nights);
+      if (draft.itinerary)           setItinerary(draft.itinerary);
+      if (draft.highlights)          setHighlights(draft.highlights);
+      if (draft.inclusions)          setInclusions(draft.inclusions);
+      if (draft.exclusions)          setExclusions(draft.exclusions);
+      if (draft.what_to_carry)       setWhatToCarry(draft.what_to_carry);
+      if (draft.cancellation_policy) setCancellationPolicy(draft.cancellation_policy);
+      if (draft.price_per_person)    setPricePer(draft.price_per_person);
+      if (draft.price_couple)        setPriceCouple(draft.price_couple);
+      if (draft.price_child)         setPriceChild(draft.price_child);
+      if (draft.group_min)           setGroupMin(draft.group_min);
+      if (draft.group_max)           setGroupMax(draft.group_max);
+      if (draft.age_min != null)     setAgeMin(draft.age_min);
+      if (draft.age_max != null)     setAgeMax(draft.age_max);
       setStep(2);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "AI generation failed");
@@ -181,8 +189,10 @@ export default function NewPackagePage() {
     age_max: ageMax === "" ? null : ageMax,
     cancellation_policy: cancellationPolicy,
     available_dates: availableDates.split(",").map(d => d.trim()).filter(Boolean),
-    image_urls: images,
-    contact_phone: contactPhone, contact_whatsapp: contactWhatsapp, contact_email: contactEmail,
+    images,
+    booking_phone: contactPhone,
+    booking_whatsapp: contactWhatsapp,
+    booking_email: contactEmail,
     status,
   });
 

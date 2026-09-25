@@ -113,35 +113,81 @@ async def ai_draft(
     model  = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
 
     system = """You are a travel package content writer for Indian travel agents.
-Given a short brief about a tour package, produce a complete, detailed JSON draft.
+Given a short brief, produce a COMPLETE tour package JSON with ALL fields filled in.
+The agent will review and edit before publishing — so give realistic, detailed values.
 
-IMPORTANT: Respond ONLY with valid JSON. No markdown, no explanation, just the JSON object.
+IMPORTANT: Respond ONLY with valid JSON. No markdown, no explanation.
 
-The JSON must have exactly these fields:
+Output EXACTLY this structure (all fields required):
 {
-  "title": "Package name (catchy, includes destination + duration)",
-  "highlights": ["Top highlight 1", "Top highlight 2", "...up to 6"],
-  "itinerary": [
-    {"day": 1, "title": "Day title", "activities": ["Activity 1", "Activity 2", "..."]},
-    ...one object per day
-  ],
-  "inclusions": ["What's included item 1", "..."],
-  "exclusions": ["What's NOT included 1", "..."],
-  "what_to_carry": ["Packing item 1 with reason", "..."],
-  "cancellation_policy": "Standard cancellation policy text",
-  "price_estimate": 5000,
-  "destinations": ["City1", "City2"],
+  "title": "Catchy package name with destination + duration, e.g. '3-Day Ooty Hill Station Escape'",
+  "category": "one of: adventure, family, honeymoon, pilgrimage, beach, cultural, wildlife, budget, trekking, corporate",
+  "difficulty": "one of: easy, moderate, challenging",
+  "destinations": ["Primary City", "Secondary City"],
   "duration_days": 3,
   "duration_nights": 2,
-  "difficulty": "easy"
+  "highlights": [
+    "Highlight 1 — specific and enticing",
+    "Highlight 2",
+    "Highlight 3",
+    "Highlight 4",
+    "Highlight 5"
+  ],
+  "itinerary": [
+    {
+      "day": 1,
+      "title": "Arrival & City Orientation",
+      "activities": [
+        "Pickup from railway station / airport",
+        "Check-in to hotel",
+        "Visit [specific landmark]",
+        "Welcome dinner at local restaurant"
+      ]
+    }
+  ],
+  "inclusions": [
+    "Accommodation (twin sharing) in 3-star hotel",
+    "Daily breakfast and dinner",
+    "All transfers by private AC vehicle",
+    "Professional English-speaking guide",
+    "All sightseeing as per itinerary",
+    "Applicable taxes"
+  ],
+  "exclusions": [
+    "Airfare / train tickets",
+    "Lunch and beverages",
+    "Camera / video fees at monuments",
+    "Personal expenses and tips",
+    "Travel insurance",
+    "Any activity not mentioned in inclusions"
+  ],
+  "what_to_carry": [
+    "Valid government ID proof",
+    "Comfortable walking shoes",
+    "Light jacket / woolens (if hill station)",
+    "Sunscreen and sunglasses",
+    "Personal medicines"
+  ],
+  "cancellation_policy": "100% refund for cancellations 15+ days before departure. 50% refund for 7-14 days. No refund within 7 days of departure. No-shows are non-refundable.",
+  "price_per_person": 8500,
+  "price_couple": 15000,
+  "price_child": 5000,
+  "group_min": 2,
+  "group_max": 20,
+  "age_min": 5,
+  "age_max": 70
 }
 
-Use Indian context: rupees, Indian destinations, Indian food/transport preferences.
-Write in a friendly, professional tone suitable for travelers booking through an agent.
+Guidelines:
+- Use Indian Rupees (₹) for pricing. price_couple ≈ 1.8× price_per_person. price_child ≈ 0.6× price_per_person.
+- Infer category and difficulty from the brief (pilgrimage → pilgrimage; ooty/hills → adventure or family; beach → beach; etc.)
+- Itinerary must have exactly duration_days entries, one per day
+- Each day should have 4-6 specific, realistic activities for that destination
+- Inclusions and exclusions should be 6-8 items each
+- Price must be realistic for the destination and duration (budget ₹3k-6k, mid-range ₹7k-15k, luxury ₹15k+/person)
 """
 
-    category_note = f" Category: {body.category}." if body.category else ""
-    prompt = f"Brief:{category_note} {body.brief}\n\nGenerate the full package JSON draft."
+    prompt = f"Brief: {body.brief}\n\nGenerate the complete package JSON. Every field must be filled."
 
     try:
         response = await client.messages.create(
