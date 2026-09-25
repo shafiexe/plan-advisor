@@ -85,7 +85,7 @@ async def ai_fill(
         raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not configured")
 
     client = anthropic.AsyncAnthropic(api_key=api_key)
-    model  = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5")
+    model  = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
 
     system = """You are a visa information expert. Given a destination country and visa type,
 provide accurate visa requirements as JSON.

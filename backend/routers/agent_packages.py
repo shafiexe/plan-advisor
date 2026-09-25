@@ -110,7 +110,7 @@ async def ai_draft(
         raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not configured")
 
     client = anthropic.AsyncAnthropic(api_key=api_key)
-    model  = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5")
+    model  = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
 
     system = """You are a travel package content writer for Indian travel agents.
 Given a short brief about a tour package, produce a complete, detailed JSON draft.

@@ -1633,7 +1633,7 @@ def _trim_history(messages: list) -> list:
 
 async def stream_response(messages: list, extra_system: str | None = None, user_context: dict | None = None) -> AsyncGenerator[dict, None]:
     client = _get_client()
-    model  = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5")
+    model  = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
     system = SYSTEM_PROMPT.format(today=datetime.date.today().isoformat())
     if extra_system:
         system = system + "\n\n" + extra_system

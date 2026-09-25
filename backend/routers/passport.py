@@ -72,7 +72,7 @@ async def scan_passport(file: UploadFile = File(...)):
 
     b64     = base64.standard_b64encode(raw).decode()
     api_key = os.getenv("ANTHROPIC_API_KEY")
-    model   = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5")
+    model   = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
 
     client = anthropic.AsyncAnthropic(api_key=api_key)
     try:
@@ -143,7 +143,7 @@ async def parse_text(body: TextBody):
         raise HTTPException(status_code=400, detail="Text too long — max 4000 characters")
 
     api_key = os.getenv("ANTHROPIC_API_KEY")
-    model   = os.getenv("CLAUDE_MODEL", "claude-sonnet-4-5")
+    model   = os.getenv("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
     client  = anthropic.AsyncAnthropic(api_key=api_key)
 
     try:
