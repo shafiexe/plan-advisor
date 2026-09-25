@@ -106,6 +106,8 @@ export default function NewPackagePage() {
   const [error, setError] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [aiBrief, setAiBrief] = useState("");
+  const [aiApplied, setAiApplied] = useState(false);
+  const [showRefill, setShowRefill] = useState(false);
 
   // Core fields
   const [title, setTitle] = useState("");
@@ -176,6 +178,8 @@ export default function NewPackagePage() {
       if (draft.group_max)           setGroupMax(draft.group_max);
       if (draft.age_min != null)     setAgeMin(draft.age_min);
       if (draft.age_max != null)     setAgeMax(draft.age_max);
+      setAiApplied(true);
+      setShowRefill(false);
       setStep(2);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "AI generation failed");
@@ -282,6 +286,39 @@ export default function NewPackagePage() {
       {/* Step 2: Edit Package */}
       {step === 2 && (
         <div className="flex flex-col gap-6">
+
+          {/* AI status banner */}
+          {aiApplied && !showRefill && (
+            <div className="flex items-center justify-between bg-emerald-900/30 border border-emerald-700/50 rounded-xl px-4 py-3">
+              <span className="text-sm text-emerald-300">✨ AI draft applied — all fields pre-filled. Review and edit below.</span>
+              <button onClick={() => setShowRefill(true)} className="text-xs text-emerald-400 hover:text-emerald-200 underline ml-4 shrink-0">
+                Re-fill with AI
+              </button>
+            </div>
+          )}
+
+          {/* Re-fill panel (shown when coming from manual fill OR re-fill button) */}
+          {(!aiApplied || showRefill) && (
+            <div className="bg-slate-900 border border-slate-700 rounded-2xl p-5 flex flex-col gap-3">
+              <p className="text-sm font-semibold text-slate-300 flex items-center gap-2">🤖 Auto-fill with AI</p>
+              <textarea value={aiBrief} onChange={e => setAiBrief(e.target.value)} rows={2}
+                placeholder="e.g. 3 day ooty family package from bangalore"
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-[#d4a017] resize-none" />
+              <div className="flex gap-2">
+                <button onClick={generateAiDraft} disabled={aiLoading || !aiBrief.trim()}
+                  className="flex-1 py-2.5 rounded-xl font-semibold text-sm transition-all disabled:opacity-50"
+                  style={{ background: "#d4a017", color: "#000" }}>
+                  {aiLoading ? "Generating…" : "✨ Generate & Fill All Fields"}
+                </button>
+                {showRefill && (
+                  <button onClick={() => setShowRefill(false)} className="px-4 py-2.5 rounded-xl text-sm text-slate-400 border border-slate-700 hover:border-slate-600">
+                    Cancel
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Basic Info */}
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
             <p className={SECTION_TITLE}>📋 Basic Information</p>
