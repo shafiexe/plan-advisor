@@ -27,6 +27,7 @@ router = APIRouter(prefix="/api/agent/packages")
 class PackageBody(BaseModel):
     title:               str
     category:            str = ""
+    departure_city:      str = ""
     destinations:        list[str] = []
     duration_days:       int = 1
     duration_nights:     int = 0
@@ -46,6 +47,8 @@ class PackageBody(BaseModel):
     age_min:             int | None = None
     age_max:             int | None = None
     images:              list[str] = []
+    meeting_point:       str = ""
+    special_notes:       str = ""
     booking_phone:       str = ""
     booking_whatsapp:    str = ""
     booking_email:       str = ""
@@ -66,6 +69,7 @@ def _pkg_to_dict(p: TourPackage) -> dict:
         "title":               p.title,
         "slug":                p.slug,
         "category":            p.category,
+        "departure_city":      p.departure_city or "",
         "destinations":        p.destinations or [],
         "duration_days":       p.duration_days,
         "duration_nights":     p.duration_nights,
@@ -85,6 +89,8 @@ def _pkg_to_dict(p: TourPackage) -> dict:
         "age_min":             p.age_min,
         "age_max":             p.age_max,
         "images":              p.images or [],
+        "meeting_point":       p.meeting_point or "",
+        "special_notes":       p.special_notes or "",
         "booking_phone":       p.booking_phone,
         "booking_whatsapp":    p.booking_whatsapp,
         "booking_email":       p.booking_email,
@@ -123,6 +129,7 @@ Output EXACTLY this structure (all fields required):
   "title": "Catchy package name with destination + duration, e.g. '3-Day Ooty Hill Station Escape'",
   "category": "one of: adventure, family, honeymoon, pilgrimage, beach, cultural, wildlife, budget, trekking, corporate",
   "difficulty": "one of: easy, moderate, challenging",
+  "departure_city": "City travellers start from, e.g. 'Bangalore', 'Chennai', 'Coimbatore'",
   "destinations": ["Primary City", "Secondary City"],
   "duration_days": 3,
   "duration_nights": 2,
@@ -175,7 +182,9 @@ Output EXACTLY this structure (all fields required):
   "group_min": 2,
   "group_max": 20,
   "age_min": 5,
-  "age_max": 70
+  "age_max": 70,
+  "meeting_point": "Departure point with time, e.g. 'Ooty Bus Stand, Gate 2 — 7:00 AM on Day 1'",
+  "special_notes": "Important notes: passport/ID required, clothing guidelines, health advisories, what NOT to bring, etc."
 }
 
 Guidelines:

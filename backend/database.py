@@ -48,6 +48,9 @@ async def init_db():
                 "ALTER TABLE agent_profiles ADD COLUMN agency_code TEXT DEFAULT ''",
                 "ALTER TABLE user_preferences ADD COLUMN onboarding_done BOOLEAN DEFAULT 0",
                 "ALTER TABLE user_preferences ADD COLUMN packing_essentials JSON",
+                "ALTER TABLE tour_packages ADD COLUMN meeting_point TEXT DEFAULT ''",
+                "ALTER TABLE tour_packages ADD COLUMN special_notes TEXT DEFAULT ''",
+                "ALTER TABLE tour_packages ADD COLUMN departure_city TEXT DEFAULT ''",
             ):
                 try:
                     await conn.execute(text(col_def))
@@ -63,6 +66,9 @@ async def init_db():
                 "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS agency_code TEXT DEFAULT ''",
                 "ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS onboarding_done BOOLEAN DEFAULT FALSE",
                 "ALTER TABLE user_preferences ADD COLUMN IF NOT EXISTS packing_essentials JSON",
+                "ALTER TABLE tour_packages ADD COLUMN IF NOT EXISTS meeting_point TEXT DEFAULT ''",
+                "ALTER TABLE tour_packages ADD COLUMN IF NOT EXISTS special_notes TEXT DEFAULT ''",
+                "ALTER TABLE tour_packages ADD COLUMN IF NOT EXISTS departure_city TEXT DEFAULT ''",
             ):
                 try:
                     await conn.execute(text(col_def))

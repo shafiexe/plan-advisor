@@ -110,6 +110,7 @@ export default function NewPackagePage() {
   // Core fields
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("adventure");
+  const [departureCity, setDepartureCity] = useState("");
   const [destinations, setDestinations] = useState<string[]>([]);
   const [durationDays, setDurationDays] = useState(3);
   const [durationNights, setDurationNights] = useState(2);
@@ -132,6 +133,9 @@ export default function NewPackagePage() {
   const [ageMax, setAgeMax] = useState<number | "">("");
   const [cancellationPolicy, setCancellationPolicy] = useState("");
 
+  const [meetingPoint, setMeetingPoint] = useState("");
+  const [specialNotes, setSpecialNotes] = useState("");
+
   // Step 3 fields
   const [availableDates, setAvailableDates] = useState("");
   const [images, setImages] = useState<string[]>([]);
@@ -153,7 +157,10 @@ export default function NewPackagePage() {
       if (draft.title)               setTitle(draft.title);
       if (draft.category)            setCategory(draft.category);
       if (draft.difficulty)          setDifficulty(draft.difficulty);
+      if (draft.departure_city)      setDepartureCity(draft.departure_city);
       if (draft.destinations)        setDestinations(draft.destinations);
+      if (draft.meeting_point)       setMeetingPoint(draft.meeting_point);
+      if (draft.special_notes)       setSpecialNotes(draft.special_notes);
       if (draft.duration_days)       setDurationDays(draft.duration_days);
       if (draft.duration_nights)     setDurationNights(draft.duration_nights);
       if (draft.itinerary)           setItinerary(draft.itinerary);
@@ -176,7 +183,7 @@ export default function NewPackagePage() {
   };
 
   const buildPayload = (status: "draft" | "published") => ({
-    title, category, destinations,
+    title, category, departure_city: departureCity, destinations,
     duration_days: durationDays, duration_nights: durationNights,
     itinerary, highlights, inclusions, exclusions,
     what_to_carry: whatToCarry,
@@ -188,6 +195,8 @@ export default function NewPackagePage() {
     age_min: ageMin === "" ? null : ageMin,
     age_max: ageMax === "" ? null : ageMax,
     cancellation_policy: cancellationPolicy,
+    meeting_point: meetingPoint,
+    special_notes: specialNotes,
     available_dates: availableDates.split(",").map(d => d.trim()).filter(Boolean),
     images,
     booking_phone: contactPhone,
@@ -296,6 +305,10 @@ export default function NewPackagePage() {
                 </div>
               </div>
               <div>
+                <label className={SECTION_LABEL}>From (Departure City)</label>
+                <input value={departureCity} onChange={e => setDepartureCity(e.target.value)} placeholder="e.g. Bangalore, Chennai" className={INPUT_CLASS} />
+              </div>
+              <div>
                 <label className={SECTION_LABEL}>Destinations</label>
                 <TagInput value={destinations} onChange={setDestinations} placeholder="Type destination and press Enter" />
               </div>
@@ -389,6 +402,22 @@ export default function NewPackagePage() {
             <p className={SECTION_TITLE}>📜 Cancellation Policy</p>
             <textarea value={cancellationPolicy} onChange={e => setCancellationPolicy(e.target.value)} rows={3}
               placeholder="Describe your cancellation and refund policy…"
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-[#d4a017] resize-none" />
+          </div>
+
+          {/* Meeting Point */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <p className={SECTION_TITLE}>📍 Meeting Point</p>
+            <textarea value={meetingPoint} onChange={e => setMeetingPoint(e.target.value)} rows={2}
+              placeholder="e.g. Ooty Bus Stand, Gate 2 — 7:00 AM on Day 1. Driver will hold a name placard."
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-[#d4a017] resize-none" />
+          </div>
+
+          {/* Special Notes */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6">
+            <p className={SECTION_TITLE}>📌 Special Notes</p>
+            <textarea value={specialNotes} onChange={e => setSpecialNotes(e.target.value)} rows={3}
+              placeholder="Important notes for travellers — ID requirements, dress code, health advisories, what not to bring, etc."
               className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-[#d4a017] resize-none" />
           </div>
         </div>

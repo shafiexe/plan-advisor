@@ -160,6 +160,7 @@ class TourPackage(Base):
     title            = Column(String(200), nullable=False)
     slug             = Column(String(220), unique=True, nullable=False)
     category         = Column(String(40), default="")       # adventure/family/honeymoon/pilgrimage/beach/cultural/wildlife/budget
+    departure_city   = Column(String(100), default="")      # starting point e.g. "Bangalore"
     destinations     = Column(JSON, default=list)           # ["Ooty","Coonoor"]
     duration_days    = Column(Integer, default=1)
     duration_nights  = Column(Integer, default=0)
@@ -179,6 +180,8 @@ class TourPackage(Base):
     age_min          = Column(Integer, nullable=True)
     age_max          = Column(Integer, nullable=True)
     images           = Column(JSON, default=list)           # [url,…] up to 8
+    meeting_point    = Column(Text, default="")              # pickup/meeting location
+    special_notes    = Column(Text, default="")              # important notes for travellers
     booking_phone    = Column(String(20), default="")
     booking_whatsapp = Column(String(20), default="")
     booking_email    = Column(String(120), default="")
