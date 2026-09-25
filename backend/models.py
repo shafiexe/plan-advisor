@@ -215,6 +215,14 @@ class Ticket(Base):
     amenities        = Column(JSON, default=list)           # ["AC","Sleeper",…]
     vehicle_details  = Column(JSON, default=dict)
     notes            = Column(Text, default="")
+    # Flight-specific fields
+    airline_name     = Column(String(100), default="")         # e.g. "IndiGo", "Air India"
+    flight_number    = Column(String(20), default="")          # e.g. "6E 123"
+    travel_class     = Column(String(20), default="economy")   # economy/business/first
+    is_nonstop       = Column(Boolean, default=True)
+    layovers         = Column(JSON, default=list)              # [{city, duration}]
+    arrival_time     = Column(String(10), default="")          # HH:MM at destination
+    original_price   = Column(Integer, nullable=True)          # what seller paid — shows discount
     contact_phone    = Column(String(20), default="")
     contact_whatsapp = Column(String(20), default="")
     contact_email    = Column(String(120), default="")

@@ -23,16 +23,24 @@ class TicketBody(BaseModel):
     destination:     str
     travel_date:     str             # YYYY-MM-DD
     travel_time:     str = ""
+    arrival_time:    str = ""
     return_date:     str = ""
     total_seats:     int = 1
     available_seats: int = 1
     price_per_seat:  int = 0
+    original_price:  int | None = None
     booking_deadline:str = ""
     departure_point: str = ""
     pickup_points:   list[dict] = []
     amenities:       list[str] = []
     vehicle_details: dict = {}
     notes:           str = ""
+    # Flight-specific
+    airline_name:    str = ""
+    flight_number:   str = ""
+    travel_class:    str = "economy"
+    is_nonstop:      bool = True
+    layovers:        list[dict] = []
     contact_phone:   str = ""
     contact_whatsapp:str = ""
     contact_email:   str = ""
@@ -63,16 +71,23 @@ def _ticket_to_dict(t: Ticket) -> dict:
         "destination":     t.destination,
         "travel_date":     t.travel_date,
         "travel_time":     t.travel_time,
+        "arrival_time":    t.arrival_time or "",
         "return_date":     t.return_date,
         "total_seats":     t.total_seats,
         "available_seats": t.available_seats,
         "price_per_seat":  t.price_per_seat,
+        "original_price":  t.original_price,
         "booking_deadline":t.booking_deadline,
         "departure_point": t.departure_point,
         "pickup_points":   t.pickup_points or [],
         "amenities":       t.amenities or [],
         "vehicle_details": t.vehicle_details or {},
         "notes":           t.notes,
+        "airline_name":    t.airline_name or "",
+        "flight_number":   t.flight_number or "",
+        "travel_class":    t.travel_class or "economy",
+        "is_nonstop":      t.is_nonstop if t.is_nonstop is not None else True,
+        "layovers":        t.layovers or [],
         "contact_phone":   t.contact_phone,
         "contact_whatsapp":t.contact_whatsapp,
         "contact_email":   t.contact_email,
@@ -164,6 +179,22 @@ async def toggle_public(
     t.updated_at = _now()
     await db.commit()
     return {"ok": True, "is_public": t.is_public}
+
+
+@router.delete("/expired")
+async def delete_expired(
+    profile: AgentProfile = Depends(require_agent),
+    db: AsyncSession = Depends(get_db),
+):
+    """Delete all expired tickets for this agent."""
+    today = date.today().isoformat()
+    rows = (await db.execute(
+        select(Ticket).where(Ticket.agent_email == profile.user_email, Ticket.travel_date < today)
+    )).scalars().all()
+    for t in rows:
+        await db.delete(t)
+    await db.commit()
+    return {"ok": True, "deleted": len(rows)}
 
 
 @router.delete("/{ticket_id}")

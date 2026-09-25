@@ -51,6 +51,13 @@ async def init_db():
                 "ALTER TABLE tour_packages ADD COLUMN meeting_point TEXT DEFAULT ''",
                 "ALTER TABLE tour_packages ADD COLUMN special_notes TEXT DEFAULT ''",
                 "ALTER TABLE tour_packages ADD COLUMN departure_city TEXT DEFAULT ''",
+                "ALTER TABLE tickets ADD COLUMN airline_name TEXT DEFAULT ''",
+                "ALTER TABLE tickets ADD COLUMN flight_number TEXT DEFAULT ''",
+                "ALTER TABLE tickets ADD COLUMN travel_class TEXT DEFAULT 'economy'",
+                "ALTER TABLE tickets ADD COLUMN is_nonstop BOOLEAN DEFAULT 1",
+                "ALTER TABLE tickets ADD COLUMN layovers JSON DEFAULT '[]'",
+                "ALTER TABLE tickets ADD COLUMN arrival_time TEXT DEFAULT ''",
+                "ALTER TABLE tickets ADD COLUMN original_price INTEGER",
             ):
                 try:
                     await conn.execute(text(col_def))
@@ -69,6 +76,13 @@ async def init_db():
                 "ALTER TABLE tour_packages ADD COLUMN IF NOT EXISTS meeting_point TEXT DEFAULT ''",
                 "ALTER TABLE tour_packages ADD COLUMN IF NOT EXISTS special_notes TEXT DEFAULT ''",
                 "ALTER TABLE tour_packages ADD COLUMN IF NOT EXISTS departure_city TEXT DEFAULT ''",
+                "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS airline_name TEXT DEFAULT ''",
+                "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS flight_number TEXT DEFAULT ''",
+                "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS travel_class TEXT DEFAULT 'economy'",
+                "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS is_nonstop BOOLEAN DEFAULT TRUE",
+                "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS layovers JSON DEFAULT '[]'",
+                "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS arrival_time TEXT DEFAULT ''",
+                "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS original_price INTEGER",
             ):
                 try:
                     await conn.execute(text(col_def))
