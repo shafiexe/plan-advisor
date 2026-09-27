@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "633448295242",
+    "firebase_url": "https://fir-demo-120e4.firebaseio.com",
+    "project_id": "fir-demo-120e4",
+    "storage_bucket": "fir-demo-120e4.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:633448295242:android:8f2aac30430af0b1286fb3",
+        "android_client_info": {
+          "package_name": "in.planadvisors.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "633448295242-hnuthtl43h5iind51fkfptvicss7or4f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0efKvRATVYoG-9ACIR1EQfG_2qJHGNgs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "633448295242-hnuthtl43h5iind51fkfptvicss7or4f.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
