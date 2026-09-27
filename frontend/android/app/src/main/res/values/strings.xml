@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">PlanAdvisors — Travel Planner</string>
+    <string name="title_activity_main">PlanAdvisors — Travel Planner</string>
+    <string name="package_name">in.planadvisors.app</string>
+    <string name="custom_url_scheme">in.planadvisors.app</string>
+</resources>

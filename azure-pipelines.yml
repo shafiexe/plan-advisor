@@ -229,3 +229,68 @@ stages:
 
                       echo "Frontend deployed ✓"
                       echo "Frontend URL: https://$FRONTEND_FQDN"
+
+  # ── Stage 3: Build Android APK / AAB ─────────────────────────────────────────
+  - stage: Android
+    displayName: "Android"
+    dependsOn: Build
+    # Only build on pushes to main
+    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'Manual'))
+    jobs:
+      - job: BuildAndroid
+        displayName: "Build Android AAB for Play Store"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: NodeTool@0
+            displayName: "Use Node 20"
+            inputs:
+              versionSpec: "20.x"
+
+          - task: JavaToolInstaller@0
+            displayName: "Use Java 17"
+            inputs:
+              versionSpec: "17"
+              jdkArchitectureOption: "x64"
+              jdkSourceOption: "PreInstalled"
+
+          - script: |
+              cd frontend
+              npm ci --legacy-peer-deps
+            displayName: "Install frontend dependencies"
+
+          - script: |
+              cd frontend
+              # Capacitor loads the live URL — no Next.js build needed for Android
+              # Just sync the Capacitor config to the android folder
+              node_modules/.bin/cap sync android
+            displayName: "Capacitor sync"
+
+          - task: Bash@3
+            displayName: "Decode keystore"
+            inputs:
+              targetType: "inline"
+              script: |
+                echo "$(ANDROID_KEYSTORE_BASE64)" | base64 --decode > frontend/android/app/planadvisors.keystore
+            env:
+              ANDROID_KEYSTORE_BASE64: $(ANDROID_KEYSTORE_BASE64)
+
+          - task: Gradle@3
+            displayName: "Build release AAB"
+            inputs:
+              workingDirectory: "frontend/android"
+              gradleWrapperFile: "frontend/android/gradlew"
+              tasks: "bundleRelease"
+              publishJUnitResults: false
+              jdkVersionOption: "1.17"
+            env:
+              ANDROID_KEYSTORE_PASSWORD: $(ANDROID_KEYSTORE_PASSWORD)
+              ANDROID_KEY_ALIAS: $(ANDROID_KEY_ALIAS)
+              ANDROID_KEY_PASSWORD: $(ANDROID_KEY_PASSWORD)
+
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish AAB artifact"
+            inputs:
+              PathtoPublish: "frontend/android/app/build/outputs/bundle/release/app-release.aab"
+              ArtifactName: "android-release"
+              publishLocation: "Container"
