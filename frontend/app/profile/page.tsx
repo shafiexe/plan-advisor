@@ -19,7 +19,8 @@ const labelSty = {
   textTransform: "uppercase" as const, letterSpacing: "0.05em", marginBottom: 6,
 };
 
-declare global { interface Window { Razorpay: unknown } }
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare global { interface Window { Razorpay: any } }
 
 function loadRazorpay(): Promise<boolean> {
   return new Promise(resolve => {
@@ -85,8 +86,7 @@ export default function ProfilePage() {
       }
       const data = await res.json();
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rzp = new (window.Razorpay as any)({
+      const rzp = new window.Razorpay({
         key: RZP_KEY,
         subscription_id: data.subscription_id,
         name: "PlanAdvisors",
@@ -99,8 +99,7 @@ export default function ProfilePage() {
         },
         modal: { ondismiss: () => setUpgrading(false) },
       });
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      rzp.on("payment.failed", (resp: any) => {
+      rzp.on("payment.failed", (resp: { error?: { description?: string } }) => {
         setUpgradeError(resp?.error?.description || "Payment failed. Please try again.");
         setUpgrading(false);
       });
