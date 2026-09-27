@@ -331,6 +331,18 @@ def make_slug(title: str, suffix: str) -> str:
     return f"{base}-{suffix}"
 
 
+class PushToken(Base):
+    """FCM push tokens for native Android app users."""
+    __tablename__ = "push_tokens"
+
+    id         = Column(Integer, primary_key=True, autoincrement=True)
+    user_email = Column(String(120), nullable=False, index=True)
+    token      = Column(Text, nullable=False, unique=True)
+    platform   = Column(String(20), default="android")
+    created_at = Column(DateTime, default=_now)
+    updated_at = Column(DateTime, default=_now)
+
+
 class Enquiry(Base):
     """Traveller enquiry about a listing — stored and shown in agent dashboard."""
     __tablename__ = "enquiries"

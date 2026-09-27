@@ -10,7 +10,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database import get_db
-from models import Conversation, Passenger, PassengerProfile, UserPreferences
+from models import Conversation, Passenger, PassengerProfile, PushToken, UserPreferences
 
 log = logging.getLogger(__name__)
 
@@ -456,4 +456,32 @@ async def delete_passenger(
     if row:
         await db.delete(row)
         await db.commit()
+    return {"ok": True}
+
+
+# ── Push tokens (Android / Capacitor) ─────────────────────────────────────────
+
+class PushTokenBody(BaseModel):
+    token: str
+    platform: str = "android"
+
+
+@router.post("/push-token")
+async def register_push_token(
+    body: PushTokenBody,
+    email: str = Depends(current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from models import _now
+    existing = (await db.execute(
+        select(PushToken).where(PushToken.token == body.token)
+    )).scalar_one_or_none()
+
+    if existing:
+        existing.user_email = email
+        existing.updated_at = _now()
+    else:
+        db.add(PushToken(user_email=email, token=body.token, platform=body.platform))
+
+    await db.commit()
     return {"ok": True}
