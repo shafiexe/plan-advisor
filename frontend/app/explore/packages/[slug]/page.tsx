@@ -3,11 +3,20 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import EnquiryModal from "@/components/agent/EnquiryModal";
+import ChatPanel from "@/components/agent/ChatPanel";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyRecord = Record<string, any>;
+
+function getTravellerEmail(): string | null {
+  try {
+    const raw = localStorage.getItem("pa_agent_session");
+    if (raw) { const s = JSON.parse(raw); if (s.email) return s.email; }
+  } catch {}
+  return null;
+}
 
 export default function PackageDetailPage() {
   const params = useParams();
@@ -18,6 +27,7 @@ export default function PackageDetailPage() {
   const [notFound, setNotFound] = useState(false);
   const [activeImage, setActiveImage] = useState(0);
   const [enquiryOpen, setEnquiryOpen] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [openDays, setOpenDays] = useState<Set<number>>(new Set([0]));
 
   useEffect(() => {
@@ -281,6 +291,24 @@ export default function PackageDetailPage() {
               >
                 Enquire Now
               </button>
+
+              <button
+                onClick={() => setChatOpen(v => !v)}
+                className="w-full py-3 rounded-xl text-sm font-semibold text-black transition-all mb-2 flex items-center justify-center gap-2"
+                style={{ background: "#d4a017" }}
+              >
+                💬 {chatOpen ? "Close Chat" : "Chat with Agent"}
+              </button>
+
+              {chatOpen && agent.email && (() => {
+                const me = getTravellerEmail() || "guest@planadvisors.in";
+                const roomId = [me, agent.email].sort().join(":");
+                return (
+                  <div className="h-80 mb-2">
+                    <ChatPanel roomId={roomId} myEmail={me} otherEmail={agent.email} onClose={() => setChatOpen(false)} />
+                  </div>
+                );
+              })()}
 
               {(agent.whatsapp || agent.phone) && (
                 <button

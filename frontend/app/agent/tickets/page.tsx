@@ -5,6 +5,19 @@ import Link from "next/link";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+function useAgentEmail() {
+  const { data: session } = useSession();
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    if (session?.user?.email) { setEmail(session.user.email); return; }
+    try {
+      const raw = localStorage.getItem("pa_agent_session");
+      if (raw) { const s = JSON.parse(raw); if (s.email) setEmail(s.email); }
+    } catch {}
+  }, [session]);
+  return email;
+}
+
 interface Ticket {
   id: number;
   title: string;
@@ -41,7 +54,7 @@ const CLASS_LABEL: Record<string, string> = {
 };
 
 export default function TicketsPage() {
-  const { data: session } = useSession();
+  const agentEmail = useAgentEmail();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -50,17 +63,17 @@ export default function TicketsPage() {
   const [cleaningUp, setCleaningUp] = useState(false);
 
   const fetchTickets = async () => {
-    if (!session?.user?.email) return;
+    if (!agentEmail) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/agent/tickets`, { headers: { "X-User-Email": session.user.email } });
+      const res = await fetch(`${API}/api/agent/tickets`, { headers: { "X-User-Email": agentEmail } });
       const data = await res.json();
       setTickets(Array.isArray(data) ? data : []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchTickets(); }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchTickets(); }, [agentEmail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const updateSeats = async (ticket: Ticket) => {
     const soldVal = soldInput[ticket.id];
@@ -70,7 +83,7 @@ export default function TicketsPage() {
     try {
       await fetch(`${API}/api/agent/tickets/${ticket.id}/seats`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json", "X-User-Email": session!.user!.email! },
+        headers: { "Content-Type": "application/json", "X-User-Email": agentEmail! },
         body: JSON.stringify({ sold }),
       });
       setSoldInput(prev => { const next = { ...prev }; delete next[ticket.id]; return next; });
@@ -81,7 +94,7 @@ export default function TicketsPage() {
 
   const togglePublic = async (ticket: Ticket) => {
     await fetch(`${API}/api/agent/tickets/${ticket.id}/toggle`, {
-      method: "PATCH", headers: { "X-User-Email": session!.user!.email! },
+      method: "PATCH", headers: { "X-User-Email": agentEmail! },
     });
     fetchTickets();
   };
@@ -93,7 +106,7 @@ export default function TicketsPage() {
       : `Delete expired ticket "${ticket.title}"?`;
     if (!confirm(msg)) return;
     await fetch(`${API}/api/agent/tickets/${ticket.id}`, {
-      method: "DELETE", headers: { "X-User-Email": session!.user!.email! },
+      method: "DELETE", headers: { "X-User-Email": agentEmail! },
     });
     fetchTickets();
   };
@@ -105,7 +118,7 @@ export default function TicketsPage() {
     setCleaningUp(true);
     try {
       await fetch(`${API}/api/agent/tickets/expired`, {
-        method: "DELETE", headers: { "X-User-Email": session!.user!.email! },
+        method: "DELETE", headers: { "X-User-Email": agentEmail! },
       });
       fetchTickets();
     } catch (e) { console.error(e); }

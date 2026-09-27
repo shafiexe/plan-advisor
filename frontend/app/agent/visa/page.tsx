@@ -5,6 +5,19 @@ import Link from "next/link";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+function useAgentEmail() {
+  const { data: session } = useSession();
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    if (session?.user?.email) { setEmail(session.user.email); return; }
+    try {
+      const raw = localStorage.getItem("pa_agent_session");
+      if (raw) { const s = JSON.parse(raw); if (s.email) setEmail(s.email); }
+    } catch {}
+  }, [session]);
+  return email;
+}
+
 interface VisaService {
   id: number;
   destination_country: string;
@@ -43,27 +56,27 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default function VisaPage() {
-  const { data: session } = useSession();
+  const agentEmail = useAgentEmail();
   const [visas, setVisas] = useState<VisaService[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchVisas = async () => {
-    if (!session?.user?.email) return;
+    if (!agentEmail) return;
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/agent/visa`, { headers: { "X-User-Email": session.user.email } });
+      const res = await fetch(`${API}/api/agent/visa`, { headers: { "X-User-Email": agentEmail } });
       const data = await res.json();
       setVisas(Array.isArray(data) ? data : []);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchVisas(); }, [session]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchVisas(); }, [agentEmail]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const deleteVisa = async (visa: VisaService) => {
     if (!confirm(`Delete visa service for ${visa.destination_country}?`)) return;
     await fetch(`${API}/api/agent/visa/${visa.id}`, {
-      method: "DELETE", headers: { "X-User-Email": session!.user!.email! },
+      method: "DELETE", headers: { "X-User-Email": agentEmail! },
     });
     fetchVisas();
   };

@@ -140,6 +140,9 @@ async def create_visa(
     profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
+    from services.limits import check_visa_limit
+    await check_visa_limit(profile.user_email, db)
+
     v = VisaService(agent_email=profile.user_email, **body.model_dump())
     db.add(v)
     await db.commit()

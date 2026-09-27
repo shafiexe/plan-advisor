@@ -5,6 +5,19 @@ import Link from "next/link";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+function useAgentEmail() {
+  const { data: session } = useSession();
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    if (session?.user?.email) { setEmail(session.user.email); return; }
+    try {
+      const raw = localStorage.getItem("pa_agent_session");
+      if (raw) { const s = JSON.parse(raw); if (s.email) setEmail(s.email); }
+    } catch {}
+  }, [session]);
+  return email;
+}
+
 interface RecentPackage { id: number; title: string; status: string; destinations: string[]; }
 interface Stats {
   packages: number;
@@ -16,14 +29,14 @@ interface Stats {
 }
 
 export default function AgentDashboard() {
-  const { data: session } = useSession();
+  const agentEmail = useAgentEmail();
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileSlug, setProfileSlug] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!session?.user?.email) return;
-    const headers = { "X-User-Email": session.user.email };
+    if (!agentEmail) return;
+    const headers = { "X-User-Email": agentEmail };
     fetch(`${API}/api/agent/dashboard/stats`, { headers })
       .then(r => r.json()).then(setStats).catch(console.error).finally(() => setLoading(false));
     fetch(`${API}/api/agent/check`, { headers })
@@ -34,7 +47,7 @@ export default function AgentDashboard() {
           setProfileSlug(`${base}-${d.profile.id}`);
         }
       }).catch(console.error);
-  }, [session]);
+  }, [agentEmail]);
 
   const STAT_CARDS = [
     { label: "Total Packages", value: stats?.packages ?? 0, sub: `${stats?.published_packages ?? 0} published`, icon: "🌍", href: "/agent/packages" },

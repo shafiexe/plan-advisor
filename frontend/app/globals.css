@@ -73,7 +73,7 @@ html[data-theme="light"] {
 .markdown-body > *:last-child  { margin-bottom: 0; }
 
 /* ── Light mode: sidebar active chat item ────────────────────────────────── */
-html[data-theme="light"] .conv-sidebar .text-[#d4a017] {
+html[data-theme="light"] .conv-sidebar .text-\[\#d4a017\] {
   color: #b8860f;  /* darker gold — readable on light bg */
 }
 html[data-theme="light"] .conv-sidebar .text-slate-600 {
@@ -84,19 +84,13 @@ html[data-theme="light"] .conv-sidebar .text-slate-700 {
 }
 
 /* ── Light mode: flight card — navy/gold colors ──────────────────────────── */
-html[data-theme="light"] .flight-card .text-[#d4a017] {
+html[data-theme="light"] .flight-card .text-\[\#d4a017\] {
   color: #b8860f;  /* darker gold — readable on light bg */
 }
 html[data-theme="light"] .flight-card .text-emerald-400 {
   color: oklch(0.261 0.12 145);  /* emerald-800 — dark green, readable on light bg */
 }
-/* Selected flight row bg: dark indigo stays, add slight opacity adjustment */
-html[data-theme="light"] .flight-card .bg-[#172554]\/50 {
-  background-color: oklch(0.9 0.01 264 / 0.6);  /* near-white indigo tint */
-}
-html[data-theme="light"] .flight-card .bg-[#172554]\/30 {
-  background-color: oklch(0.92 0.01 264 / 0.5);
-}
+/* Selected flight row: light-mode tint handled via component inline style */
 html[data-theme="light"] .flight-card .bg-emerald-900\/40 {
   background-color: oklch(0.85 0.06 145 / 0.5); /* light green tint */
 }

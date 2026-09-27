@@ -36,8 +36,20 @@ interface TimePoint {
   conversations: number;
   messages: number;
 }
+interface AgentBreakdown {
+  total: number;
+  approved: number;
+  pending_review: number;
+  rejected: number;
+}
+interface ApiUsage {
+  by_type: Record<string, number>;
+  total_cost_inr: number;
+}
 interface Stats {
-  overview: Overview;
+  overview: Overview & { active_subscriptions: number; subscription_revenue_inr: number };
+  agents: AgentBreakdown;
+  api_usage_30d: ApiUsage;
   users: UserStat[];
   recent_conversations: RecentConv[];
   timeseries: TimePoint[];
@@ -226,11 +238,49 @@ export default function AdminPage() {
 
         {/* Overview cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Users"         value={stats.overview.total_users}         icon="👥" />
-          <StatCard label="Conversations" value={stats.overview.total_conversations} icon="💬" />
-          <StatCard label="Messages"      value={stats.overview.total_messages}      icon="✉️" />
-          <StatCard label="Passengers"    value={stats.overview.total_passengers}    icon="🧳" />
+          <StatCard label="Users"           value={stats.overview.total_users}              icon="👥" />
+          <StatCard label="Conversations"   value={stats.overview.total_conversations}      icon="💬" />
+          <StatCard label="Messages"        value={stats.overview.total_messages}           icon="✉️" />
+          <StatCard label="Pro Subscribers" value={stats.overview.active_subscriptions}     icon="⭐" />
         </div>
+
+        {/* Agent + subscription summary */}
+        {stats.agents && (
+          <section>
+            <h2 className="text-lg font-semibold text-slate-200 mb-3">Agents & Revenue</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <StatCard label="Total Agents"    value={stats.agents.total}          icon="🏢" />
+              <StatCard label="Approved"        value={stats.agents.approved}       icon="✅" />
+              <StatCard label="Pending Review"  value={stats.agents.pending_review} icon="⏳" />
+              <StatCard label="Revenue (₹/mo)"  value={stats.overview.subscription_revenue_inr} icon="💰" />
+            </div>
+          </section>
+        )}
+
+        {/* API usage */}
+        {stats.api_usage_30d && (
+          <section>
+            <h2 className="text-lg font-semibold text-slate-200 mb-3">API Usage — Last 30 Days</h2>
+            <div className="bg-slate-900/80 border border-slate-800/60 rounded-2xl p-5">
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-sm text-slate-400">Total estimated cost</p>
+                <p className="text-lg font-bold text-white">₹{stats.api_usage_30d.total_cost_inr.toFixed(2)}</p>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {Object.entries(stats.api_usage_30d.by_type).map(([api, count]) => (
+                  <div key={api} className="bg-slate-800/60 rounded-xl p-3 text-center">
+                    <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">{api.replace(/_/g, " ")}</p>
+                    <p className="text-2xl font-bold text-white">{count}</p>
+                    <p className="text-xs text-slate-600 mt-0.5">calls</p>
+                  </div>
+                ))}
+                {Object.keys(stats.api_usage_30d.by_type).length === 0 && (
+                  <p className="text-slate-500 text-sm col-span-full text-center py-4">No API calls logged yet — start a chat to see usage appear here.</p>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Activity chart */}
         {stats.timeseries.length > 0 && (

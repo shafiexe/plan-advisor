@@ -48,7 +48,7 @@ import type { BaggagePolicy } from "@/types/baggagePolicy";
 import type { PredepartureChecklist } from "@/types/predepartureChecklist";
 import ItinerarySidebar from "@/components/ItinerarySidebar";
 import PriceAlertModal from "@/components/PriceAlertModal";
-import { exportCleanText, exportFilename, buildPrintHTML } from "@/utils/exportUtils";
+import { buildPrintHTML } from "@/utils/exportUtils";
 
 /* ── Persistence helpers ─────────────────────────────────── */
 function loadConversations(key: string): Conversation[] {
@@ -603,20 +603,6 @@ export default function Home() {
     }
   }, [sync]);
 
-  /* ── Export conversation as clean plain text ─── */
-  const handleExport = useCallback(() => {
-    if (!activeConversation || activeConversation.messages.length === 0) return;
-    const text = exportCleanText(activeConversation.messages);
-    const filename = exportFilename(activeConversation.messages);
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [activeConversation]);
-
   /* ── Export conversation as print-ready PDF ─── */
   const handlePrintExport = useCallback(() => {
     if (!activeConversation || activeConversation.messages.length === 0) return;
@@ -1025,20 +1011,6 @@ export default function Home() {
                 🗺️ <span className="hidden sm:inline">Summary</span>
               </button>
             )}
-            <button
-              onClick={handleExport}
-              title="Export conversation as plain text"
-              className="flex items-center gap-1.5 px-2 py-1.5 sm:px-2.5 rounded-lg text-xs font-medium
-                text-slate-400 hover:text-slate-200 hover:bg-slate-800/80 transition-colors backdrop-blur-sm border border-transparent hover:border-slate-700/60"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                <polyline points="14 2 14 8 20 8"/>
-                <line x1="12" y1="18" x2="12" y2="12"/>
-                <line x1="9" y1="15" x2="15" y2="15"/>
-              </svg>
-              <span className="hidden sm:inline">Export</span>
-            </button>
             <button
               onClick={handlePrintExport}
               title="Export as printable PDF"

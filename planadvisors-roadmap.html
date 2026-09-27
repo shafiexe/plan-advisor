@@ -1,0 +1,945 @@
+<title>PlanAdvisors Roadmap</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&family=Inter:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --bg:           #f3f5f9;
+    --surface:      #ffffff;
+    --surface-2:    #f8f9fc;
+    --border:       #dde2ee;
+    --text:         #1c2437;
+    --muted:        #64748b;
+    --accent:       #c99a0e;
+    --accent-light: #fdf5d9;
+    --navy:         #1e3a8a;
+    --navy-mid:     #2d50a8;
+    --navy-light:   #e8edf9;
+    --green:        #16a34a;
+    --green-light:  #dcfce7;
+    --red:          #dc2626;
+    --red-light:    #fee2e2;
+    --amber:        #d97706;
+    --amber-light:  #fef3c7;
+
+    --type-display: 'Sora', sans-serif;
+    --type-body:    'Inter', sans-serif;
+
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg:           #0c1018;
+      --surface:      #141924;
+      --surface-2:    #1a2234;
+      --border:       #263050;
+      --text:         #dde4f0;
+      --muted:        #8899b8;
+      --accent:       #e6b832;
+      --accent-light: #2a2206;
+      --navy:         #4a72d6;
+      --navy-mid:     #5b84e8;
+      --navy-light:   #151e3a;
+      --green:        #22c55e;
+      --green-light:  #052e16;
+      --red:          #f87171;
+      --red-light:    #2d0a0a;
+      --amber:        #fbbf24;
+      --amber-light:  #2d1b00;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:           #0c1018;
+    --surface:      #141924;
+    --surface-2:    #1a2234;
+    --border:       #263050;
+    --text:         #dde4f0;
+    --muted:        #8899b8;
+    --accent:       #e6b832;
+    --accent-light: #2a2206;
+    --navy:         #4a72d6;
+    --navy-mid:     #5b84e8;
+    --navy-light:   #151e3a;
+    --green:        #22c55e;
+    --green-light:  #052e16;
+    --red:          #f87171;
+    --red-light:    #2d0a0a;
+    --amber:        #fbbf24;
+    --amber-light:  #2d1b00;
+    color-scheme: dark;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--type-body);
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text);
+    background: var(--bg);
+    padding-inline: 0;
+    padding-block: 0;
+  }
+
+  /* Layout */
+  .page-wrap {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    min-height: 100%;
+    max-width: 1120px;
+    margin-inline: auto;
+    padding-inline: 24px;
+    gap: 0 40px;
+  }
+
+  @media (max-width: 860px) {
+    .page-wrap { grid-template-columns: 1fr; padding-inline: 16px; }
+    .toc-aside { display: none; }
+  }
+
+  /* TOC */
+  .toc-aside {
+    position: sticky;
+    top: 24px;
+    align-self: start;
+    padding-block: 32px;
+    max-height: calc(100vh - 48px);
+    overflow-y: auto;
+  }
+  .toc-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+    font-family: var(--type-body);
+  }
+  .toc-list { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+  .toc-list a {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border-left: 2px solid transparent;
+    transition: color .15s, background .15s, border-color .15s;
+    line-height: 1.4;
+  }
+  .toc-list a:hover { color: var(--text); background: var(--surface); }
+  .toc-list a.active { color: var(--navy); border-left-color: var(--navy); background: var(--navy-light); font-weight: 500; }
+
+  /* Main content */
+  main { padding-block: 32px 64px; }
+
+  /* Header */
+  .doc-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+  }
+  .brand-dot {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: var(--navy);
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--type-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+  .doc-header-text { flex: 1; }
+  .doc-title {
+    font-family: var(--type-display);
+    font-size: clamp(22px, 4vw, 30px);
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.2;
+    text-wrap: balance;
+  }
+  .doc-meta { font-size: 13px; color: var(--muted); margin-top: 6px; }
+  .doc-meta span { display: inline-block; }
+  .doc-meta span + span::before { content: "·"; margin-inline: 6px; }
+
+  /* Sections */
+  section { margin-bottom: 52px; scroll-margin-top: 24px; }
+  h2 {
+    font-family: var(--type-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 20px;
+    text-wrap: balance;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2 .section-num {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--navy);
+    background: var(--navy-light);
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-family: var(--type-body);
+  }
+  h3 {
+    font-family: var(--type-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin-top: 24px;
+    margin-bottom: 10px;
+    text-wrap: balance;
+  }
+  p { margin-bottom: 12px; max-width: 65ch; }
+  p:last-child { margin-bottom: 0; }
+
+  /* Role cards */
+  .role-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .role-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px 20px;
+  }
+  .role-card .role-name {
+    font-family: var(--type-display);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .role-card .role-name .icon { font-size: 16px; }
+  .role-card .role-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+  .role-card .role-tag {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-top: 10px;
+  }
+
+  /* Steps */
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step {
+    display: grid;
+    grid-template-columns: 36px 1fr;
+    gap: 0 16px;
+  }
+  .step-marker-col { display: flex; flex-direction: column; align-items: center; }
+  .step-circle {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--navy-light);
+    border: 2px solid var(--navy);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--navy);
+    flex-shrink: 0;
+    font-family: var(--type-display);
+  }
+  .step-line { flex: 1; width: 2px; background: var(--border); margin: 4px 0; }
+  .step:last-child .step-line { display: none; }
+  .step-body { padding-bottom: 24px; }
+  .step-title { font-weight: 600; color: var(--text); font-size: 14px; margin-bottom: 4px; margin-top: 7px; }
+  .step-desc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+  .step-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-top: 6px;
+    font-weight: 500;
+  }
+  .tag-new { background: var(--green-light); color: var(--green); }
+  .tag-exists { background: var(--navy-light); color: var(--navy); }
+  .tag-partial { background: var(--amber-light); color: var(--amber); }
+  .tag-fix { background: var(--red-light); color: var(--red); }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin-bottom: 12px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 420px;
+  }
+  th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  tr:last-child td { border-bottom: none; }
+  .check { color: var(--green); font-weight: 600; }
+  .cross { color: var(--red); }
+
+  /* Subscription comparison */
+  .plan-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .plan-grid { grid-template-columns: 1fr; } }
+  .plan-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px;
+  }
+  .plan-card.pro { border-color: var(--accent); background: var(--surface); }
+  .plan-name {
+    font-family: var(--type-display);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .plan-price {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--navy);
+    font-family: var(--type-display);
+    margin-bottom: 14px;
+  }
+  .plan-price span { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .plan-card.pro .plan-price { color: var(--accent); }
+  .plan-features { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+  .plan-features li { font-size: 13px; color: var(--muted); display: flex; align-items: flex-start; gap: 7px; line-height: 1.4; }
+  .plan-features li::before { content: "✓"; color: var(--green); font-weight: 600; flex-shrink: 0; margin-top: 1px; }
+  .plan-features li.limit::before { content: "○"; color: var(--amber); }
+  .plan-features li.no::before { content: "—"; color: var(--red); }
+
+  /* Phase timeline */
+  .phases { display: flex; flex-direction: column; gap: 12px; }
+  .phase-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0 16px;
+    align-items: start;
+  }
+  .phase-num {
+    font-family: var(--type-display);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--border);
+    line-height: 1;
+    padding-top: 3px;
+    font-variant-numeric: tabular-nums;
+    min-width: 28px;
+  }
+  .phase-card:hover .phase-num { color: var(--navy); }
+  .phase-title { font-family: var(--type-display); font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .phase-time { font-size: 12px; color: var(--accent); font-weight: 500; margin-bottom: 8px; }
+  .phase-items { display: flex; flex-wrap: wrap; gap: 4px; }
+  .phase-item {
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--surface-2);
+    color: var(--muted);
+    border: 1px solid var(--border);
+    line-height: 1.5;
+  }
+
+  /* Fix list */
+  .fix-list { display: flex; flex-direction: column; gap: 8px; }
+  .fix-item {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  .fix-icon { font-size: 15px; margin-top: 1px; }
+  .fix-desc { color: var(--text); line-height: 1.5; }
+  .fix-desc em { display: block; color: var(--muted); font-style: normal; font-size: 12px; margin-top: 2px; }
+  .priority {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .p-high { background: var(--red-light); color: var(--red); }
+  .p-med { background: var(--amber-light); color: var(--amber); }
+
+  /* Code block */
+  pre {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    color: var(--text);
+  }
+  code { font-family: 'Courier New', monospace; font-size: 12px; }
+
+  /* Info callout */
+  .callout {
+    background: var(--navy-light);
+    border-left: 3px solid var(--navy);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 16px;
+    line-height: 1.6;
+  }
+  .callout.warn { background: var(--amber-light); border-left-color: var(--amber); }
+  .callout.success { background: var(--green-light); border-left-color: var(--green); }
+
+  /* Divider */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 0; }
+
+  /* Utility */
+  .text-muted { color: var(--muted); }
+  .text-small { font-size: 13px; }
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  strong { font-weight: 600; }
+</style>
+
+<div class="page-wrap">
+  <aside class="toc-aside">
+    <div class="toc-label">Contents</div>
+    <ul class="toc-list" id="toc">
+      <li><a href="#overview">Overview</a></li>
+      <li><a href="#roles">User Roles</a></li>
+      <li><a href="#verification">Agent Verification</a></li>
+      <li><a href="#subscriptions">Subscriptions</a></li>
+      <li><a href="#admin">Admin Panel</a></li>
+      <li><a href="#travellers">Traveller Features</a></li>
+      <li><a href="#chat">Real-Time Chat</a></li>
+      <li><a href="#marketplace">Marketplace</a></li>
+      <li><a href="#debt">Technical Fixes</a></li>
+      <li><a href="#phases">Implementation Phases</a></li>
+      <li><a href="#verify">Verification Plan</a></li>
+    </ul>
+  </aside>
+
+  <main>
+    <header class="doc-header">
+      <div class="brand-dot">P</div>
+      <div class="doc-header-text">
+        <h1 class="doc-title">PlanAdvisors Platform Roadmap</h1>
+        <p class="doc-meta">
+          <span>Approved 27 Sep 2026</span>
+          <span>5 phases · ~12 weeks</span>
+          <span>Razorpay · Surepass · MSG91</span>
+        </p>
+      </div>
+    </header>
+
+    <!-- Overview -->
+    <section id="overview">
+      <h2><span class="section-num">00</span> Overview</h2>
+      <p>PlanAdvisors is expanding from an AI travel assistant into a <strong>trust-based travel marketplace</strong>. The core platform — FastAPI WebSocket backend, Next.js 16 frontend, Claude tool-calling — already exists. This roadmap adds the commercial and trust layer on top.</p>
+      <div class="callout success mt-16">
+        <strong>What already works:</strong> AI chat (30+ tools), packages/tickets/visa CRUD, explore marketplace, agent registration with partial phone OTP, enquiry modal, admin stats dashboard.
+      </div>
+      <div class="callout warn">
+        <strong>What this plan adds:</strong> Aadhaar + travel-license verification, Razorpay subscriptions, real-time agent↔traveller chat, admin approval queue, API usage tracking, free-tier limits, agent-lead matching, document requirements tool.
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Roles -->
+    <section id="roles">
+      <h2><span class="section-num">01</span> User Roles</h2>
+      <p>Three roles share a single OAuth login (Google / GitHub). An agent is also a traveller — same account, both AI chat and listing management available.</p>
+      <div class="role-grid">
+        <div class="role-card">
+          <div class="role-name"><span class="icon">🧳</span> Traveller</div>
+          <div class="role-desc">Any logged-in user. AI chat, browse marketplace, contact agents, plan trips.</div>
+          <span class="role-tag tag-exists">Default on login</span>
+        </div>
+        <div class="role-card">
+          <div class="role-name"><span class="icon">🏢</span> Travel Agent (Travels)</div>
+          <div class="role-desc">Register → verify identity → admin approves. Create packages, tickets, visa. Chat with travellers.</div>
+          <span class="role-tag tag-new">Requires approval</span>
+        </div>
+        <div class="role-card">
+          <div class="role-name"><span class="icon">⚙️</span> Admin</div>
+          <div class="role-desc">Email in <code>ADMIN_EMAILS</code> env var. Approve agents, manage subscriptions, view all analytics.</div>
+          <span class="role-tag tag-exists">Env-var gated</span>
+        </div>
+      </div>
+
+      <h3>Services agents can offer</h3>
+      <p>Selected at registration — drives which create forms appear and how the public profile is shown:</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Service</th><th>Examples</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Tour Packages</strong></td><td>Family trips, adventure tours, cultural, beach, trekking</td></tr>
+            <tr><td><strong>Ticket Sales</strong></td><td>Resell airline / bus / train seats at or below market price</td></tr>
+            <tr><td><strong>Visa Processing</strong></td><td>Tourist, business, work, student, medical visas</td></tr>
+            <tr><td><strong>Hajj / Umra</strong></td><td>Pilgrimage packages, group arrangements, guided ziyarat</td></tr>
+            <tr><td><strong>Recruitment Visa</strong></td><td>Job visa placement — plumber, electrician, nurse, etc.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Verification -->
+    <section id="verification">
+      <h2><span class="section-num">02</span> Agent Registration &amp; Verification</h2>
+      <p>Agents must complete a 5-step verification flow before they can publish listings. Every step must pass before the admin review queue is triggered.</p>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-marker-col"><div class="step-circle">1</div><div class="step-line"></div></div>
+          <div class="step-body">
+            <div class="step-title">Basic Info</div>
+            <div class="step-desc">Name, agency type, phone, location, specializations, languages, years of experience, services offered (multi-select).</div>
+            <span class="step-tag tag-exists">Already built</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-marker-col"><div class="step-circle">2</div><div class="step-line"></div></div>
+          <div class="step-body">
+            <div class="step-title">Phone OTP</div>
+            <div class="step-desc">6-digit OTP sent via <strong>MSG91</strong> SMS to the registered phone. Verified OTP sets <code>phone_verified = true</code>. ENV: <code>MSG91_AUTH_KEY</code>.</div>
+            <span class="step-tag tag-partial">Backend exists — SMS not wired</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-marker-col"><div class="step-circle">3</div><div class="step-line"></div></div>
+          <div class="step-body">
+            <div class="step-title">Aadhaar OTP Verification</div>
+            <div class="step-desc">Agent enters their 12-digit Aadhaar number. Backend calls <strong>Surepass API</strong> → UIDAI sends OTP to the Aadhaar-linked mobile. Agent enters OTP to verify. Only the last 4 digits are stored. Cost: ~₹5–10/verification. ENV: <code>SUREPASS_API_KEY</code>.</div>
+            <span class="step-tag tag-new">New</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-marker-col"><div class="step-circle">4</div><div class="step-line"></div></div>
+          <div class="step-body">
+            <div class="step-title">Travel License Upload <span style="font-weight:400;color:var(--muted)">(agency agents only)</span></div>
+            <div class="step-desc">Tour operators / agencies upload their travel license (PDF or image). Stored in Azure Blob Storage. Individual agents skip this step. ENVs: <code>AZURE_STORAGE_ACCOUNT</code>, <code>AZURE_STORAGE_CONTAINER</code>.</div>
+            <span class="step-tag tag-new">New</span>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-marker-col"><div class="step-circle">5</div><div class="step-line"></div></div>
+          <div class="step-body">
+            <div class="step-title">Admin Review &amp; Approval</div>
+            <div class="step-desc">Agent enters <code>pending_review</code> state. Admin sees them in the Approval Queue with all verification badges. Admin approves (email + SMS sent to agent) or rejects with a reason. Only approved agents' listings appear publicly.</div>
+            <span class="step-tag tag-new">New</span>
+          </div>
+        </div>
+      </div>
+
+      <h3>New AgentProfile fields</h3>
+      <pre>aadhaar_verified    BOOLEAN   DEFAULT FALSE
+aadhaar_last4       VARCHAR(4)          -- last 4 digits only
+license_url         TEXT      DEFAULT ''
+license_filename    TEXT      DEFAULT ''
+approval_status     VARCHAR(20) DEFAULT 'pending_review'
+                    -- values: pending_review / approved / rejected
+approval_note       TEXT      DEFAULT ''
+approved_at         DATETIME  NULLABLE
+approved_by         VARCHAR(120)        -- admin email
+services_offered    JSON      DEFAULT '[]'</pre>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Subscriptions -->
+    <section id="subscriptions">
+      <h2><span class="section-num">03</span> Subscription Model</h2>
+      <p>Monthly recurring billing via <strong>Razorpay Subscriptions API</strong>. Both agent and traveller plans are ₹50/month. Webhooks update DB on payment events.</p>
+
+      <h3>Agent tiers</h3>
+      <div class="plan-grid">
+        <div class="plan-card">
+          <div class="plan-name">Free</div>
+          <div class="plan-price">₹0 <span>/month</span></div>
+          <ul class="plan-features">
+            <li class="limit">Max 10 tour packages</li>
+            <li class="limit">Max 10 ticket listings</li>
+            <li class="limit">Max 5 visa services</li>
+            <li class="limit">5 AI draft generations / month</li>
+            <li class="no">No real-time chat</li>
+            <li class="no">No enquiry notifications</li>
+            <li class="no">Standard search ranking</li>
+          </ul>
+        </div>
+        <div class="plan-card pro">
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">₹50 <span>/month</span></div>
+          <ul class="plan-features">
+            <li>Unlimited packages, tickets, visa</li>
+            <li>Unlimited AI draft generation</li>
+            <li>Real-time chat with travellers</li>
+            <li>SMS + email enquiry notifications</li>
+            <li>Priority listing in search results</li>
+            <li>Receive search leads from travellers</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3 class="mt-16">Traveller tiers</h3>
+      <div class="plan-grid">
+        <div class="plan-card">
+          <div class="plan-name">Free</div>
+          <div class="plan-price">₹0 <span>/month</span></div>
+          <ul class="plan-features">
+            <li>Full AI travel assistant</li>
+            <li>Browse marketplace</li>
+            <li>Contact via WhatsApp / email</li>
+            <li class="no">No real-time agent chat</li>
+            <li class="no">No agent lead matching</li>
+            <li class="no">No priority responses</li>
+          </ul>
+        </div>
+        <div class="plan-card pro">
+          <div class="plan-name">Pro</div>
+          <div class="plan-price">₹50 <span>/month</span></div>
+          <ul class="plan-features">
+            <li>All Free features</li>
+            <li>Real-time chat with agents</li>
+            <li>Search signals shared with relevant agents (with consent)</li>
+            <li>Agents proactively contact you with offers</li>
+            <li>Priority agent responses</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="callout mt-16">
+        <strong>Privacy:</strong> Search sharing requires explicit consent during Pro onboarding. The privacy policy must disclose that search preferences are shared with relevant agents to help find better deals — no other use.
+      </div>
+
+      <h3>New endpoints</h3>
+      <pre>POST /api/subscription/create    -- create Razorpay order, return checkout data
+POST /api/subscription/webhook   -- verify HMAC signature, update DB on payment events
+GET  /api/subscription/status    -- current plan for calling user
+POST /api/subscription/cancel    -- cancel recurring subscription</pre>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Admin -->
+    <section id="admin">
+      <h2><span class="section-num">04</span> Admin Panel</h2>
+
+      <div class="callout warn">
+        <strong>Bug to fix first:</strong> <code>admin.py</code> hardcodes <code>{"shafi1379@gmail.com"}</code> while <code>agent_auth.py</code> reads <code>ADMIN_EMAILS</code> env var. Consolidate to one env var everywhere.
+      </div>
+
+      <h3>Agent Approval Queue <span class="step-tag tag-new" style="font-size:11px">New page: /agent/admin/approval</span></h3>
+      <p>Lists all agents with <code>approval_status = 'pending_review'</code>. Shows name, phone, location, Aadhaar-verified badge, license file preview. One-click Approve or Reject (with reason text → email sent to agent).</p>
+
+      <h3>Enhanced Stats <span class="step-tag tag-partial" style="font-size:11px">Extend existing /api/admin/stats</span></h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Metric</th><th>How</th></tr></thead>
+          <tbody>
+            <tr><td>API calls by type (SerpAPI, Amadeus, Claude)</td><td>Read from new <code>api_usage_logs</code> table</td></tr>
+            <tr><td>Estimated API cost (₹)</td><td>Stored <code>cost_paise</code> column, sum and convert</td></tr>
+            <tr><td>Subscription revenue</td><td>Count active subscriptions × ₹50</td></tr>
+            <tr><td>Agent breakdown (pending / approved / rejected)</td><td>Group by <code>approval_status</code></td></tr>
+            <tr><td>Top agents by enquiry count</td><td>Join enquiries on agent_email, sort</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>API usage tracking</h3>
+      <p>New table <code>api_usage_logs</code> with one row per external API call. Logged at the service layer:</p>
+      <pre>api_usage_logs (id, user_email, api_type, endpoint, tokens_used, cost_paise, created_at)
+-- api_type values: 'claude', 'serp_flights', 'amadeus', 'aadhaar_kyc', 'whisper', 'openai_tts'</pre>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Travellers -->
+    <section id="travellers">
+      <h2><span class="section-num">05</span> Traveller Features</h2>
+
+      <h3>Document requirements tool <span class="step-tag tag-new" style="font-size:11px">New</span></h3>
+      <p>New Claude tool <code>get_document_requirements(trip_type, nationality, destination)</code>. Returns what's needed for domestic flight / international flight / hotel check-in. No external API needed — a structured knowledge base in <code>services/documents.py</code>.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Context</th><th>Documents</th></tr></thead>
+          <tbody>
+            <tr><td>Domestic flight (India)</td><td>Aadhaar, PAN, Passport, or Voter ID — any government-issued ID</td></tr>
+            <tr><td>International flight</td><td>Passport (≥6 months validity), visa, travel insurance</td></tr>
+            <tr><td>Hotel in India</td><td>Aadhaar or Passport copy for guest registration</td></tr>
+            <tr><td>Hotel abroad</td><td>Passport copy</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Visa guidance</h3>
+      <p>When a traveller searches for an international destination, the chat proactively shows: visa-on-arrival vs tourist visa required, agents who handle that country's visa (pulled from <code>visa_services</code> table), and a self-service step-by-step guide if the traveller prefers to apply independently.</p>
+
+      <h3>Agent matching on search <span class="step-tag tag-new" style="font-size:11px">Pro travellers only</span></h3>
+      <p>When a Pro traveller's chat signals travel intent, the backend extracts structured intent and notifies matching agents. Agents can proactively reach out via the direct chat system.</p>
+      <pre>search_leads (id, traveller_email, search_intent JSON, matched_agents JSON, created_at)
+-- search_intent: {type, destination, dates, budget, travelers}</pre>
+
+      <h3>Traveller profile page <span class="step-tag tag-new" style="font-size:11px">New route: /profile</span></h3>
+      <p>Currently there is no profile page for travellers. Add: home city, nationality, travel style, currency, passport expiry, subscription status + upgrade button, search-sharing consent toggle.</p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Chat -->
+    <section id="chat">
+      <h2><span class="section-num">06</span> Real-Time Agent ↔ Traveller Chat</h2>
+      <p>Extends the existing FastAPI WebSocket infrastructure (already used for AI chat). A new namespace <code>/ws/agent-chat</code> handles direct messaging. Messages persist in DB so history loads on reconnect.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Component</th><th>Detail</th></tr></thead>
+          <tbody>
+            <tr><td>WebSocket endpoint</td><td><code>WS /ws/agent-chat/{room_id}</code> — room_id = sorted pair of emails</td></tr>
+            <tr><td>Message storage</td><td><code>agent_messages</code> table — room_id, sender_email, content, is_read, created_at</td></tr>
+            <tr><td>Offline delivery</td><td>If recipient not connected → push notification via existing VAPID/pywebpush setup</td></tr>
+            <tr><td>REST history</td><td><code>GET /api/chat/rooms</code>, <code>GET /api/chat/rooms/{room_id}/messages</code>, <code>POST /api/chat/rooms/{room_id}/read</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>Agent inbox <span class="step-tag tag-fix" style="font-size:11px">Missing page: /agent/enquiries</span></h3>
+      <p>Dashboard stat card already references this page but it doesn't exist. Build it to show both enquiry form submissions and real-time chat rooms in one unified inbox with unread count badges.</p>
+
+      <h3>Chat entry for travellers</h3>
+      <p>On every explore page (package, ticket, visa, agent profile): a <strong>💬 Chat with Agent</strong> button. Opens a floating drawer from the bottom on mobile, a side panel on desktop. Only available for Pro travellers — free travellers see WhatsApp / Call / Email contact links instead.</p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Marketplace -->
+    <section id="marketplace">
+      <h2><span class="section-num">07</span> Marketplace &amp; Chat Boundary</h2>
+
+      <h3>Listing visibility rules</h3>
+      <p>A listing is publicly visible only when: agent <code>approval_status = 'approved'</code> AND <code>is_active = true</code>, AND listing <code>is_public = true</code> AND <code>status = 'published'</code>. Currently the explore API does not check approval status — that filter needs to be added.</p>
+
+      <h3>Search ranking</h3>
+      <p>Pro agent listings are ranked first. Within the same tier, order by <code>views_count</code> then <code>created_at</code> (freshness). This creates a clear upgrade incentive without hiding free agents entirely.</p>
+
+      <h3>Chat-to-agent handoff</h3>
+      <p>When Claude detects a traveller looking for something an agent can help with, it surfaces a contextual prompt:</p>
+      <div class="callout">
+        "I found 3 local agents who specialise in Dubai family packages. Would you like to browse them? → <strong>View Agents</strong>"
+      </div>
+
+      <h3>Chat boundary (travel-focused)</h3>
+      <p>The AI currently has no topic guard. Add a clause to the Claude system prompt in <code>services/claude.py</code> that redirects off-topic queries:</p>
+      <pre>"If the user asks about topics unrelated to travel (cooking, coding, politics, etc.),
+respond: 'I'm PlanAdvisors, your travel planning assistant! I can help you plan
+trips, find flights, hotels, and connect with verified travel agents. Are you
+planning a trip?'
+
+If the query is ambiguous — a 'trip to hospital' or a 'factory tour' — ask:
+'Just to check — are you looking to plan a travel trip?'"</pre>
+      <p>This is a single prompt change in <code>backend/services/claude.py</code> — no code refactor needed.</p>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Technical Debt -->
+    <section id="debt">
+      <h2><span class="section-num">08</span> Technical Fixes Required</h2>
+      <div class="fix-list">
+        <div class="fix-item">
+          <div class="fix-icon">🔧</div>
+          <div class="fix-desc"><strong>admin.py hardcodes email set</strong><em>Replace {"shafi1379@gmail.com"} with ADMIN_EMAILS env var — same as agent_auth.py</em></div>
+          <span class="priority p-high">High</span>
+        </div>
+        <div class="fix-item">
+          <div class="fix-icon">📱</div>
+          <div class="fix-desc"><strong>SMS OTP not actually sent</strong><em>Phone OTP currently prints to console. Wire MSG91 branch in agent_auth.py → phone-otp route.</em></div>
+          <span class="priority p-high">High</span>
+        </div>
+        <div class="fix-item">
+          <div class="fix-icon">📬</div>
+          <div class="fix-desc"><strong>No enquiry notifications for agents</strong><em>After POST /api/explore/enquiries, send push notification + email to the agent. Already have push and email services.</em></div>
+          <span class="priority p-high">High</span>
+        </div>
+        <div class="fix-item">
+          <div class="fix-icon">🖼️</div>
+          <div class="fix-desc"><strong>No image upload endpoint</strong><em>Package images stored as URL strings only. Add POST /api/agent/upload/image → Azure Blob Storage.</em></div>
+          <span class="priority p-high">High</span>
+        </div>
+        <div class="fix-item">
+          <div class="fix-icon">📄</div>
+          <div class="fix-desc"><strong>/agent/enquiries page missing</strong><em>Dashboard stat card links to this page but it doesn't exist. Build the agent inbox.</em></div>
+          <span class="priority p-high">High</span>
+        </div>
+        <div class="fix-item">
+          <div class="fix-icon">🔐</div>
+          <div class="fix-desc"><strong>Backend trusts X-User-Email header blindly</strong><em>Any caller who knows a user's email can impersonate them. Add HMAC-signed token from the NextAuth session.</em></div>
+          <span class="priority p-med">Medium</span>
+        </div>
+        <div class="fix-item">
+          <div class="fix-icon">🗃️</div>
+          <div class="fix-desc"><strong>No proper migrations (Alembic)</strong><em>Schema changes are raw ALTER TABLE strings in init_db(). Add Alembic for migration history and rollback support.</em></div>
+          <span class="priority p-med">Medium</span>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Phases -->
+    <section id="phases">
+      <h2><span class="section-num">09</span> Implementation Phases</h2>
+      <div class="phases">
+        <div class="phase-card">
+          <div class="phase-num">1</div>
+          <div>
+            <div class="phase-title">Trust &amp; Verification</div>
+            <div class="phase-time">3–4 weeks</div>
+            <div class="phase-items">
+              <span class="phase-item">Fix ADMIN_EMAILS inconsistency</span>
+              <span class="phase-item">MSG91 SMS OTP</span>
+              <span class="phase-item">Aadhaar OTP (Surepass)</span>
+              <span class="phase-item">Travel license upload</span>
+              <span class="phase-item">approval_status field</span>
+              <span class="phase-item">Admin approval queue page</span>
+              <span class="phase-item">Approval email/SMS</span>
+              <span class="phase-item">Block unapproved listings from explore</span>
+            </div>
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-num">2</div>
+          <div>
+            <div class="phase-title">Subscriptions</div>
+            <div class="phase-time">2–3 weeks</div>
+            <div class="phase-items">
+              <span class="phase-item">subscriptions table + migrations</span>
+              <span class="phase-item">Razorpay integration</span>
+              <span class="phase-item">Webhook handler</span>
+              <span class="phase-item">Free-tier limits on create endpoints</span>
+              <span class="phase-item">Subscription pages (agent + traveller)</span>
+              <span class="phase-item">Search-sharing consent toggle</span>
+            </div>
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-num">3</div>
+          <div>
+            <div class="phase-title">Real-Time Chat</div>
+            <div class="phase-time">2–3 weeks</div>
+            <div class="phase-items">
+              <span class="phase-item">agent_messages table</span>
+              <span class="phase-item">WS /ws/agent-chat endpoint</span>
+              <span class="phase-item">Chat REST endpoints</span>
+              <span class="phase-item">Agent inbox page</span>
+              <span class="phase-item">Chat widget on explore pages</span>
+              <span class="phase-item">Push notifications for new messages</span>
+            </div>
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-num">4</div>
+          <div>
+            <div class="phase-title">Admin &amp; Analytics</div>
+            <div class="phase-time">1–2 weeks</div>
+            <div class="phase-items">
+              <span class="phase-item">api_usage_logs table</span>
+              <span class="phase-item">Logging at service call sites</span>
+              <span class="phase-item">Extended admin stats</span>
+              <span class="phase-item">Activity log page</span>
+              <span class="phase-item">API quota alerts</span>
+            </div>
+          </div>
+        </div>
+        <div class="phase-card">
+          <div class="phase-num">5</div>
+          <div>
+            <div class="phase-title">Marketplace Polish</div>
+            <div class="phase-time">2 weeks</div>
+            <div class="phase-items">
+              <span class="phase-item">Traveller profile page</span>
+              <span class="phase-item">Document requirements chat tool</span>
+              <span class="phase-item">Agent matching / search leads</span>
+              <span class="phase-item">Pro-first search ranking</span>
+              <span class="phase-item">Chat-to-agent handoff in AI</span>
+              <span class="phase-item">Travel-focus chat boundary</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="divider">
+
+    <!-- Verification Plan -->
+    <section id="verify">
+      <h2><span class="section-num">10</span> Verification Plan</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Feature</th><th>How to test</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Agent registration</strong></td><td>Complete all 5 steps → agent appears in admin queue → approve → agent email received → listings visible in explore</td></tr>
+            <tr><td><strong>Aadhaar OTP</strong></td><td>Surepass returns OTP → correct code passes, wrong code blocked</td></tr>
+            <tr><td><strong>Travel license upload</strong></td><td>File appears in Azure Blob, URL stored in DB</td></tr>
+            <tr><td><strong>Free-tier limits</strong></td><td>Create 11th package → API returns 402 with <code>upgrade_required</code></td></tr>
+            <tr><td><strong>Razorpay subscription</strong></td><td>Checkout opens → complete payment → webhook fires → DB updated → agent can exceed limits</td></tr>
+            <tr><td><strong>Real-time chat</strong></td><td>Traveller sends message → agent push notification fires → agent replies → traveller sees it live → disconnect/reconnect → history loads from DB</td></tr>
+            <tr><td><strong>API usage tracking</strong></td><td>AI chat searches a flight → api_usage_logs gets one SerpAPI row → admin panel shows it in today's chart</td></tr>
+            <tr><td><strong>Chat boundary</strong></td><td>"Best pasta recipe" → AI redirects. "Dubai in November" → AI responds normally. "Trip to hospital" → AI asks clarifying question.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+  // Active TOC link
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('#toc a');
+
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`#toc a[href="#${e.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => obs.observe(s));
+</script>

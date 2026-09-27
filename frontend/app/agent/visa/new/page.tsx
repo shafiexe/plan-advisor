@@ -1,11 +1,24 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import TagInput from "@/components/agent/TagInput";
 import ChecklistBuilder from "@/components/agent/ChecklistBuilder";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+function useAgentEmail() {
+  const { data: session } = useSession();
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    if (session?.user?.email) { setEmail(session.user.email); return; }
+    try {
+      const raw = localStorage.getItem("pa_agent_session");
+      if (raw) { const s = JSON.parse(raw); if (s.email) setEmail(s.email); }
+    } catch {}
+  }, [session]);
+  return email;
+}
 
 const VISA_TYPES = ["tourist", "visiting", "work", "student", "transit", "medical"];
 const ENTRY_TYPES = ["single", "double", "multiple"];
@@ -18,7 +31,7 @@ const SELECT_CLASS = "w-full bg-slate-800 border border-slate-700 rounded-xl px-
 const SECTION_TITLE = "text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2";
 
 export default function NewVisaPage() {
-  const { data: session } = useSession();
+  const agentEmail = useAgentEmail();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -63,7 +76,7 @@ export default function NewVisaPage() {
     try {
       const res = await fetch(`${API}/api/agent/visa/ai-fill`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Email": session!.user!.email! },
+        headers: { "Content-Type": "application/json", "X-User-Email": agentEmail ?? "" },
         body: JSON.stringify({ country: destinationCountry, visa_type: visaType }),
       });
       if (!res.ok) throw new Error("AI fill failed");
@@ -93,7 +106,7 @@ export default function NewVisaPage() {
     try {
       const res = await fetch(`${API}/api/agent/visa`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Email": session!.user!.email! },
+        headers: { "Content-Type": "application/json", "X-User-Email": agentEmail ?? "" },
         body: JSON.stringify({
           destination_country: destinationCountry,
           country_code: countryCode,

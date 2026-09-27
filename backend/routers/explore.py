@@ -11,10 +11,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import Depends
 
 from database import get_db
-from models import AgentProfile, TourPackage, Ticket, VisaService, Enquiry, _now
+from models import AgentProfile, TourPackage, Ticket, VisaService, Enquiry, Subscription, _now
 
 log = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/explore")
+
+# Subquery: only agent emails with approval_status = 'approved'
+def _approved_agents_sq():
+    return select(AgentProfile.user_email).where(
+        AgentProfile.approval_status == "approved",
+        AgentProfile.is_active == True,
+    )
+
+
+async def _pro_agent_emails(db: AsyncSession) -> set[str]:
+    """Return set of agent emails with an active agent_pro subscription."""
+    rows = (await db.execute(
+        select(Subscription.user_email).where(
+            Subscription.plan_type == "agent_pro",
+            Subscription.status == "active",
+        )
+    )).scalars().all()
+    return set(rows)
+
+
+def _pro_first(items: list[dict], pro_emails: set[str], key: str = "agent_email") -> list[dict]:
+    """Sort list so items whose agent is on Pro come first."""
+    return sorted(items, key=lambda x: (0 if x.get(key, "") in pro_emails else 1))
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -69,6 +92,7 @@ async def list_packages(
     q = select(TourPackage).where(
         TourPackage.is_public == True,
         TourPackage.status == "published",
+        TourPackage.agent_email.in_(_approved_agents_sq()),
     )
     if destination:
         q = q.where(func.lower(func.json_extract(TourPackage.destinations, '$') if False else TourPackage.title).contains(destination.lower()))
@@ -80,6 +104,7 @@ async def list_packages(
         q = q.where(TourPackage.difficulty == difficulty)
     q = q.order_by(TourPackage.updated_at.desc()).offset((page - 1) * limit).limit(limit)
     rows = (await db.execute(q)).scalars().all()
+    pro_emails = await _pro_agent_emails(db)
 
     result = []
     for r in rows:
@@ -99,8 +124,10 @@ async def list_packages(
             "highlights":      (r.highlights or [])[:3],
             "images":          (r.images or [])[:1],
             "agent":           _agent_summary(agent),
+            "agent_email":     r.agent_email,
+            "is_pro_agent":    r.agent_email in pro_emails,
         })
-    return result
+    return _pro_first(result, pro_emails)
 
 
 @router.get("/packages/{slug}")
@@ -174,6 +201,7 @@ async def list_tickets(
     q = select(Ticket).where(
         Ticket.is_public == True,
         Ticket.travel_date >= today,
+        Ticket.agent_email.in_(_approved_agents_sq()),
     )
     if origin:
         q = q.where(Ticket.origin.ilike(f"%{origin}%"))
@@ -291,6 +319,7 @@ async def list_visa(
     q = select(VisaService).where(
         VisaService.is_public == True,
         VisaService.status == "active",
+        VisaService.agent_email.in_(_approved_agents_sq()),
     )
     if country:
         q = q.where(VisaService.destination_country.ilike(f"%{country}%"))
@@ -377,7 +406,7 @@ async def list_agents(
     limit:          int = Query(20, le=50),
     db: AsyncSession = Depends(get_db),
 ):
-    q = select(AgentProfile).where(AgentProfile.is_active == True)
+    q = select(AgentProfile).where(AgentProfile.is_active == True, AgentProfile.approval_status == "approved")
     if location:
         q = q.where(AgentProfile.location.ilike(f"%{location}%"))
     if agent_type:
@@ -428,7 +457,7 @@ async def get_agent(slug: str, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Agent not found")
 
     a = (await db.execute(
-        select(AgentProfile).where(AgentProfile.id == agent_id, AgentProfile.is_active == True)
+        select(AgentProfile).where(AgentProfile.id == agent_id, AgentProfile.is_active == True, AgentProfile.approval_status == "approved")
     )).scalar_one_or_none()
     if not a:
         from fastapi import HTTPException
@@ -515,4 +544,18 @@ async def submit_enquiry(body: EnquiryBody, db: AsyncSession = Depends(get_db)):
     enq = Enquiry(**body.model_dump())
     db.add(enq)
     await db.commit()
+
+    # Notify the agent via push notification
+    try:
+        from routers.push import send_push_to_user
+        await send_push_to_user(
+            db=db,
+            user_email=body.agent_email,
+            title=f"New enquiry from {body.enquirer_name or 'a traveller'}",
+            body=f"Re: {body.listing_title or body.listing_type} — {body.message[:80] if body.message else 'Tap to view'}",
+            url="/agent/enquiries",
+        )
+    except Exception:
+        pass  # push is best-effort
+
     return {"ok": True, "message": "Enquiry submitted. The agent will contact you shortly."}

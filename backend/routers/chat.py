@@ -3,6 +3,8 @@ import os
 import time
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from services.claude import stream_response
+from services.usage_logger import log_api_call
+from database import AsyncSessionLocal
 
 router = APIRouter()
 
@@ -111,7 +113,16 @@ async def websocket_chat(websocket: WebSocket):
             await websocket.send_json({"type": "typing"})
 
             async for event in stream_response(messages, extra_system=extra_system, user_context=user_preferences):
-                await websocket.send_json(event)
+                if event.get("type") == "api_log":
+                    async with AsyncSessionLocal() as _db:
+                        await log_api_call(
+                            _db,
+                            api_type=event["api_type"],
+                            user_email=user_email,
+                            tokens_used=event.get("tokens", 0),
+                        )
+                else:
+                    await websocket.send_json(event)
 
             await websocket.send_json({"type": "done"})
 

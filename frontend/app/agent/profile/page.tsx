@@ -4,6 +4,19 @@ import { useEffect, useState } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+function useAgentEmail() {
+  const { data: session } = useSession();
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    if (session?.user?.email) { setEmail(session.user.email); return; }
+    try {
+      const raw = localStorage.getItem("pa_agent_session");
+      if (raw) { const s = JSON.parse(raw); if (s.email) setEmail(s.email); }
+    } catch {}
+  }, [session]);
+  return email;
+}
+
 const SPECIALIZATIONS = ["Pilgrimage", "Adventure", "Family", "Honeymoon", "Beach", "Wildlife", "Cultural", "Budget", "Trekking", "Corporate"];
 const LANGUAGES = ["Malayalam", "Tamil", "Hindi", "English", "Arabic", "Urdu", "Telugu", "Kannada"];
 
@@ -11,7 +24,8 @@ const SECTION_LABEL = "text-xs text-slate-400 font-medium uppercase tracking-wid
 const INPUT_CLASS = "w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-[#d4a017]";
 
 export default function AgentProfilePage() {
-  const { data: session } = useSession();
+  const agentEmail = useAgentEmail();
+  const session = { user: { email: agentEmail } }; // unified compat alias
   const [fetchLoading, setFetchLoading] = useState(true);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);

@@ -1,10 +1,23 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import PickupPointsBuilder from "@/components/agent/PickupPointsBuilder";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+function useAgentEmail() {
+  const { data: session } = useSession();
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    if (session?.user?.email) { setEmail(session.user.email); return; }
+    try {
+      const raw = localStorage.getItem("pa_agent_session");
+      if (raw) { const s = JSON.parse(raw); if (s.email) setEmail(s.email); }
+    } catch {}
+  }, [session]);
+  return email;
+}
 
 interface PickupPoint { location: string; time: string; }
 interface Layover { city: string; duration: string; }
@@ -50,7 +63,7 @@ function LayoverBuilder({ value, onChange }: { value: Layover[]; onChange: (v: L
 }
 
 export default function NewTicketPage() {
-  const { data: session } = useSession();
+  const agentEmail = useAgentEmail();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -126,7 +139,7 @@ export default function NewTicketPage() {
     try {
       const res = await fetch(`${API}/api/agent/tickets`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-User-Email": session!.user!.email! },
+        headers: { "Content-Type": "application/json", "X-User-Email": agentEmail ?? "" },
         body: JSON.stringify({
           title, ticket_type: ticketType, mode,
           origin, destination,

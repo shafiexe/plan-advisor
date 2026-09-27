@@ -87,6 +87,50 @@ async def unsubscribe(
     return {"ok": True}
 
 
+# ── Reusable push helper ─────────────────────────────────────────────────────
+
+async def send_push_to_user(
+    db: AsyncSession,
+    user_email: str,
+    title: str,
+    body: str,
+    url: str = "/",
+) -> int:
+    """Send a web push notification to all subscriptions for user_email. Returns count sent."""
+    private_key = os.getenv("VAPID_PRIVATE_KEY", "")
+    public_key  = os.getenv("VAPID_PUBLIC_KEY", "")
+    subject     = os.getenv("VAPID_SUBJECT", "mailto:admin@planadvisors.in")
+    if not private_key or not public_key:
+        return 0
+
+    subs = (await db.execute(
+        select(PushSubscription).where(PushSubscription.user_email == user_email.lower())
+    )).scalars().all()
+
+    if not subs:
+        return 0
+
+    try:
+        from pywebpush import webpush, WebPushException  # type: ignore
+        import json as _json
+    except ImportError:
+        return 0
+
+    sent = 0
+    for sub in subs:
+        try:
+            webpush(
+                subscription_info={"endpoint": sub.endpoint, "keys": {"p256dh": sub.p256dh, "auth": sub.auth}},
+                data=_json.dumps({"title": title, "body": body, "url": url}),
+                vapid_private_key=private_key,
+                vapid_claims={"sub": subject},
+            )
+            sent += 1
+        except Exception as exc:
+            log.debug("Push failed for %s: %s", sub.endpoint[:40], exc)
+    return sent
+
+
 # ── VAPID public key endpoint (browser needs this to subscribe) ───────────────
 
 @router.get("/vapid-public-key")

@@ -19,13 +19,21 @@ export default function LandingNav() {
             Explore →
           </Link>
           {isLoggedIn ? (
-            <Link
-              href="/"
-              className="px-4 py-1.5 rounded-lg border border-[#1e3a8a]/70 text-[#d4a017] text-sm font-medium
-                hover:bg-[#1e3a8a]/10 hover:border-[#1e3a8a] transition-colors duration-150"
-            >
-              Open Chat →
-            </Link>
+            <>
+              <Link
+                href="/profile"
+                className="text-xs text-slate-400 hover:text-slate-200 transition-colors hidden sm:inline"
+              >
+                Profile
+              </Link>
+              <Link
+                href="/"
+                className="px-4 py-1.5 rounded-lg border border-[#1e3a8a]/70 text-[#d4a017] text-sm font-medium
+                  hover:bg-[#1e3a8a]/10 hover:border-[#1e3a8a] transition-colors duration-150"
+              >
+                Open Chat →
+              </Link>
+            </>
           ) : (
             <Link
               href="/login"

@@ -8,6 +8,19 @@ import ImageGrid from "@/components/agent/ImageGrid";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+function useAgentEmail() {
+  const { data: session } = useSession();
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    if (session?.user?.email) { setEmail(session.user.email); return; }
+    try {
+      const raw = localStorage.getItem("pa_agent_session");
+      if (raw) { const s = JSON.parse(raw); if (s.email) setEmail(s.email); }
+    } catch {}
+  }, [session]);
+  return email;
+}
+
 const CATEGORIES = ["adventure", "family", "honeymoon", "pilgrimage", "beach", "cultural", "wildlife", "budget", "trekking", "corporate"];
 const DIFFICULTIES = ["easy", "moderate", "challenging"];
 
@@ -98,7 +111,7 @@ const SELECT_CLASS = "w-full bg-slate-800 border border-slate-700 rounded-xl px-
 const SECTION_TITLE = "text-sm font-semibold text-slate-300 mb-4 flex items-center gap-2";
 
 export default function EditPackagePage() {
-  const { data: session } = useSession();
+  const agentEmail = useAgentEmail();
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string;
@@ -141,8 +154,8 @@ export default function EditPackagePage() {
   const [currentStatus, setCurrentStatus] = useState("draft");
 
   useEffect(() => {
-    if (!session?.user?.email || !id) return;
-    fetch(`${API}/api/agent/packages/${id}`, { headers: { "X-User-Email": session.user.email } })
+    if (!agentEmail || !id) return;
+    fetch(`${API}/api/agent/packages/${id}`, { headers: { "X-User-Email": agentEmail ?? "" } })
       .then(r => r.json())
       .then(d => {
         setTitle(d.title ?? "");
@@ -173,7 +186,7 @@ export default function EditPackagePage() {
       })
       .catch(console.error)
       .finally(() => setFetchLoading(false));
-  }, [session, id]);
+  }, [agentEmail, id]);
 
   const buildPayload = (status: string) => ({
     title, category, destinations,
@@ -200,7 +213,7 @@ export default function EditPackagePage() {
     try {
       const res = await fetch(`${API}/api/agent/packages/${id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "X-User-Email": session!.user!.email! },
+        headers: { "Content-Type": "application/json", "X-User-Email": agentEmail ?? "" },
         body: JSON.stringify(buildPayload(status)),
       });
       if (!res.ok) { const d = await res.json(); throw new Error(d.detail || "Save failed"); }

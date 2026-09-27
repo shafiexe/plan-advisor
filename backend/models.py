@@ -121,23 +121,47 @@ class AgentProfile(Base):
     """Travel agent or agency profile — linked to an existing OAuth user by email."""
     __tablename__ = "agent_profiles"
 
-    id              = Column(Integer, primary_key=True, autoincrement=True)
-    user_email      = Column(String, nullable=False, unique=True, index=True)
-    agent_type      = Column(String, nullable=False)       # "agency" | "individual"
-    name            = Column(String, nullable=False)        # agency name or personal name
-    phone           = Column(String, nullable=False)
-    phone_verified  = Column(Boolean, default=False)
-    location        = Column(String, default="")
-    website         = Column(String, default="")
-    description     = Column(Text, default="")
-    logo_url        = Column(String, default="")
-    specializations = Column(JSON, default=list)           # ["pilgrimage","adventure",…]
-    languages       = Column(JSON, default=list)           # individual agents only
-    experience_years= Column(Integer, default=0)           # individual agents only
-    agency_code     = Column(String, default="")           # link to agency if individual
-    is_active       = Column(Boolean, default=True)        # can be deactivated by admin
-    created_at      = Column(DateTime, default=_now)
-    updated_at      = Column(DateTime, default=_now, onupdate=_now)
+    id               = Column(Integer, primary_key=True, autoincrement=True)
+    user_email       = Column(String, nullable=False, unique=True, index=True)
+    agent_type       = Column(String, nullable=False)       # "agency" | "individual"
+    name             = Column(String, nullable=False)        # agency name or personal name
+    phone            = Column(String, nullable=False)
+    phone_verified   = Column(Boolean, default=False)
+    location         = Column(String, default="")
+    website          = Column(String, default="")
+    description      = Column(Text, default="")
+    logo_url         = Column(String, default="")
+    specializations  = Column(JSON, default=list)           # ["pilgrimage","adventure",…]
+    languages        = Column(JSON, default=list)           # individual agents only
+    experience_years = Column(Integer, default=0)           # individual agents only
+    agency_code      = Column(String, default="")           # link to agency if individual
+    services_offered = Column(JSON, default=list)           # ["packages","tickets","visa","hajj_umra","recruitment"]
+    # Aadhaar KYC
+    aadhaar_verified = Column(Boolean, default=False)
+    aadhaar_last4    = Column(String(4), default="")        # last 4 digits only
+    # Travel license (for agency agent type)
+    license_url      = Column(String, default="")
+    license_filename = Column(String, default="")
+    # Admin approval
+    approval_status  = Column(String(20), default="pending_review")  # pending_review / approved / rejected
+    approval_note    = Column(Text, default="")             # reason if rejected
+    approved_at      = Column(DateTime, nullable=True)
+    approved_by      = Column(String(120), default="")      # admin email
+    is_active        = Column(Boolean, default=True)        # can be deactivated by admin
+    created_at       = Column(DateTime, default=_now)
+    updated_at       = Column(DateTime, default=_now, onupdate=_now)
+
+
+class AadhaarSession(Base):
+    """Tracks Surepass Aadhaar OTP session IDs so we can verify them."""
+    __tablename__ = "aadhaar_sessions"
+
+    id          = Column(Integer, primary_key=True, autoincrement=True)
+    user_email  = Column(String, nullable=False, index=True)
+    client_id   = Column(String(100), nullable=False)       # Surepass client_id for submit-otp
+    expires_at  = Column(DateTime, nullable=False)
+    used        = Column(Boolean, default=False)
+    created_at  = Column(DateTime, default=_now)
 
 
 class OTPRecord(Base):
@@ -259,6 +283,46 @@ class VisaService(Base):
     status                   = Column(String(20), default="active") # active/paused/discontinued
     created_at               = Column(DateTime, default=_now)
     updated_at               = Column(DateTime, default=_now, onupdate=_now)
+
+
+class Subscription(Base):
+    """Razorpay recurring subscription — one row per user plan."""
+    __tablename__ = "subscriptions"
+
+    id              = Column(Integer, primary_key=True, autoincrement=True)
+    user_email      = Column(String, nullable=False, index=True)
+    plan_type       = Column(String(20), nullable=False)    # 'agent_pro' | 'traveller_pro'
+    status          = Column(String(20), default="active")  # active / cancelled / expired
+    razorpay_sub_id = Column(String(100), unique=True, nullable=True)
+    starts_at       = Column(DateTime, nullable=True)
+    ends_at         = Column(DateTime, nullable=True)
+    created_at      = Column(DateTime, default=_now)
+    updated_at      = Column(DateTime, default=_now, onupdate=_now)
+
+
+class ApiUsageLog(Base):
+    """One row per external API call — for admin analytics and cost tracking."""
+    __tablename__ = "api_usage_logs"
+
+    id          = Column(Integer, primary_key=True, autoincrement=True)
+    user_email  = Column(String, nullable=True, index=True)
+    api_type    = Column(String(50), nullable=False)   # claude / serp_flights / amadeus / aadhaar_kyc / etc.
+    endpoint    = Column(String(200), default="")
+    tokens_used = Column(Integer, default=0)
+    cost_paise  = Column(Integer, default=0)           # in paise (1/100 rupee)
+    created_at  = Column(DateTime, default=_now)
+
+
+class AgentMessage(Base):
+    """Real-time message between a travel agent and a traveller."""
+    __tablename__ = "agent_messages"
+
+    id           = Column(Integer, primary_key=True, autoincrement=True)
+    room_id      = Column(String(255), nullable=False, index=True)  # "{sorted_email_a}:{sorted_email_b}"
+    sender_email = Column(String(120), nullable=False)
+    content      = Column(Text, nullable=False)
+    is_read      = Column(Boolean, default=False)
+    created_at   = Column(DateTime, default=_now)
 
 
 def make_slug(title: str, suffix: str) -> str:

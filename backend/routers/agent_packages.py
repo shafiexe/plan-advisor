@@ -224,6 +224,9 @@ async def create_package(
     profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
+    from services.limits import check_package_limit
+    await check_package_limit(profile.user_email, db)
+
     suffix = str(uuid.uuid4())[:6]
     slug = make_slug(body.title, suffix)
 

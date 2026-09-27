@@ -8,17 +8,22 @@ import BrandLogo from "@/components/BrandLogo";
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 const NAV = [
-  { href: "/agent/dashboard", icon: "📊", label: "Dashboard" },
-  { href: "/agent/packages",  icon: "🌍", label: "Tour Packages" },
-  { href: "/agent/tickets",   icon: "🎫", label: "Tickets" },
-  { href: "/agent/visa",      icon: "🛂", label: "Visa Services" },
-  { href: "/agent/profile",   icon: "👤", label: "Profile" },
+  { href: "/agent/dashboard",  icon: "📊", label: "Dashboard" },
+  { href: "/agent/packages",   icon: "🌍", label: "Tour Packages" },
+  { href: "/agent/tickets",    icon: "🎫", label: "Tickets" },
+  { href: "/agent/visa",       icon: "🛂", label: "Visa Services" },
+  { href: "/agent/enquiries",     icon: "💬", label: "Enquiries" },
+  { href: "/agent/subscription",  icon: "⭐", label: "Subscription" },
+  { href: "/agent/profile",       icon: "👤", label: "Profile" },
 ];
 
 const ADMIN_NAV = [
-  { href: "/agent/admin/agents", icon: "🏢", label: "All Agents" },
-  { href: "/agent/admin/users",  icon: "👥", label: "All Travellers" },
+  { href: "/agent/admin/approval", icon: "✅", label: "Approval Queue" },
+  { href: "/agent/admin/agents",   icon: "🏢", label: "All Agents" },
+  { href: "/agent/admin/users",    icon: "👥", label: "All Travellers" },
 ];
+
+interface LocalSession { email: string; name?: string; is_admin?: boolean; approval_status?: string; }
 
 export default function AgentLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
@@ -26,24 +31,50 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
   const pathname = usePathname();
   const [ready, setReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [localSession, setLocalSession] = useState<LocalSession | null>(null);
 
   useEffect(() => {
-    if (status === "unauthenticated") { router.push("/login?callbackUrl=/agent/dashboard"); return; }
-    if (status === "authenticated" && session?.user?.email) {
-      fetch(`${API}/api/agent/check`, { headers: { "X-User-Email": session.user.email } })
-        .then(r => r.json())
-        .then(d => {
-          if (!d.is_agent && !d.is_admin) { router.push("/"); return; }
-          setIsAdmin(!!d.is_admin);
-          setReady(true);
-        })
-        .catch(() => router.push("/"));
+    // Try localStorage agent session first if NextAuth has no session
+    if (status === "loading") return;
+
+    let email: string | null = session?.user?.email ?? null;
+
+    if (!email) {
+      try {
+        const raw = localStorage.getItem("pa_agent_session");
+        if (raw) {
+          const parsed: LocalSession = JSON.parse(raw);
+          if (parsed?.email) { email = parsed.email; setLocalSession(parsed); }
+        }
+      } catch {}
     }
+
+    if (!email) {
+      router.push("/login/agent");
+      return;
+    }
+
+    fetch(`${API}/api/agent/check`, { headers: { "X-User-Email": email } })
+      .then(r => r.json())
+      .then(d => {
+        if (!d.is_agent && !d.is_admin) { router.push("/login/agent"); return; }
+        setIsAdmin(!!d.is_admin);
+        setReady(true);
+      })
+      .catch(() => router.push("/login/agent"));
   }, [status, session, router]);
+
+  const handleLogout = () => {
+    try { localStorage.removeItem("pa_agent_session"); } catch {}
+    router.push("/login/agent");
+  };
+
+  const displayEmail = session?.user?.email ?? localSession?.email ?? "";
+  const displayName  = localSession?.name ?? session?.user?.name ?? "";
 
   if (status === "loading" || !ready) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#020817" }}>
         <div className="flex gap-2 items-center text-slate-400">
           <div className="w-4 h-4 border-2 border-slate-600 border-t-[#d4a017] rounded-full animate-spin" />
           Loading…
@@ -55,12 +86,13 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
   const allNav = isAdmin ? [...NAV, ...ADMIN_NAV] : NAV;
 
   return (
-    <div className="flex min-h-screen bg-slate-950">
+    <div className="flex min-h-screen" style={{ background: "#020817" }}>
       {/* Sidebar */}
       <aside className="w-56 flex-shrink-0 flex flex-col" style={{ background: "#172554" }}>
         <div className="p-4 border-b border-white/10">
           <Link href="/"><BrandLogo size={28} /></Link>
-          <p className="text-xs text-blue-300/60 mt-2 truncate">{session?.user?.email}</p>
+          {displayName && <p className="text-xs text-blue-100/80 mt-2 font-medium truncate">{displayName}</p>}
+          <p className="text-xs text-blue-300/60 truncate">{displayEmail}</p>
           {isAdmin && (
             <span className="mt-1 inline-block text-[10px] px-2 py-0.5 rounded-full font-semibold" style={{ background: "#d4a01720", color: "#d4a017" }}>
               Admin
@@ -98,11 +130,15 @@ export default function AgentLayout({ children }: { children: React.ReactNode })
           <Link href="/" className="flex items-center gap-2 px-3 py-2 text-xs text-blue-300/50 hover:text-blue-200 rounded-lg hover:bg-white/5 transition-all">
             ← Back to Chat
           </Link>
+          <button onClick={handleLogout}
+            className="flex items-center gap-2 px-3 py-2 text-xs text-red-400/60 hover:text-red-300 rounded-lg hover:bg-red-900/10 transition-all text-left w-full">
+            ⏏ Sign Out
+          </button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto" style={{ background: "#0f172a", color: "#e2e8f0" }}>
         {children}
       </main>
     </div>

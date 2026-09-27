@@ -58,6 +58,16 @@ async def init_db():
                 "ALTER TABLE tickets ADD COLUMN layovers JSON DEFAULT '[]'",
                 "ALTER TABLE tickets ADD COLUMN arrival_time TEXT DEFAULT ''",
                 "ALTER TABLE tickets ADD COLUMN original_price INTEGER",
+                # Agent approval + Aadhaar + license fields
+                "ALTER TABLE agent_profiles ADD COLUMN services_offered JSON DEFAULT '[]'",
+                "ALTER TABLE agent_profiles ADD COLUMN aadhaar_verified BOOLEAN DEFAULT 0",
+                "ALTER TABLE agent_profiles ADD COLUMN aadhaar_last4 TEXT DEFAULT ''",
+                "ALTER TABLE agent_profiles ADD COLUMN license_url TEXT DEFAULT ''",
+                "ALTER TABLE agent_profiles ADD COLUMN license_filename TEXT DEFAULT ''",
+                "ALTER TABLE agent_profiles ADD COLUMN approval_status TEXT DEFAULT 'pending_review'",
+                "ALTER TABLE agent_profiles ADD COLUMN approval_note TEXT DEFAULT ''",
+                "ALTER TABLE agent_profiles ADD COLUMN approved_at DATETIME",
+                "ALTER TABLE agent_profiles ADD COLUMN approved_by TEXT DEFAULT ''",
             ):
                 try:
                     await conn.execute(text(col_def))
@@ -83,8 +93,80 @@ async def init_db():
                 "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS layovers JSON DEFAULT '[]'",
                 "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS arrival_time TEXT DEFAULT ''",
                 "ALTER TABLE tickets ADD COLUMN IF NOT EXISTS original_price INTEGER",
+                # Agent approval + Aadhaar + license fields
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS services_offered JSON",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS aadhaar_verified BOOLEAN DEFAULT FALSE",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS aadhaar_last4 TEXT DEFAULT ''",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS license_url TEXT DEFAULT ''",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS license_filename TEXT DEFAULT ''",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS approval_status TEXT DEFAULT 'pending_review'",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS approval_note TEXT DEFAULT ''",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP",
+                "ALTER TABLE agent_profiles ADD COLUMN IF NOT EXISTS approved_by TEXT DEFAULT ''",
             ):
                 try:
                     await conn.execute(text(col_def))
                 except Exception:
                     pass
+
+        # New tables for Phase 2-4 (create_all handles new tables; these guard existing DBs)
+        if is_sqlite:
+            for tbl_sql in (
+                """CREATE TABLE IF NOT EXISTS subscriptions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_email TEXT NOT NULL,
+                    plan_type TEXT NOT NULL,
+                    status TEXT DEFAULT 'active',
+                    razorpay_sub_id TEXT UNIQUE,
+                    starts_at DATETIME,
+                    ends_at DATETIME,
+                    created_at DATETIME,
+                    updated_at DATETIME
+                )""",
+                """CREATE TABLE IF NOT EXISTS api_usage_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_email TEXT,
+                    api_type TEXT NOT NULL,
+                    endpoint TEXT DEFAULT '',
+                    tokens_used INTEGER DEFAULT 0,
+                    cost_paise INTEGER DEFAULT 0,
+                    created_at DATETIME
+                )""",
+                """CREATE TABLE IF NOT EXISTS agent_messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    room_id TEXT NOT NULL,
+                    sender_email TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    is_read BOOLEAN DEFAULT 0,
+                    created_at DATETIME
+                )""",
+                """CREATE TABLE IF NOT EXISTS aadhaar_sessions (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_email TEXT NOT NULL,
+                    client_id TEXT NOT NULL,
+                    expires_at DATETIME NOT NULL,
+                    used BOOLEAN DEFAULT 0,
+                    created_at DATETIME
+                )""",
+            ):
+                try:
+                    await conn.execute(text(tbl_sql))
+                except Exception:
+                    pass
+
+        # Backfill: agents active before the approval system are grandfathered as 'approved'
+        try:
+            if is_sqlite:
+                await conn.execute(text(
+                    "UPDATE agent_profiles SET approval_status = 'approved' "
+                    "WHERE is_active = 1 AND (approval_status IS NULL OR approval_status = 'pending_review') "
+                    "AND created_at < '2026-09-27 00:00:00'"
+                ))
+            else:
+                await conn.execute(text(
+                    "UPDATE agent_profiles SET approval_status = 'approved' "
+                    "WHERE is_active = TRUE AND (approval_status IS NULL OR approval_status = 'pending_review') "
+                    "AND created_at < '2026-09-27 00:00:00'"
+                ))
+        except Exception:
+            pass

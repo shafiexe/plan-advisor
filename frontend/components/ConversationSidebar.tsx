@@ -1047,6 +1047,17 @@ export default function ConversationSidebar({
                     </button>
                   )}
 
+                  {/* Subscription */}
+                  <a
+                    href="/profile"
+                    onClick={() => setShowUserMenu(false)}
+                    className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm hover:bg-slate-800/60 transition-colors"
+                    style={{ color: "#d4a017", textDecoration: "none" }}
+                  >
+                    <span className="text-base shrink-0">⭐</span>
+                    Subscription &amp; Profile
+                  </a>
+
                   {/* Sign out */}
                   {onSignOut && (
                     <button

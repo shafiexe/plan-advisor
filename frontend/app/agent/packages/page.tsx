@@ -5,6 +5,19 @@ import Link from "next/link";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
+function useAgentEmail() {
+  const { data: session } = useSession();
+  const [email, setEmail] = useState<string | null>(null);
+  useEffect(() => {
+    if (session?.user?.email) { setEmail(session.user.email); return; }
+    try {
+      const raw = localStorage.getItem("pa_agent_session");
+      if (raw) { const s = JSON.parse(raw); if (s.email) setEmail(s.email); }
+    } catch {}
+  }, [session]);
+  return email;
+}
+
 interface Package {
   id: number;
   title: string;
@@ -32,17 +45,17 @@ const CATEGORY_EMOJI: Record<string, string> = {
 };
 
 export default function PackagesPage() {
-  const { data: session } = useSession();
+  const agentEmail = useAgentEmail();
   const [packages, setPackages] = useState<Package[]>([]);
   const [filter, setFilter] = useState<"all" | "draft" | "published">("all");
   const [loading, setLoading] = useState(true);
 
   const fetchPackages = async () => {
-    if (!session?.user?.email) return;
+    if (!agentEmail) return;
     setLoading(true);
     try {
       const q = filter !== "all" ? `?status=${filter}` : "";
-      const res = await fetch(`${API}/api/agent/packages${q}`, { headers: { "X-User-Email": session.user.email } });
+      const res = await fetch(`${API}/api/agent/packages${q}`, { headers: { "X-User-Email": agentEmail } });
       const data = await res.json();
       setPackages(Array.isArray(data) ? data : []);
     } catch (e) {
@@ -52,11 +65,11 @@ export default function PackagesPage() {
     }
   };
 
-  useEffect(() => { fetchPackages(); }, [session, filter]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { fetchPackages(); }, [agentEmail, filter]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const togglePublic = async (pkg: Package) => {
     await fetch(`${API}/api/agent/packages/${pkg.id}/toggle`, {
-      method: "PATCH", headers: { "X-User-Email": session!.user!.email! },
+      method: "PATCH", headers: { "X-User-Email": agentEmail! },
     });
     fetchPackages();
   };
@@ -64,7 +77,7 @@ export default function PackagesPage() {
   const deletePackage = async (pkg: Package) => {
     if (!confirm(`Delete "${pkg.title}"?`)) return;
     await fetch(`${API}/api/agent/packages/${pkg.id}`, {
-      method: "DELETE", headers: { "X-User-Email": session!.user!.email! },
+      method: "DELETE", headers: { "X-User-Email": agentEmail! },
     });
     fetchPackages();
   };

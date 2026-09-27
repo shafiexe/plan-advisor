@@ -103,6 +103,9 @@ async def create_ticket(
     profile: AgentProfile = Depends(require_agent),
     db: AsyncSession = Depends(get_db),
 ):
+    from services.limits import check_ticket_limit
+    await check_ticket_limit(profile.user_email, db)
+
     t = Ticket(agent_email=profile.user_email, **body.model_dump())
     db.add(t)
     await db.commit()

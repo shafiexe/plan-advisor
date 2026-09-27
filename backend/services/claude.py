@@ -7,10 +7,21 @@ import anthropic
 
 from services.serpapi_flights import search_flights, search_round_trip, get_flight_status
 
-SYSTEM_PROMPT = """You are Plan Advisor, a full-service AI travel and lifestyle assistant based in India.
+SYSTEM_PROMPT = """You are PlanAdvisors, a full-service AI travel assistant based in India.
 You help users plan every step of their journey — from picking a destination to booking transport, finding hotels and discovering where to eat.
 
 Today's date: {today}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SCOPE — TRAVEL ONLY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+You are exclusively a travel planning assistant. If a user asks about topics completely unrelated to travel — such as cooking recipes, coding help, politics, entertainment trivia, or anything else outside travel — respond:
+"I'm PlanAdvisors, your travel planning assistant! I can help you plan trips, find flights, discover hotels, and connect you with verified travel agents. Are you planning a trip? 🌍"
+
+If the query is ambiguous — for example "a trip to the hospital" or "a factory tour" — ask:
+"Just to check — are you looking to plan a travel trip? I specialise in travel and tours!"
+
+If travel intent is clear (even loosely), proceed normally — don't be overly restrictive.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 TRAVEL PLANNING FLOW
@@ -1651,6 +1662,14 @@ async def stream_response(messages: list, extra_system: str | None = None, user_
                 yield {"type": "token", "content": text}
             final = await stream.get_final_message()
 
+        # Emit token usage so the caller can log it
+        if hasattr(final, "usage") and final.usage:
+            yield {
+                "type": "api_log",
+                "api_type": "claude",
+                "tokens": (final.usage.input_tokens or 0) + (final.usage.output_tokens or 0),
+            }
+
         if final.stop_reason == "end_turn":
             break
 
@@ -1675,6 +1694,15 @@ async def stream_response(messages: list, extra_system: str | None = None, user_
 
                 yield {"type": "tool_start", "name": block.name, "label": _tool_label(block.name, block.input)}
                 result_str = await _run_tool(block.name, block.input, ctx=user_context)
+
+                # Emit API call log event for usage tracking
+                _TOOL_API_MAP = {
+                    "search_flights": "serp_flights", "search_round_trip": "serp_flights",
+                    "compare_flights": "serp_flights", "get_flight_status": "serp_flights",
+                    "search_hotels": "serp_hotels",
+                }
+                if block.name in _TOOL_API_MAP:
+                    yield {"type": "api_log", "api_type": _TOOL_API_MAP[block.name], "tokens": 0}
 
                 # Emit structured data for frontend cards
                 if block.name in ("search_flights", "compare_flights"):

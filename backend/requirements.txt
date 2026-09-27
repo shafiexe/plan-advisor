@@ -24,3 +24,5 @@ apscheduler>=3.10.0
 aiosmtplib>=3.0.0
 # Web Push notifications
 pywebpush>=2.0.0
+# Azure Blob Storage — license and image uploads
+azure-storage-blob>=12.20.0
