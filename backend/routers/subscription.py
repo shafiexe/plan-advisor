@@ -30,11 +30,23 @@ RAZORPAY_KEY_ID     = os.getenv("RAZORPAY_KEY_ID", "")
 RAZORPAY_KEY_SECRET = os.getenv("RAZORPAY_KEY_SECRET", "")
 RAZORPAY_WEBHOOK_SECRET = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
 
-# Razorpay plan IDs — create these in the Razorpay dashboard under Subscriptions → Plans
-# then set these env vars.
-PLAN_IDS = {
+# Razorpay plan IDs — auto-created on first use if not set in env
+PLAN_IDS: dict[str, str] = {
     "agent_pro":     os.getenv("RAZORPAY_PLAN_AGENT_PRO", ""),
     "traveller_pro": os.getenv("RAZORPAY_PLAN_TRAVELLER_PRO", ""),
+}
+
+PLAN_CONFIGS = {
+    "agent_pro": {
+        "name": "PlanAdvisors Agent Pro",
+        "description": "Unlimited listings, priority search, real-time chat",
+        "amount": 5000,   # ₹50 in paise
+    },
+    "traveller_pro": {
+        "name": "PlanAdvisors Traveller Pro",
+        "description": "Agent matching, real-time chat, priority response",
+        "amount": 5000,
+    },
 }
 
 RZ_BASE = "https://api.razorpay.com/v1"
@@ -46,6 +58,35 @@ async def _rz_post(path: str, body: dict) -> dict:
         if resp.status_code not in (200, 201):
             raise HTTPException(status_code=502, detail=f"Razorpay error: {resp.text}")
         return resp.json()
+
+
+async def _ensure_plan(plan_type: str) -> str:
+    """Return configured plan_id, or create the plan via API if missing/invalid."""
+    plan_id = PLAN_IDS.get(plan_type, "")
+    if plan_id:
+        return plan_id
+
+    if not RAZORPAY_KEY_ID:
+        raise HTTPException(status_code=503, detail="Payment gateway not configured.")
+
+    cfg = PLAN_CONFIGS[plan_type]
+    async with httpx.AsyncClient(timeout=15, auth=(RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET)) as client:
+        resp = await client.post(f"{RZ_BASE}/plans", json={
+            "period": "monthly",
+            "interval": 1,
+            "item": {
+                "name": cfg["name"],
+                "amount": cfg["amount"],
+                "currency": "INR",
+                "description": cfg["description"],
+            },
+        })
+        if resp.status_code not in (200, 201):
+            raise HTTPException(status_code=502, detail=f"Could not create Razorpay plan: {resp.text}")
+        new_plan = resp.json()
+        PLAN_IDS[plan_type] = new_plan["id"]
+        log.info("Auto-created Razorpay plan %s → %s", plan_type, new_plan["id"])
+        return new_plan["id"]
 
 
 async def _rz_post_action(path: str) -> dict:
@@ -66,14 +107,10 @@ async def create_subscription(
     email: str = Depends(current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    if body.plan_type not in PLAN_IDS:
+    if body.plan_type not in PLAN_CONFIGS:
         raise HTTPException(status_code=422, detail="Invalid plan type.")
-    if not RAZORPAY_KEY_ID:
-        raise HTTPException(status_code=503, detail="Payment gateway not configured.")
 
-    plan_id = PLAN_IDS[body.plan_type]
-    if not plan_id:
-        raise HTTPException(status_code=503, detail=f"Razorpay plan for {body.plan_type} not configured.")
+    plan_id = await _ensure_plan(body.plan_type)
 
     # Cancel any existing active subscription first
     existing = (await db.execute(
